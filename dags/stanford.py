@@ -62,6 +62,8 @@ with DAG(
     # Retrive MARC from Sinopia API, convert to MARC JSON,
     setup_rdf2marc = GitRdf2Marc()
 
+    run_rdf2marc = Rdf2Marc(urls)
+
     sinopia_to_symphony_json = PythonOperator(
         task_id="symphony_json",
         python_callable=retrive_rdf2marc,
@@ -93,6 +95,6 @@ with DAG(
     update_sinopia = UpdateIdentifier(urls=urls)
 
 listen_sns >> branch_ils >> [setup_rdf2marc, sinopia_to_folio_records]
-setup_rdf2marc >> sinopia_to_symphony_json >> send_to_symphony >> processed_sinopia
+setup_rdf2marc >> run_rdf2marc >> sinopia_to_symphony_json >> send_to_symphony >> processed_sinopia
 sinopia_to_folio_records >> send_to_folio >> processed_sinopia
 processed_sinopia >> update_sinopia

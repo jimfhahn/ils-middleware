@@ -1,8 +1,8 @@
 import logging
-import datetime
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 from airflow.contrib.sensors.bash_sensor import BashSensor
+
 
 def UpdateIdentifier(**kwargs) -> PythonOperator:
     """Adds Identifier to Sinopia"""
@@ -46,18 +46,18 @@ def GitRdf2Marc() -> BashSensor:
     fi
     """
     return BashSensor(
-      task_id="git_rdf2marc",
-      bash_command=sensor_rdf2marc_cmd,
-      poke_interval=60,
-      timeout=60*50
+        task_id="git_rdf2marc",
+        bash_command=sensor_rdf2marc_cmd,
+        poke_interval=60,
+        timeout=60 * 50,
     )
+
 
 def Rdf2Marc(**kwargs) -> BashOperator:
     """Runs rdf2marc on a BF Instance URL"""
-    instance_url = kwargs.get('instance_url')
+    instance_url = kwargs.get("instance_url")
     if instance_url is None:
         raise ValueError("Missing Instance URL")
     return BashOperator(
-        task_id="rdf2marc",
-        bash_command=f"./exe/rdf2marc {instance_url}"
+        task_id="rdf2marc", bash_command=f"./exe/rdf2marc {instance_url}"
     )
