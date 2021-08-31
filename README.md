@@ -23,4 +23,11 @@ In the `dags` subdirectory, add a python module for the DAG. Running Airflow
 locally through Docker (see above), the DAG should appear in the list of DAGs
 or display any errors in the DAG.
 
+## Dependency Management and Packaging
+We are using [poetry][POET] to better manage dependency updates. To install
+[poetry][POET], run the following command in your shell:
+
+`curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -`
+
 [AF]: https://airflow.apache.org/
+[POET]: https://python-poetry.org/
