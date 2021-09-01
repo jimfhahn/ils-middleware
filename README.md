@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/LD4P/ils-middleware/tree/main.svg?style=svg)](https://circleci.com/gh/LD4P/ils-middleware/tree/main)
+
 # ILS Middleware
 Proof-of-concept for using [Apache Airflow][AF] to manage Sinopia workflows
 that interact with institutional integrated library systems (ILS) and/or
