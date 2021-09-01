@@ -95,6 +95,12 @@ with DAG(
     update_sinopia = UpdateIdentifier(urls=urls)
 
 listen_sns >> branch_ils >> [setup_rdf2marc, sinopia_to_folio_records]
-setup_rdf2marc >> run_rdf2marc >> sinopia_to_symphony_json >> send_to_symphony >> processed_sinopia
+(
+    setup_rdf2marc
+    >> run_rdf2marc
+    >> sinopia_to_symphony_json
+    >> send_to_symphony
+    >> processed_sinopia
+)
 sinopia_to_folio_records >> send_to_folio >> processed_sinopia
 processed_sinopia >> update_sinopia

@@ -29,10 +29,28 @@ We are using [poetry][POET] to better manage dependency updates. To install
 
 `curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -`
 
+## Automated Tests
+
+The [pytest][PYTEST] framework is used to run the tests.  Tests can be invoked manually by calling `poetry run pytest` (which will save an xml formatted [coverage report][PYTESTCOV], as well as printing the coverage report to the terminal).
+
 ## Linting
+
 The [flake8][FLK8] Python code linter can be manually run by invoking `poetry run flake8` from
 the command-line. Configuration options are in the `setup.cfg` file, under the flake8 section.
 
+## Code formatting
+
+Code can be auto-formatted using [Black][BLACK], an opinionated Python code formatter.
+
+To see whether Black would make changes: `poetry run black --check .`
+
+To have Black apply formatting: `poetry run black .`
+
+For information about integrations, including Git hooks and plugins for popular IDEs, see:  https://black.readthedocs.io/en/stable/integrations/index.html
+
 [AF]: https://airflow.apache.org/
+[BLACK]: https://black.readthedocs.io/
 [FLK8]: https://flake8.pycqa.org/en/latest/
 [POET]: https://python-poetry.org/
+[PYTEST]: https://docs.pytest.org/
+[PYTESTCOV]: https://github.com/pytest-dev/pytest-cov
