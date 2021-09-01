@@ -62,7 +62,7 @@ with DAG(
     # Retrive MARC from Sinopia API, convert to MARC JSON,
     setup_rdf2marc = GitRdf2Marc()
 
-    run_rdf2marc = Rdf2Marc(urls)
+    run_rdf2marc = Rdf2Marc(instance_url=urls[0])
 
     sinopia_to_symphony_json = PythonOperator(
         task_id="symphony_json",
