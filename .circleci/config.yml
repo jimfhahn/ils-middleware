@@ -32,6 +32,10 @@ jobs:
           name: Lint with flake8
           command: |
              poetry run flake8
+      - run:
+          name: Lint with Black
+          command: |
+             poetry run black --diff --check .
   test:
       executor: python/default
       steps:
