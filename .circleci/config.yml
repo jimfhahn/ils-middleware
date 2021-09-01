@@ -1,0 +1,44 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.2
+
+workflows:
+  build:
+    jobs:
+      - build
+      - linting:
+          requires:
+            - build
+      - test:
+          requires:
+            - build
+
+jobs:
+  build:
+    docker:
+      - image: cimg/python:3.8
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: poetry
+  linting:
+     executor: python/default
+     steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: poetry
+      - run:
+          name: Lint with flake8
+          command: |
+             poetry run flake8
+  test:
+      executor: python/default
+      steps:
+        - checkout
+        - python/install-packages:
+            pkg-manager: poetry
+        - run:
+            name: Run tests
+            command: |
+              poetry run pytest --version
