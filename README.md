@@ -29,5 +29,10 @@ We are using [poetry][POET] to better manage dependency updates. To install
 
 `curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -`
 
+## Linting
+The [flake8][FLK8] Python code linter can be manually run by invoking `poetry run flake8` from
+the command-line. Configuration options are in the `setup.cfg` file, under the flake8 section.
+
 [AF]: https://airflow.apache.org/
+[FLK8]: https://flake8.pycqa.org/en/latest/
 [POET]: https://python-poetry.org/

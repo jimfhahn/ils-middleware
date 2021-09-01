@@ -1,6 +1,8 @@
 import logging
-from airflow.operators.bash import BashOperator
-from airflow.operators.python import PythonOperator
+
+# from airflow.operators.bash import BashOperator
+# from airflow.operators.python import PythonOperator
+
 
 def map_to_folio(urls: list):
     logging.info(f"Starting with {len(urls)} from Sinopia")
