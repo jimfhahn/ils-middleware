@@ -10,6 +10,7 @@ for Stanford and Cornell Sinopia-to-ILS/LSP workflows.
 Based on the documentation, [Running Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html):
 
 1. Clone repository `git clone https://github.com/LD4P/ils-middleware`
+1. Uncomment the line `# - ./dags:/opt/airflow/dags` in docker-compose.yaml
 1. Run `docker-compose up airflow-init` to initialize the Airflow
 1. Bring up airflow, `docker-compose up` to run the containers in the foreground,
    add `docker-compose up -d` to run as a daemon.
@@ -24,6 +25,11 @@ FOLIO workflow. Editing either of these code files will change the DAG.
 In the `dags` subdirectory, add a python module for the DAG. Running Airflow
 locally through Docker (see above), the DAG should appear in the list of DAGs
 or display any errors in the DAG.
+
+To add any new DAGs to `ld4p/ils-middleware:latest` image, either build the
+image locally with `docker build -t ld4p/ils-middleware:latest .` or uncomment
+the `# # build: .` line in docker-compose.yaml while commenting out the previous
+line `image: ${AIRFLOW_IMAGE_NAME:-ld4p/ils-middleware:latest}`.
 
 ## Dependency Management and Packaging
 We are using [poetry][POET] to better manage dependency updates. To install
