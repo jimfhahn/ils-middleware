@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
-from aws_sns import SubscribeOperator
+from aws_sqs import SubscribeOperator
 from folio import map_to_folio
 from sinopia import UpdateIdentifier
 
@@ -32,14 +32,8 @@ with DAG(
 ) as dag:
 
     # Monitors SNS for Cornell topic
-    listen_sns = SubscribeOperator(topic="cornell")
+    listen_sns = SubscribeOperator(queue="cornell-ils")
 
-    # Should retrieve URLS from a listen_sns_task task message
-    urls = [
-        "http://sinopia-example.io/cornell/01",
-        "http://sinopia-example.io/cornell/02",
-        "http://sinopia-example.io/cornell/03",
-    ]
 
     # Maps Documents from URLs in the SNS Message to FOLIO JSON
     map_sinopia_to_inventory_records = PythonOperator(

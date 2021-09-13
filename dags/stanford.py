@@ -2,15 +2,16 @@ import logging
 
 from datetime import datetime, timedelta
 
-from aws_sns import SubscribeOperator
+from aws_sqs import SubscribeOperator
 from folio import map_to_folio
 from sinopia import UpdateIdentifier, GitRdf2Marc, Rdf2Marc
-
+# from symphony import
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
+
 
 
 def choose_ils(**kwargs) -> str:
@@ -70,13 +71,15 @@ with DAG(
         op_kwargs={"urls": urls},
     )
 
-    connect_symphony_cmd = """echo send POST to Symphony Web Services, returns CATKEY
-    exit 0"""
+
+
+
 
     #  Send to Symphony Web API
-    send_to_symphony = BashOperator(
-        task_id="symphony_send", bash_command=connect_symphony_cmd
+    send_to_symphony = NewMARCtoSymphony(
+
     )
+
 
     sinopia_to_folio_records = PythonOperator(
         task_id="folio_map", python_callable=map_to_folio, op_kwargs={"urls": urls}
