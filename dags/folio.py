@@ -1,3 +1,4 @@
+"""FOLIO Operators and Functions for Institutional DAGs."""
 import logging
 
 # from airflow.operators.bash import BashOperator
@@ -5,6 +6,7 @@ import logging
 
 
 def map_to_folio(urls: list):
+    """Map Sinopia RDF to FOLIO Inventory records."""
     logging.info(f"Starting with {len(urls)} from Sinopia")
     for url in urls:
         logging.info(f"Sinopia {url} retrives Document")

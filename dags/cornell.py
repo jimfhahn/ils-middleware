@@ -1,3 +1,4 @@
+"""DAG for Cornell University Libraries."""
 import logging
 from datetime import datetime, timedelta
 
@@ -34,10 +35,9 @@ with DAG(
     # Monitors SNS for Cornell topic
     listen_sns = SubscribeOperator(queue="cornell-ils")
 
-
     # Maps Documents from URLs in the SNS Message to FOLIO JSON
     map_sinopia_to_inventory_records = PythonOperator(
-        task_id="folio_map", python_callable=map_to_folio, op_kwargs={"urls": urls}
+        task_id="folio_map", python_callable=map_to_folio, op_kwargs={"urls": []}
     )
 
     logging.info(
@@ -52,6 +52,6 @@ with DAG(
     )
 
     # Updates Sinopia URLS with HRID
-    update_sinopia = UpdateIdentifier(urls=urls, identifier="borked:1")
+    update_sinopia = UpdateIdentifier(urls=[], identifier="borked:1")
 
 listen_sns >> map_sinopia_to_inventory_records >> send_to_folio >> update_sinopia
