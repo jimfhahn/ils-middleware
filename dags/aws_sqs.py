@@ -10,10 +10,11 @@ def SubscribeOperator(**kwargs) -> PythonOperator:
     """Subscribe to a topic to filter SQS messages."""
     queue_name = kwargs.get("queue", "")
     # Defaults to Sinopia dev environment
-    sinopia_env = kwargs.get('sinopia_env', 'dev')
+    sinopia_env = kwargs.get("sinopia_env", "dev")
     aws_sqs_url = Variable.get(f"sqs_{sinopia_env}")
     return SQSSensor(
-       aws_conn_id=f"aws_sqs_{sinopia_env}",
-       sqs_queue=f"{aws_sqs_url}{queue_name}",
-       task_id="sqs-sensor"
+        aws_conn_id=f"aws_sqs_{sinopia_env}",
+        sqs_queue=f"{aws_sqs_url}{queue_name}",
+        task_id="sqs-sensor",
+        dag=kwargs.get("dag"),
     )
