@@ -1,3 +1,4 @@
+"""Sinopia Operators and Functions for Institutional DAGs."""
 import logging
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
@@ -5,7 +6,7 @@ from airflow.contrib.sensors.bash_sensor import BashSensor
 
 
 def UpdateIdentifier(**kwargs) -> PythonOperator:
-    """Adds Identifier to Sinopia"""
+    """Add Identifier to Sinopia."""
     return PythonOperator(
         task_id="sinopia-id-update",
         python_callable=sinopia_update,
@@ -14,6 +15,7 @@ def UpdateIdentifier(**kwargs) -> PythonOperator:
 
 
 def sinopia_update(**kwargs):
+    """Stub for updating Sinopia RDF resource with identifier."""
     urls = kwargs.get("urls")
     identifier = kwargs.get("identifier")
     logging.info(f"Starts updating Sinopia {len(urls)} resources")
@@ -23,7 +25,7 @@ def sinopia_update(**kwargs):
 
 
 def GitRdf2Marc() -> BashSensor:
-    """Clones https://github.com/ld4p/rdf2marc repository if it doesn't exist"""
+    """Clones https://github.com/ld4p/rdf2marc repository if it doesn't exist."""
     logging.info("Checks and clones rdf2marc")
     sensor_rdf2marc_cmd = """
     if [ ! -d rdf2marc ]; then
@@ -54,7 +56,7 @@ def GitRdf2Marc() -> BashSensor:
 
 
 def Rdf2Marc(**kwargs) -> BashOperator:
-    """Runs rdf2marc on a BF Instance URL"""
+    """Run rdf2marc on a BF Instance URL."""
     instance_url = kwargs.get("instance_url")
     if instance_url is None:
         raise ValueError("Missing Instance URL")
