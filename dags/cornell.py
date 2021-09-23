@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta
 
 from aws_sqs import SubscribeOperator
-from folio import map_to_folio
+from folio_login import map_to_folio
 from sinopia import UpdateIdentifier
 
 from airflow import DAG
