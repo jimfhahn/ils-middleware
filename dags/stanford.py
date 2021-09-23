@@ -56,7 +56,7 @@ with DAG(
         op_kwargs={"instance_uri": urls[0]},
     )
 
-    with TaskGroup(group_id='process_symphony') as symphony_task_group:
+    with TaskGroup(group_id="process_symphony") as symphony_task_group:
         download_symphony_marc = PythonOperator(
             task_id="download_symphony_marc",
             python_callable=get_from_s3,
@@ -78,20 +78,12 @@ with DAG(
 
         download_symphony_marc >> export_symphony_json >> send_to_symphony
 
-    with TaskGroup(group_id='process_folio') as folio_task_group:
-        download_folio_marc = DummyOperator(
-            task_id="download_folio_marc",
-            dag=dag,
-        )
+    with TaskGroup(group_id="process_folio") as folio_task_group:
+        download_folio_marc = DummyOperator(task_id="download_folio_marc", dag=dag)
 
-        export_folio_json = DummyOperator(
-            task_id="folio_json_to_s3",
-            dag=dag)
+        export_folio_json = DummyOperator(task_id="folio_json_to_s3", dag=dag)
 
-        send_to_folio = DummyOperator(
-            task_id='folio_send',
-            dag=dag
-        )
+        send_to_folio = DummyOperator(task_id="folio_send", dag=dag)
 
         download_folio_marc >> export_folio_json >> send_to_folio
 
