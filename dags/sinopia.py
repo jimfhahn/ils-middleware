@@ -1,9 +1,10 @@
-"""Sinopia Operators and Functions for Institutional DAGs."""
-import logging
+import logging, json
+from urllib.parse import urlparse
+from os import path, getenv
+
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
-from airflow.contrib.sensors.bash_sensor import BashSensor
-
+from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
 
 def UpdateIdentifier(**kwargs) -> PythonOperator:
     """Add Identifier to Sinopia."""
@@ -24,42 +25,38 @@ def sinopia_update(**kwargs):
     logging.info(f"Ends updating Sinopia {identifier}")
 
 
-def GitRdf2Marc() -> BashSensor:
-    """Clones https://github.com/ld4p/rdf2marc repository if it doesn't exist."""
-    logging.info("Checks and clones rdf2marc")
-    sensor_rdf2marc_cmd = """
-    if [ ! -d rdf2marc ]; then
-        echo "rdf2marc does not exist. Cloning now"
-        git clone https://github.com/ld4p/rdf2marc --depth=1
-        exit 0
-    fi
-    cd rdf2marc
-    git fetch
-    local_hash = `git rev-parse main`
-    remote_hash = `git rev-parse origin/main`
-    if [ $local_hash != $remote_hash]
-    then
-        echo "Pulling in latest changes"
-        git pull origin main
-        exit 0
-    else
-        echo "Everything is updated with origin/main"
-        exit 1
-    fi
-    """
-    return BashSensor(
-        task_id="git_rdf2marc",
-        bash_command=sensor_rdf2marc_cmd,
-        poke_interval=60,
-        timeout=60 * 50,
-    )
-
-
 def Rdf2Marc(**kwargs) -> BashOperator:
-    """Run rdf2marc on a BF Instance URL."""
-    instance_url = kwargs.get("instance_url")
-    if instance_url is None:
-        raise ValueError("Missing Instance URL")
-    return BashOperator(
-        task_id="rdf2marc", bash_command=f"./exe/rdf2marc {instance_url}"
+    """Runs rdf2marc on a BF Instance URL"""
+    instance_uri = kwargs.get("instance_uri")
+    instance_path = urlparse(instance_uri).path
+    instance_id = path.split(instance_path)[-1]
+
+    rdf2marc_lambda = getenv('RDF2MARC_LAMBDA')
+    s3_bucket = getenv('MARC_S3_BUCKET')
+    s3_record_path = f"airflow/{instance_id}/record"
+    marc_path = f"{s3_record_path}.mar"
+    marc_text_path = f"{s3_record_path}.txt"
+    marc_err_path = f"{s3_record_path}.err"
+
+    lambda_hook = AwsLambdaHook(
+        rdf2marc_lambda,
+        log_type='None',
+        qualifier='$LATEST',
+        invocation_type='RequestResponse',
+        config=None,
+        aws_conn_id='aws_lambda_connection'
     )
+
+    params = {
+        'instance_uri': instance_uri,
+        'bucket': s3_bucket,
+        'marc_path': marc_path,
+        'marc_txt_path': marc_text_path,
+        'error_path': marc_err_path
+    }
+
+    # TODO: Determine what should be returned/saved from result
+    result = lambda_hook.invoke_lambda(payload=json.dumps(params))
+    logging.info(f"RESULT = {result}")
+
+    return "success"
