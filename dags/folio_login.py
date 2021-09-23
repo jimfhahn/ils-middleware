@@ -19,7 +19,7 @@ def FolioLogin(**kwargs) -> SimpleHttpOperator:
         headers={
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "x-okapi-tenant": tenant
+            "x-okapi-tenant": tenant,
         },
         endpoint="authn/login",
         response_filter=lambda response: response.json().get("x-okapi-token"),
