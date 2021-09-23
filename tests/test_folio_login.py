@@ -1,17 +1,16 @@
 """Test FOLIO Operators and functions."""
 
 import pytest
-
 from datetime import datetime
-
 from airflow import DAG
-
 from dags.folio_login import FolioLogin
+
 
 @pytest.fixture
 def test_dag():
     start_date = datetime(2021, 9, 20)
     return DAG("test_dag", default_args={"owner": "airflow", "start_date": start_date})
+
 
 def test_subscribe_operator_missing_kwargs(test_dag):
     """Test missing kwargs for SubscribeOperator."""
