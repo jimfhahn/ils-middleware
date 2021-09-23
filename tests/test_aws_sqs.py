@@ -19,7 +19,7 @@ def test_dag():
 @pytest.fixture
 def mock_variable(monkeypatch):
     def mock_get(key):
-        if key == "sqs_stage":
+        if key == "SQS_STAGE":
             return "http://aws.com/12345/"
 
     monkeypatch.setattr(Variable, "get", mock_get)
