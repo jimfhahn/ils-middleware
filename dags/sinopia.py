@@ -1,10 +1,12 @@
-import logging, json
+import logging
+import json
 from urllib.parse import urlparse
 from os import path, getenv
 
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
+
 
 def UpdateIdentifier(**kwargs) -> PythonOperator:
     """Add Identifier to Sinopia."""
