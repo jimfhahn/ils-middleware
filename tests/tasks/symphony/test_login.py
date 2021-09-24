@@ -1,4 +1,4 @@
-"""Test Symphony Operators and functions."""
+"""Test Symphony Login."""
 
 import pytest
 
@@ -6,7 +6,7 @@ from datetime import datetime
 
 from airflow import DAG
 
-from dags.symphony_login import SymphonyLogin
+from dags.tasks.symphony.login import SymphonyLogin
 
 
 @pytest.fixture
@@ -16,14 +16,14 @@ def test_dag():
 
 
 def test_subscribe_operator_missing_kwargs(test_dag):
-    """Test missing kwargs for SubscribeOperator."""
+    """Test missing kwargs for SymphonyLogin."""
 
     task = SymphonyLogin(dag=test_dag)
     assert task.http_conn_id is None
 
 
 def test_subscribe_operator(test_dag):
-    """Test with typical kwargs for SubscribeOperator."""
+    """Test with typical kwargs for SymphonyLogin."""
     task = SymphonyLogin(
         conn_id="symphony_dev_login", login="DEVSYS", password="APASSWord", dag=test_dag
     )
