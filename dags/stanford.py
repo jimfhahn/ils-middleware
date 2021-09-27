@@ -15,7 +15,6 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 
 
-
 def choose_ils(**kwargs) -> str:
     import random
 
@@ -56,7 +55,6 @@ with DAG(
     run_rdf2marc = PythonOperator(
         task_id="symphony_json",
         python_callable=Rdf2Marc,
-        op_kwargs={"instance_uri": urls[0]},
     )
 
     with TaskGroup(group_id="process_symphony") as symphony_task_group:

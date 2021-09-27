@@ -7,8 +7,11 @@ from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
 
 
 def Rdf2Marc(**kwargs):
+
+    task_instance = kwargs["task_instance"]
+    instance_uri = task_instance.xcom_pull(task_ids="sqs-sensor")
+
     """Runs rdf2marc on a BF Instance URL"""
-    instance_uri = kwargs.get("instance_uri")
     instance_path = urlparse(instance_uri).path
     instance_id = path.split(instance_path)[-1]
 
@@ -36,8 +39,13 @@ def Rdf2Marc(**kwargs):
         "error_path": marc_err_path,
     }
 
-    # TODO: Determine what should be returned/saved from result
     result = lambda_hook.invoke_lambda(payload=json.dumps(params))
-    logging.info(f"RESULT = {result}")
+    print(f"RESULT = {result['StatusCode']}")
 
-    return "success"
+    if result["StatusCode"] == 200:
+        return instance_id
+
+    logging.error(
+        f"RDF2MARC conversion failed for {instance_uri}: {result['FunctionError']}"
+    )
+    raise Exception()
