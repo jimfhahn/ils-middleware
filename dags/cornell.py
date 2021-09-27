@@ -2,11 +2,9 @@
 import logging
 from datetime import datetime, timedelta
 
-from aws_sqs import SubscribeOperator
-from sinopia import UpdateIdentifier
 from folio import map_to_folio
-from folio_request import FolioRequest
-from folio_login import FolioLogin
+from tasks.amazon.sqs import SubscribeOperator
+from tasks.sinopia.sinopia import UpdateIdentifier
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator

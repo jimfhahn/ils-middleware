@@ -48,6 +48,7 @@ with DAG(
     # Monitors SQS for Stanford topic
     listen_sns = SubscribeOperator(topic="stanford")
 
+    # TODO: Remove once stubbed methods are complete
     urls = [
         "https://api.stage.sinopia.io/resource/3eb5f480-60d6-4732-8daf-02d8d6f26eb7",
     ]
