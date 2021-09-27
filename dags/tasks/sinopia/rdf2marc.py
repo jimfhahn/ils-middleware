@@ -3,31 +3,10 @@ import json
 from urllib.parse import urlparse
 from os import path, getenv
 
-from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
 from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
 
 
-def UpdateIdentifier(**kwargs) -> PythonOperator:
-    """Add Identifier to Sinopia."""
-    return PythonOperator(
-        task_id="sinopia-id-update",
-        python_callable=sinopia_update,
-        op_kwargs={"urls": kwargs.get("urls", []), "identifer": kwargs.get("id")},
-    )
-
-
-def sinopia_update(**kwargs):
-    """Stub for updating Sinopia RDF resource with identifier."""
-    urls = kwargs.get("urls")
-    identifier = kwargs.get("identifier")
-    logging.info(f"Starts updating Sinopia {len(urls)} resources")
-    for url in urls:
-        logging.info(f"Would PUT to Sinopia API {identifier} for {url}")
-    logging.info(f"Ends updating Sinopia {identifier}")
-
-
-def Rdf2Marc(**kwargs) -> BashOperator:
+def Rdf2Marc(**kwargs):
     """Runs rdf2marc on a BF Instance URL"""
     instance_uri = kwargs.get("instance_uri")
     instance_path = urlparse(instance_uri).path

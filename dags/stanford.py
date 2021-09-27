@@ -2,15 +2,18 @@ import logging
 
 from datetime import datetime, timedelta
 
-from aws_sqs import SubscribeOperator
-from sinopia import UpdateIdentifier, Rdf2Marc
-from airflow.utils.task_group import TaskGroup
+from tasks.amazon.s3 import get_from_s3, send_to_s3
+from tasks.amazon.sqs import SubscribeOperator
+from tasks.sinopia.sinopia import UpdateIdentifier
+from tasks.sinopia.rdf2marc import Rdf2Marc
+
 
 from airflow import DAG
+from airflow.utils.task_group import TaskGroup
+from airflow.operators.bash import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 
-from aws_s3 import get_from_s3, send_to_s3
 
 
 def choose_ils(**kwargs) -> str:
