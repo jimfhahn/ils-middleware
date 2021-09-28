@@ -3,11 +3,12 @@ import logging
 from datetime import datetime, timedelta
 
 from aws_sqs import SubscribeOperator
-from folio import map_to_folio
 from sinopia import UpdateIdentifier
+from folio import map_to_folio
+from folio_request import FolioRequest
+from folio_login import FolioLogin
 
 from airflow import DAG
-from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 
 
@@ -45,10 +46,10 @@ with DAG(
     )
     connect_okapi_cmd = """exit 0"""
 
-    send_to_folio = BashOperator(
-        task_id="cornell_folio_send",
-        # task_id="folio_send",
-        bash_command=connect_okapi_cmd,
+    send_to_folio = FolioRequest(
+        tenant="cornell",
+        token=FolioLogin(tenant="cornell", username="", password=""),
+        endpoint="",
     )
 
     # Updates Sinopia URLS with HRID
