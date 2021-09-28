@@ -24,5 +24,5 @@ def FolioRequest(**kwargs) -> SimpleHttpOperator:
         data=data,
         endpoint=endpoint,
         dag=dag,
-        response_check=lambda response: response.json.get({})
+        response_check=lambda response: response.json.get({}),
     )
