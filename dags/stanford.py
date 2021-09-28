@@ -11,7 +11,6 @@ from folio_login import FolioLogin
 # from symphony import
 
 from airflow import DAG
-from airflow.operators.bash import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 

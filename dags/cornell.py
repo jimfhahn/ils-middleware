@@ -9,7 +9,6 @@ from folio_request import FolioRequest
 from folio_login import FolioLogin
 
 from airflow import DAG
-from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 
 

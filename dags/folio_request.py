@@ -1,6 +1,4 @@
 """FOLIO Operators and Functions for Institutional DAGs."""
-import json
-
 from airflow.providers.http.operators.http import SimpleHttpOperator
 
 
