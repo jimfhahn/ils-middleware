@@ -4,9 +4,10 @@ import logging
 from datetime import datetime, timedelta
 
 from aws_sqs import SubscribeOperator
-from folio_login import map_to_folio
+from folio import map_to_folio
 from sinopia import UpdateIdentifier, GitRdf2Marc, Rdf2Marc
-
+from folio_request import FolioRequest
+from folio_login import FolioLogin
 # from symphony import
 
 from airflow import DAG
@@ -58,11 +59,11 @@ with DAG(
         task_id="folio_map", python_callable=map_to_folio, op_kwargs={"urls": []}
     )
 
-    connect_okapi_cmd = """echo POST to Okapi's /inventory/items with map_sinopia_to_inventory_records results
-    exit 0"""
-
-    send_to_folio = BashOperator(task_id="folio_send", bash_command=connect_okapi_cmd)
-
+    send_to_folio = FolioRequest(
+        tenant="sul",
+        token=FolioLogin(tenant="sul", username="", password=""),
+        endpoint="",
+    )
     # Dummy Operator
     processed_sinopia = DummyOperator(
         task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"
