@@ -1,17 +1,15 @@
 """New Record in Symphony"""
 import json
-from airflow.providers.http.operators.http import SimpleHttpOperator
+
+from .request import SymphonyRequest
 
 
-def NewMARCtoSymphony(**kwargs) -> SimpleHttpOperator:
+def NewMARCtoSymphony(**kwargs) -> SymphonyRequest:
     """Creates a new record in Symphony and returns the new CatKey"""
-    app_id = kwargs.get("app_id")
-    client_id = kwargs.get("client_id")
-    conn_id = kwargs.get("conn_id")
-    dag = kwargs.get("dag")
     marc_json = kwargs.get("marc_json")
     library_key = kwargs.get("library_key")
-    session_token = kwargs.get("session_token")
+    item_type = kwargs.get("item_type")
+    home_location = kwargs.get("home_location")
 
     payload = {
         "@resource": "/catalog/bib",
@@ -24,22 +22,28 @@ def NewMARCtoSymphony(**kwargs) -> SimpleHttpOperator:
                 "callNumber": "AUTO",
                 "classification": {"@resource": "/policy/classification", "@key": "LC"},
                 "library": {"@resource": "/policy/library", "@key": f"{library_key}"},
+                "itemList": [
+                    {
+                        "@resource": "/catalog/item",
+                        "barcode": "AUTO",
+                        "itemType": {
+                            "@resource": "/policy/itemType",
+                            "@key": f"{item_type}",
+                        },
+                        "homeLocation": {
+                            "@resource": "/policy/location",
+                            "@key": f"{home_location}",
+                        },
+                    }
+                ],
             }
         ],
     }
 
-    return SimpleHttpOperator(
+    return SymphonyRequest(
+        **kwargs,
         task_id="post_new_symphony",
-        http_conn_id=conn_id,
-        endpoint="catalog/bib",
         data=json.dumps(payload),
-        headers={
-            "Content-Type": "application/vnd.sirsidynix.roa.resource.v2+json",
-            "Accept": "application/vnd.sirsidynix.roa.resource.v2+json",
-            "sd-originating-app-id": app_id,
-            "x-sirs-clientID": client_id,
-            "x-sirs-sessionToken": session_token,
-        },
-        response_filter=lambda response: response.json().get("@key"),
-        dag=dag,
+        endpoint="catalog/bib",
+        filter=lambda response: response.json().get("@key"),
     )
