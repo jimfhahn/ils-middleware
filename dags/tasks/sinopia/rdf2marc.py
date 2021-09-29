@@ -7,16 +7,16 @@ from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
 
 
 def Rdf2Marc(**kwargs):
-
+    """Runs rdf2marc on a BF Instance URL"""
     task_instance = kwargs["task_instance"]
     instance_uri = task_instance.xcom_pull(task_ids="sqs-sensor")
 
-    """Runs rdf2marc on a BF Instance URL"""
     instance_path = urlparse(instance_uri).path
     instance_id = path.split(instance_path)[-1]
 
-    rdf2marc_lambda = getenv("RDF2MARC_LAMBDA")
-    s3_bucket = getenv("MARC_S3_BUCKET")
+    sinopia_env = kwargs.get("sinopia_env", "dev")
+    rdf2marc_lambda = f"{getenv('RDF2MARC_LAMBDA')}_{sinopia_env.upper()}"
+    s3_bucket = f"{getenv('MARC_S3_BUCKET')}_{sinopia_env.upper()}"
     s3_record_path = f"airflow/{instance_id}/record"
     marc_path = f"{s3_record_path}.mar"
     marc_text_path = f"{s3_record_path}.txt"

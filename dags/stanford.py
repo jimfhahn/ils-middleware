@@ -15,16 +15,6 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 
 
-def choose_ils(**kwargs) -> str:
-    import random
-
-    ils_choice = random.random()
-    logging.info(f"Random ILS Choice {ils_choice}")
-    if ils_choice <= 0.50:
-        return "symphony_json"
-    return "symphony_json"  # return "folio_map"
-
-
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
@@ -47,11 +37,6 @@ with DAG(
 ) as dag:
     # Monitors SQS for Stanford topic
     listen_sns = SubscribeOperator(topic="stanford")
-
-    # TODO: Remove once stubbed methods are complete
-    urls = [
-        "https://api.stage.sinopia.io/resource/3eb5f480-60d6-4732-8daf-02d8d6f26eb7",
-    ]
 
     run_rdf2marc = PythonOperator(
         task_id="symphony_json",

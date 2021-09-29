@@ -6,38 +6,34 @@ from urllib.parse import urlparse
 
 
 def get_from_s3(**kwargs) -> list:
-    urls = kwargs.get("urls")
+    url = kwargs.get("url")
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
-    downloaded_files = []
 
-    for url in urls:
-        instance_path = urlparse(url).path
-        instance_id = os.path.split(instance_path)[-1]
+    instance_path = urlparse(url).path
+    instance_id = os.path.split(instance_path)[-1]
 
-        temp_file = s3_hook.download_file(
-            key=f"marc/airflow/{instance_id}/record.mar",
-            bucket_name="sinopia-marc-development",
-        )
-        downloaded_files.append({"id": instance_id, "temp_file": temp_file})
+    temp_file = s3_hook.download_file(
+        key=f"marc/airflow/{instance_id}/record.mar",
+        bucket_name="sinopia-marc-development",
+    )
 
-    return downloaded_files
+    return {"id": instance_id, "temp_file": temp_file}
 
 
 def send_to_s3(**kwargs) -> str:
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
 
-    instances = get_temp_instances(kwargs["task_instance"])
+    instance = get_temp_instances(kwargs["task_instance"])
 
-    for instance in instances:
-        marc_reader = read_temp_file(instance)
+    marc_reader = read_temp_file(instance)
 
-        for record in marc_reader:
-            s3_hook.load_string(
-                marc_json_for(record),
-                f"marc/airflow/{instance['id']}/record.json",
-                "sinopia-marc-development",
-                replace=True,
-            )
+    for record in marc_reader:
+        s3_hook.load_string(
+            marc_json_for(record),
+            f"marc/airflow/{instance['id']}/record.json",
+            "sinopia-marc-development",
+            replace=True,
+        )
 
 
 def get_temp_instances(task_instance):
