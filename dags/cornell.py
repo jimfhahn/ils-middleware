@@ -38,7 +38,9 @@ with DAG(
 
     # Maps Documents from URLs in the SNS Message to FOLIO JSON
     map_sinopia_to_inventory_records = PythonOperator(
-        task_id="folio_map", python_callable=map_to_folio, op_kwargs={"urls": []}
+        task_id="folio_map",
+        python_callable=map_to_folio,
+        op_kwargs={"url": "http://example-instance.sinopia.io"},
     )
 
     logging.info(
