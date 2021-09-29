@@ -1,7 +1,7 @@
 """Converts PYMARC JSON to Symphony JSON"""
 
 
-def _get_subfields(subfields: dict) -> dict:
+def _get_subfields(subfields: dict) -> list:
     output = []
     for subfield, value in subfields.items():
         output.append({"code": subfield, "data": value})
