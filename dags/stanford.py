@@ -1,5 +1,3 @@
-import logging
-
 from datetime import datetime, timedelta
 
 from tasks.amazon.s3 import get_from_s3, send_to_s3
@@ -47,7 +45,6 @@ with DAG(
         download_symphony_marc = PythonOperator(
             task_id="download_symphony_marc",
             python_callable=get_from_s3,
-            op_kwargs={"urls": urls},
         )
 
         export_symphony_json = PythonOperator(
@@ -80,7 +77,7 @@ with DAG(
     )
 
     # Updates Sinopia URLS with HRID
-    update_sinopia = UpdateIdentifier(urls=urls)
+    update_sinopia = UpdateIdentifier()
 
 listen_sns >> run_rdf2marc
 run_rdf2marc >> [symphony_task_group, folio_task_group] >> processed_sinopia

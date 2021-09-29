@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from folio import map_to_folio
 from tasks.amazon.sqs import SubscribeOperator
 from tasks.sinopia.sinopia import UpdateIdentifier
+from folio_request import FolioRequest
+from folio_login import FolioLogin
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator

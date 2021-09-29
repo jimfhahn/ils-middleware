@@ -2,15 +2,13 @@ import logging
 import os
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from pymarc import MARCReader
-from urllib.parse import urlparse
 
 
 def get_from_s3(**kwargs) -> list:
-    url = kwargs.get("url")
-    s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
+    task_instance = kwargs["task_instance"]
+    instance_id = task_instance.xcom_pull(task_ids="symphony_json")
 
-    instance_path = urlparse(url).path
-    instance_id = os.path.split(instance_path)[-1]
+    s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
 
     temp_file = s3_hook.download_file(
         key=f"marc/airflow/{instance_id}/record.mar",
