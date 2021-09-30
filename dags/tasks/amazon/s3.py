@@ -4,7 +4,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from pymarc import MARCReader
 
 
-def get_from_s3(**kwargs) -> list:
+def get_from_s3(**kwargs) -> dict:
     task_instance = kwargs["task_instance"]
     instance_id = task_instance.xcom_pull(task_ids="symphony_json")
 
@@ -18,7 +18,7 @@ def get_from_s3(**kwargs) -> list:
     return {"id": instance_id, "temp_file": temp_file}
 
 
-def send_to_s3(**kwargs) -> str:
+def send_to_s3(**kwargs) -> None:
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
 
     instance = get_temp_instances(kwargs["task_instance"])

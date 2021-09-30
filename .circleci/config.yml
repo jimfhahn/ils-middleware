@@ -10,6 +10,9 @@ workflows:
       - linting:
           requires:
             - build
+      - typechecking:
+          requires:
+            - build
       - test:
           requires:
             - build
@@ -36,6 +39,16 @@ jobs:
           name: Lint with Black
           command: |
              poetry run black --diff --check .
+  typechecking:
+    executor: python/default
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: poetry
+      - run:
+          name: Type check with mypy
+          command: |
+             poetry run mypy --ignore-missing-imports .
   test:
       executor: python/default
       steps:
