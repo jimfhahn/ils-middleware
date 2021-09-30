@@ -2,9 +2,10 @@
 import json
 
 from .request import FolioRequest
+from airflow.providers.http.operators.http import SimpleHttpOperator
 
 
-def FolioLogin(**kwargs) -> FolioRequest:
+def FolioLogin(**kwargs) -> SimpleHttpOperator:
     """Logs into FOLIO and returns Okapi token."""
     username = kwargs.get("username")
     password = kwargs.get("password")

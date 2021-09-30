@@ -2,9 +2,10 @@
 import json
 
 from .request import SymphonyRequest
+from airflow.providers.http.operators.http import SimpleHttpOperator
 
 
-def NewMARCtoSymphony(**kwargs) -> SymphonyRequest:
+def NewMARCtoSymphony(**kwargs) -> SimpleHttpOperator:
     """Creates a new record in Symphony and returns the new CatKey"""
     marc_json = kwargs.get("marc_json")
     library_key = kwargs.get("library_key")

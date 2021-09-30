@@ -2,9 +2,10 @@
 import json
 
 from .request import SymphonyRequest
+from airflow.providers.http.operators.http import SimpleHttpOperator
 
 
-def SymphonyLogin(**kwargs) -> SymphonyRequest:
+def SymphonyLogin(**kwargs) -> SimpleHttpOperator:
     login = kwargs.get("login")
     password = kwargs.get("password")
 
