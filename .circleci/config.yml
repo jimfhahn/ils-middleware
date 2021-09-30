@@ -64,7 +64,7 @@ jobs:
         - run:
             name: Run tests
             command: |
-              poetry run pytest
+              PYTHONPATH=./dags poetry run pytest
         - run:
             name: Report test coverage results to CodeClimate
             command: |
