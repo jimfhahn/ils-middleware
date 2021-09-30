@@ -2,6 +2,7 @@ import glob
 import pytest
 from os import path
 from airflow import models
+from airflow.utils.dag_cycle_tester import test_cycle as cycle_test
 
 
 DAG_PATHS = glob.glob(path.join(path.dirname(__file__), "..", "..", "dags", "[!_]*.py"))
@@ -14,6 +15,10 @@ def test_dag_integrity(dag_path):
 
     dag_objects = [var for var in vars(module).values() if isinstance(var, models.DAG)]
     assert dag_objects
+
+    # For every DAG object, test for cycles
+    for dag in dag_objects:
+        cycle_test(dag)
 
 
 def _import_file(module_name, module_path):
