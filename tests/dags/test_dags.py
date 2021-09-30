@@ -4,7 +4,7 @@ from os import path
 from airflow import models
 
 
-DAG_PATHS = glob.glob(path.join(path.dirname(__file__), "..", "..", "dags", "*.py"))
+DAG_PATHS = glob.glob(path.join(path.dirname(__file__), "..", "..", "dags", "[!_]*.py"))
 
 
 @pytest.mark.parametrize("dag_path", DAG_PATHS)

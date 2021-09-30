@@ -22,7 +22,7 @@ default_args = {
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
     "provider": None,
-    'provide_context': True,
+    "provide_context": True,
 }
 
 with DAG(
