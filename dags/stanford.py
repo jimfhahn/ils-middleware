@@ -22,6 +22,7 @@ default_args = {
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
     "provider": None,
+    'provide_context': True,
 }
 
 with DAG(
@@ -77,7 +78,10 @@ with DAG(
     )
 
     # Updates Sinopia URLS with HRID
-    update_sinopia = UpdateIdentifier()
+    update_sinopia = PythonOperator(
+        task_id="sinopia-id-update",
+        python_callable=UpdateIdentifier,
+    )
 
 listen_sns >> run_rdf2marc
 run_rdf2marc >> [symphony_task_group, folio_task_group] >> processed_sinopia
