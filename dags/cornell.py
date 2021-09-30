@@ -48,11 +48,11 @@ with DAG(
     )
     connect_okapi_cmd = """exit 0"""
 
-    # send_to_folio = FolioRequest(
-    #     tenant="cornell",
-    #     token=FolioLogin(tenant="cornell", username="", password=""),
-    #     endpoint="",
-    # )
+    send_to_folio = FolioRequest(
+        tenant="cornell",
+        token=FolioLogin(tenant="cornell", username="", password=""),
+        endpoint="",
+    )
 
     # Updates Sinopia URLS with HRID
     update_sinopia = PythonOperator(
