@@ -8,7 +8,7 @@ from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
 from airflow.models.taskinstance import TaskInstance
 from airflow.operators.dummy import DummyOperator
 
-from dags.tasks.sinopia.rdf2marc import Rdf2Marc
+from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 
 mock_200_response = {
     "StatusCode": 200,

@@ -5,10 +5,10 @@ from airflow.operators.python import PythonOperator
 
 def UpdateIdentifier(**kwargs) -> PythonOperator:
     """Add Identifier to Sinopia."""
-    task_instance = kwargs["task_instance"]
-    instance = task_instance.xcom_pull(
-        task_ids="process_symphony.download_symphony_marc"
-    )
+    # task_instance = kwargs.get("task_instance")
+    # instance = task_instance.xcom_pull(
+    #     task_ids="process_symphony.download_symphony_marc"
+    # )
 
     return sinopia_update(instance["id"])
 

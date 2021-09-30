@@ -2,11 +2,11 @@
 import logging
 from datetime import datetime, timedelta
 
-from tasks.folio.map import map_to_folio
-from tasks.folio.request import FolioRequest
-from tasks.folio.login import FolioLogin
-from tasks.amazon.sqs import SubscribeOperator
-from tasks.sinopia.sinopia import UpdateIdentifier
+from ils_middleware.tasks.folio.map import map_to_folio
+from ils_middleware.tasks.amazon.sqs import SubscribeOperator
+from ils_middleware.tasks.sinopia.sinopia import UpdateIdentifier
+from ils_middleware.tasks.folio.request import FolioRequest
+from ils_middleware.tasks.folio.login import FolioLogin
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -48,9 +48,12 @@ with DAG(
     )
     connect_okapi_cmd = """exit 0"""
 
+    folio_login = FolioLogin(tenant="cornell", username="", password="")
+
     send_to_folio = FolioRequest(
+        task_id="cornell_send_to_folio",
         tenant="cornell",
-        token=FolioLogin(tenant="cornell", username="", password=""),
+        session_token="{{ task_instance.xcom_pull(key='return_value', task_ids=['folio_login'])[0]}}",
         endpoint="",
     )
 

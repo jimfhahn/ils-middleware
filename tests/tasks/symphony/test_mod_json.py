@@ -1,7 +1,7 @@
 """Tests functions for modifying JSON to Symphony JSON."""
 import pytest
 
-from dags.tasks.symphony.mod_json import to_symphony_json
+from ils_middleware.tasks.symphony.mod_json import to_symphony_json
 
 
 @pytest.fixture

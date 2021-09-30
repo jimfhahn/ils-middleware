@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 
-from tasks.amazon.s3 import get_from_s3, send_to_s3
-from tasks.amazon.sqs import SubscribeOperator
-from tasks.sinopia.sinopia import UpdateIdentifier
-from tasks.sinopia.rdf2marc import Rdf2Marc
+from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
+from ils_middleware.tasks.amazon.sqs import SubscribeOperator
+from ils_middleware.tasks.sinopia.sinopia import UpdateIdentifier
+from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 
 
 from airflow import DAG

@@ -3,7 +3,7 @@
 import pytest
 from datetime import datetime
 from airflow import DAG
-from dags.tasks.folio.login import FolioLogin
+from ils_middleware.tasks.folio.login import FolioLogin
 
 
 @pytest.fixture
