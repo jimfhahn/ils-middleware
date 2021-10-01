@@ -61,11 +61,13 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
     AIRFLOW_VAR_SQS_DEV: 'https://sqs.us-west-2.amazonaws.com/418214828013/stanford-ils'
-    DEPLOYMENT_ENV: ${DEPLOYMENT_ENV:-dev}
-    HONEYBADGER_API_KEY: ${HONEYBADGER_API_KEY:-}
-    LOGLEVEL: ${LOGLEVEL:-DEBUG}
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
-    LOGLEVEL: ${LOGLEVEL:-DEBUG}
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-pymarc}
+    MARC_S3_BUCKET: 'sinopia-marc-development'
+    RDF2MARC_LAMBDA: 'sinopia-rdf2marc-development'
+    VAULT__ROOT_TOKEN: 'vault-plaintext-root-token'
+    VAULT__URL: 'http://vault:8200'
+    AIRFLOW__SECRETS__BACKEND: "airflow.contrib.secrets.hashicorp_vault.VaultBackend"
+    AIRFLOW__SECRETS__BACKEND_KWARGS: '{"url":"http://vault:8200","token": "vault-plaintext-root-token","connections_path": "connections","variables_path": "variables","kv_engine_version":1}'
   volumes:
     - ./ils_middleware:/opt/airflow/ils_middleware
     - ./logs:/opt/airflow/logs
@@ -102,6 +104,16 @@ services:
       timeout: 30s
       retries: 50
     restart: always
+
+  vault:
+    image: vault:latest
+    ports:
+      - 8200:8200
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: 'vault-plaintext-root-token'
+      VAULT_DEV_LISTEN_ADDRESS: '0.0.0.0:8200'
 
   airflow-webserver:
     <<: *airflow-common
@@ -146,7 +158,6 @@ services:
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-
 
   flower:
     <<: *airflow-common
