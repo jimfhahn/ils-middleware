@@ -41,6 +41,10 @@ We are using [poetry][POET] to better manage dependency updates. To install
 
 The [pytest][PYTEST] framework is used to run the tests.  Tests can be invoked manually by calling `poetry run pytest` (which will save an xml formatted [coverage report][PYTESTCOV], as well as printing the coverage report to the terminal).
 
+## Typechecking
+
+The [mypy][MYPY] static type checker is used to find type errors (parameter passing, assignment, return, etc of incompatible value types).  CI runs `poetry run mypy --ignore-missing-imports .` (as not all imports have type info available).
+
 ## Linting
 
 The [flake8][FLK8] Python code linter can be manually run by invoking `poetry run flake8` from
@@ -62,3 +66,4 @@ For information about integrations, including Git hooks and plugins for popular 
 [POET]: https://python-poetry.org/
 [PYTEST]: https://docs.pytest.org/
 [PYTESTCOV]: https://github.com/pytest-dev/pytest-cov
+[MYPY]: https://mypy.readthedocs.io/en/stable/
