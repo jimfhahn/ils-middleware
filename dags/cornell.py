@@ -2,11 +2,11 @@
 import logging
 from datetime import datetime, timedelta
 
-from folio import map_to_folio
+from tasks.folio.map import map_to_folio
+from tasks.folio.request import FolioRequest
+from tasks.folio.login import FolioLogin
 from tasks.amazon.sqs import SubscribeOperator
 from tasks.sinopia.sinopia import UpdateIdentifier
-from folio_request import FolioRequest
-from folio_login import FolioLogin
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -55,6 +55,9 @@ with DAG(
     )
 
     # Updates Sinopia URLS with HRID
-    update_sinopia = UpdateIdentifier(urls=[], identifier="borked:1")
+    update_sinopia = PythonOperator(
+        task_id="sinopia-id-update",
+        python_callable=UpdateIdentifier,
+    )
 
-listen_sns >> map_sinopia_to_inventory_records >> send_to_folio >> update_sinopia
+listen_sns >> map_sinopia_to_inventory_records >> update_sinopia

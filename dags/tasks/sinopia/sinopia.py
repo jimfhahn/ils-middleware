@@ -10,18 +10,9 @@ def UpdateIdentifier(**kwargs) -> PythonOperator:
         task_ids="process_symphony.download_symphony_marc"
     )
 
-    return PythonOperator(
-        task_id="sinopia-id-update",
-        python_callable=sinopia_update,
-        op_kwargs={"identifer": instance["id"]},
-    )
+    return sinopia_update(instance["id"])
 
 
-def sinopia_update(**kwargs):
+def sinopia_update(instance_id):
     """Stub for updating Sinopia RDF resource with identifier."""
-    urls = kwargs.get("urls")
-    identifier = kwargs.get("identifier")
-    logging.info(f"Starts updating Sinopia {len(urls)} resources")
-    for url in urls:
-        logging.info(f"Would PUT to Sinopia API {identifier} for {url}")
-    logging.info(f"Ends updating Sinopia {identifier}")
+    logging.info(f"Ends updating Sinopia {instance_id}")

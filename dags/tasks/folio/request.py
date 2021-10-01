@@ -11,6 +11,7 @@ def FolioRequest(**kwargs) -> SimpleHttpOperator:
     method = kwargs.get("method")
     endpoint = kwargs.get("endpoint")
     data = kwargs.get("data")
+    task_id = kwargs.get("task_id", "folio_request")
 
     headers = {
         "Content-Type": "application/json",
@@ -22,7 +23,7 @@ def FolioRequest(**kwargs) -> SimpleHttpOperator:
         headers["x-okapi-token"] = token
 
     return SimpleHttpOperator(
-        task_id="folio_request",
+        task_id=task_id,
         http_conn_id=conn_id,
         method=method,
         headers=headers,

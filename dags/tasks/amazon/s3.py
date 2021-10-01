@@ -7,7 +7,6 @@ from pymarc import MARCReader
 def get_from_s3(**kwargs) -> dict:
     task_instance = kwargs["task_instance"]
     instance_id = task_instance.xcom_pull(task_ids="symphony_json")
-
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
 
     temp_file = s3_hook.download_file(
@@ -20,38 +19,28 @@ def get_from_s3(**kwargs) -> dict:
 
 def send_to_s3(**kwargs) -> None:
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
-
     instance = get_temp_instances(kwargs["task_instance"])
+    marc_record = marc_record_from_temp_file(instance)
 
-    marc_reader = read_temp_file(instance)
-
-    for record in marc_reader:
-        s3_hook.load_string(
-            marc_json_for(record),
-            f"marc/airflow/{instance['id']}/record.json",
-            "sinopia-marc-development",
-            replace=True,
-        )
+    s3_hook.load_string(
+        marc_record.as_json(),
+        f"marc/airflow/{instance['id']}/record.json",
+        "sinopia-marc-development",
+        replace=True,
+    )
 
 
 def get_temp_instances(task_instance):
+    """Returns the temp file location from the prior task"""
     return task_instance.xcom_pull(task_ids="process_symphony.download_symphony_marc")
 
 
-def read_temp_file(instance):
+def marc_record_from_temp_file(instance):
     instance_id = instance["id"]
     temp_file = instance["temp_file"]
     if os.path.exists(temp_file) and os.path.getsize(temp_file) > 0:
-        return marc_reader_for(temp_file)
+        with open(temp_file, "rb") as marc:
+            return next(MARCReader(marc))
     else:
         logging.error(f"MARC data for {instance_id} missing or empty.")
         raise Exception()
-
-
-def marc_reader_for(temp_file):
-    with open(temp_file, "rb") as marc:
-        return MARCReader(marc)
-
-
-def marc_json_for(marc_record):
-    return marc_record.as_json()
