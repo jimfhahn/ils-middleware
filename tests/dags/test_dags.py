@@ -8,8 +8,17 @@ from airflow.utils.dag_cycle_tester import test_cycle as cycle_test
 DAG_PATHS = glob.glob(path.join(path.dirname(__file__), "..", "..", "dags", "[!_]*.py"))
 
 
+@pytest.fixture
+def mock_variable(monkeypatch):
+    def mock_get(key, default=None):
+        if key == "SQS_DEV":
+            return "http://aws.com/12345/"
+
+    monkeypatch.setattr(models.Variable, "get", mock_get)
+
+
 @pytest.mark.parametrize("dag_path", DAG_PATHS)
-def test_dag_integrity(dag_path):
+def test_dag_integrity(dag_path, mock_variable):
     dag_name = path.basename(dag_path)
     module = _import_file(dag_name, dag_path)
 

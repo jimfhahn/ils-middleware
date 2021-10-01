@@ -9,7 +9,7 @@ from tasks.sinopia.rdf2marc import Rdf2Marc
 from airflow import DAG
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.bash import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
 
