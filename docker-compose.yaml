@@ -63,7 +63,6 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-pymarc}
     MARC_S3_BUCKET: 'sinopia-marc-development'
     RDF2MARC_LAMBDA: 'sinopia-rdf2marc-development'
-    # PYTHONPATH: '$PYTHONPATH:/ils_middleware'
   volumes:
     - ./ils_middleware/dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs

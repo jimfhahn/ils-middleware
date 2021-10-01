@@ -9,7 +9,7 @@ from airflow.models.taskinstance import TaskInstance
 from airflow.operators.dummy import DummyOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
-from dags.tasks.amazon.s3 import get_from_s3, send_to_s3
+from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 
 
 def test_task():
