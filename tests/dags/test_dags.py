@@ -5,7 +5,6 @@ from airflow import models
 from airflow.utils.dag_cycle_tester import test_cycle as cycle_test
 
 
-# DAG_PATHS = glob.glob(path.join(path.dirname(__file__), "..", "..", "dags", "[!_]*.py"))
 DAG_PATHS = [
     p
     for p in (pathlib.Path(__file__).parents[2] / "ils_middleware/dags").glob(
