@@ -1,7 +1,7 @@
 """New Record in Symphony"""
 import json
 
-from .request import SymphonyRequest
+from ils_middleware.tasks.symphony.request import SymphonyRequest
 from airflow.providers.http.operators.http import SimpleHttpOperator
 
 

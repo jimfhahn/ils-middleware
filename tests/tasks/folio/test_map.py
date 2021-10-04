@@ -1,6 +1,6 @@
 """Test FOLIO Mapping from Sinopia."""
 
-from dags.tasks.folio.map import map_to_folio
+from ils_middleware.tasks.folio.map import map_to_folio
 
 
 def test_folio():

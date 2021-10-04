@@ -7,7 +7,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.models import Variable
 
-from dags.tasks.amazon.sqs import SubscribeOperator
+from ils_middleware.tasks.amazon.sqs import SubscribeOperator
 
 
 @pytest.fixture

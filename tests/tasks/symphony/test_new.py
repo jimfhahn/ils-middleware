@@ -4,7 +4,7 @@ from datetime import datetime
 import pytest
 
 from airflow import DAG
-from dags.tasks.symphony.new import NewMARCtoSymphony
+from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
 
 
 @pytest.fixture

@@ -64,7 +64,7 @@ x-airflow-common:
     MARC_S3_BUCKET: 'sinopia-marc-development'
     RDF2MARC_LAMBDA: 'sinopia-rdf2marc-development'
   volumes:
-    - ./dags:/opt/airflow/dags
+    - ./ils_middleware/dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"

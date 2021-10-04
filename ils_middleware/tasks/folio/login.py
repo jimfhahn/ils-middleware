@@ -1,7 +1,7 @@
 """FOLIO Operators and Functions for Institutional DAGs."""
 import json
 
-from .request import FolioRequest
+from ils_middleware.tasks.folio.request import FolioRequest
 from airflow.providers.http.operators.http import SimpleHttpOperator
 
 

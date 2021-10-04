@@ -6,7 +6,7 @@ from datetime import datetime
 
 from airflow import DAG
 
-from dags.tasks.symphony.login import SymphonyLogin
+from ils_middleware.tasks.symphony.login import SymphonyLogin
 
 
 @pytest.fixture
