@@ -53,7 +53,7 @@ with DAG(
     send_to_folio = FolioRequest(
         task_id="cornell_send_to_folio",
         tenant="cornell",
-        session_token="{{ task_instance.xcom_pull(key='return_value', task_ids=['folio_login'])[0]}}",
+        token="{{ task_instance.xcom_pull(key='return_value', task_ids=['folio_login'])[0]}}",
         endpoint="",
     )
 
