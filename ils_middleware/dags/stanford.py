@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator
 from ils_middleware.tasks.sinopia.sinopia import UpdateIdentifier
+from ils_middleware.tasks.sinopia.email import email_for_success
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 
 
@@ -11,7 +12,6 @@ from airflow.utils.task_group import TaskGroup
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
-
 
 default_args = {
     "owner": "airflow",
@@ -35,6 +35,10 @@ with DAG(
     catchup=False,
 ) as dag:
     # Monitors SQS for Stanford topic
+    # By default, SubscribeOperator will make the message available via XCom: "Get messages from an SQS queue and then
+    # deletes the message from the SQS queue. If deletion of messages fails an AirflowException is thrown otherwise, the
+    # message is pushed through XCom with the key 'messages'."
+    # https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/_api/airflow/providers/amazon/aws/sensors/sqs/index.html
     listen_sns = SubscribeOperator(topic="stanford")
 
     run_rdf2marc = PythonOperator(
@@ -83,6 +87,13 @@ with DAG(
         python_callable=UpdateIdentifier,
     )
 
+    notify_sinopia_updated = PythonOperator(
+        task_id="sinopia_update_success_notification",
+        dag=dag,
+        trigger_rule="none_failed",
+        python_callable=email_for_success,
+    )
+
 listen_sns >> run_rdf2marc
 run_rdf2marc >> [symphony_task_group, folio_task_group] >> processed_sinopia
-processed_sinopia >> update_sinopia
+processed_sinopia >> update_sinopia >> notify_sinopia_updated
