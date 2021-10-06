@@ -7,7 +7,10 @@ library services platform (LSP). Currently there are Directed Acyclic Graphs (DA
 for Stanford and Cornell Sinopia-to-ILS/LSP workflows.
 
 ## Running Locally with Docker
-Based on the documentation, [Running Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html):
+Based on the documentation, [Running Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html). 
+
+> **NOTE** Make sure there is enough RAM available locally for the 
+> docker daemon, we recomend at least 5GB. 
 
 1. Clone repository `git clone https://github.com/LD4P/ils-middleware`
 1. If it's commented out, uncomment the line `- ./dags:/opt/airflow/dags` in docker-compose.yaml (under `volumes`, under `x-airflow-common`).
@@ -40,6 +43,10 @@ We are using [poetry][POET] to better manage dependency updates. To install
 ## Automated Tests
 
 The [pytest][PYTEST] framework is used to run the tests.  Tests can be invoked manually by calling `poetry run pytest` (which will save an xml formatted [coverage report][PYTESTCOV], as well as printing the coverage report to the terminal).
+
+## Building Python Package
+If you plan on building a local Docker image, be sure to build the Python 
+installation wheel first by running `poetry build`.
 
 ## Typechecking
 
