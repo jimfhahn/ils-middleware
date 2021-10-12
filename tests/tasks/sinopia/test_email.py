@@ -18,7 +18,13 @@ mock_messages_list = [
         "ReceiptHandle": "real+long+string",
         "MD5OfBody": "8bf1ff18a27bba7cc54fc68dc3ca9d5a",
         "Body": '{"resource":{"uri":"http://exmpl/resource/foo"},"user":{"email":"abc@yale.edu"},"group":"stanford","target":"ils"}',  # noqa: E501 line too long
-    }
+    },
+    {
+        "MessageId": "5678ab4f-52ab-4b54-a6cd-765b9876f08a",
+        "ReceiptHandle": "real+long+string2",
+        "MD5OfBody": "388e4db0aacfbcbe93e6072dd7cda916",
+        "Body": '{"resource":{"uri":"http://exmpl/resource/bar"},"user":{"email":"abc@yale.edu"},"group":"yale","target":"ils"}',  # noqa: E501 line too long
+    },
 ]
 
 
@@ -49,7 +55,7 @@ def test_email_for_success(mock_task_instance, mocker: MockerFixture) -> None:
     email_for_success(task_instance=task_instance)
 
     patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_dev")
-    mock_ses_hook_obj.send_email.assert_called_once_with(
+    mock_ses_hook_obj.send_email.assert_any_call(
         **{
             "mail_from": "sinopia-devs@lists.stanford.edu",
             "to": "abc@yale.edu",
@@ -57,3 +63,12 @@ def test_email_for_success(mock_task_instance, mocker: MockerFixture) -> None:
             "html_content": "You have successfully published http://exmpl/resource/foo from Sinopia to stanford ils",
         }
     )
+    mock_ses_hook_obj.send_email.assert_any_call(
+        **{
+            "mail_from": "sinopia-devs@lists.stanford.edu",
+            "to": "abc@yale.edu",
+            "subject": "successfully published http://exmpl/resource/bar",
+            "html_content": "You have successfully published http://exmpl/resource/bar from Sinopia to yale ils",
+        }
+    )
+    assert mock_ses_hook_obj.send_email.call_count == 2

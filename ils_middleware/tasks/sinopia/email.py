@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 def email_for_success(**kwargs) -> None:
     task_instance = kwargs["task_instance"]
     sinopia_env = kwargs.get("sinopia_env", "dev")
+    ses_hook = SESHook(aws_conn_id=f"aws_ses_{sinopia_env}")
     for email_attributes in _email_info_list(task_instance):
-        SESHook(aws_conn_id=f"aws_ses_{sinopia_env}").send_email(**email_attributes)
+        ses_hook.send_email(**email_attributes)
 
 
 def _email_info_list(task_instance) -> list:
