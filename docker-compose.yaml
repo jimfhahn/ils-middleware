@@ -64,6 +64,7 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     MARC_S3_BUCKET: 'sinopia-marc-development'
     RDF2MARC_LAMBDA: 'sinopia-rdf2marc-development'
+    LOGLEVEL: ${LOGLEVEL:-DEBUG}
   volumes:
     - ./ils_middleware:/opt/airflow/ils_middleware
     - ./logs:/opt/airflow/logs
