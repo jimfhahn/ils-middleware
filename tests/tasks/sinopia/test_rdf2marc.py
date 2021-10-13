@@ -41,9 +41,10 @@ def mock_lambda(monkeypatch):
 
 def test_Rdf2Marc(mock_task_instance, mock_lambda):
     payload = {"instance_uri": "http://example.com/rdf/0000-1111-2222-3333"}
-    execution_date = datetime(2021, 9, 21)
-    task_instance = TaskInstance(test_task(), execution_date)
 
     assert (
-        Rdf2Marc(task_instance=task_instance, payload=payload) == "0000-1111-2222-3333"
+        Rdf2Marc(
+            instance_uri="http://example.com/rdf/0000-1111-2222-3333", payload=payload
+        )
+        == "0000-1111-2222-3333"
     )
