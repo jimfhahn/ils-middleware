@@ -1,6 +1,11 @@
 """Custom Operator using AWS SQSSensor."""
+import logging
+import json
+
 from airflow.models import Variable
 from airflow.providers.amazon.aws.sensors.sqs import SQSSensor
+
+logger = logging.getLogger(__name__)
 
 
 # Should return aws_sqs_sensor operator
@@ -16,4 +21,17 @@ def SubscribeOperator(**kwargs) -> SQSSensor:
         sqs_queue=f"{aws_sqs_url}{queue_name}",
         task_id="sqs-sensor",
         dag=kwargs.get("dag"),
+        max_messages=1,
     )
+
+
+def parse_messages(**kwargs) -> str:
+    """Parses SQS Message Body into constituent part."""
+    task_instance = kwargs["task_instance"]
+    raw_sqs_message = task_instance.xcom_pull(key="messages", task_ids=["sqs-sensor"])[
+        0
+    ]
+    message_body = json.loads(raw_sqs_message[0].get("Body"))
+    task_instance.xcom_push(key="email", value=message_body["user"]["email"])
+    task_instance.xcom_push(key="resource_uri", value=message_body["resource"]["uri"])
+    return "completed_parse"

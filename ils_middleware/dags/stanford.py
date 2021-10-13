@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
-from ils_middleware.tasks.amazon.sqs import SubscribeOperator
+from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.sinopia import UpdateIdentifier
 from ils_middleware.tasks.sinopia.email import email_for_success
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
@@ -41,9 +41,17 @@ with DAG(
     # https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/_api/airflow/providers/amazon/aws/sensors/sqs/index.html
     listen_sns = SubscribeOperator(topic="stanford")
 
+    process_message = PythonOperator(
+        task_id="sqs-message-parse",
+        python_callable=parse_messages,
+    )
+
     run_rdf2marc = PythonOperator(
         task_id="symphony_json",
         python_callable=Rdf2Marc,
+        op_kwargs={
+            "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}"
+        },
     )
 
     with TaskGroup(group_id="process_symphony") as symphony_task_group:
@@ -94,6 +102,6 @@ with DAG(
         python_callable=email_for_success,
     )
 
-listen_sns >> run_rdf2marc
+listen_sns >> process_message >> run_rdf2marc
 run_rdf2marc >> [symphony_task_group, folio_task_group] >> processed_sinopia
 processed_sinopia >> update_sinopia >> notify_sinopia_updated
