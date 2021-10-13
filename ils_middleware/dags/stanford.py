@@ -46,22 +46,22 @@ with DAG(
         python_callable=parse_messages,
     )
 
-    run_rdf2marc = PythonOperator(
-        task_id="symphony_json",
-        python_callable=Rdf2Marc,
-        op_kwargs={
-            "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}"
-        },
-    )
-
     with TaskGroup(group_id="process_symphony") as symphony_task_group:
-        download_symphony_marc = PythonOperator(
-            task_id="download_symphony_marc",
+        run_rdf2marc = PythonOperator(
+            task_id="rdf2marc",
+            python_callable=Rdf2Marc,
+            op_kwargs={
+                "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}"
+            },
+        )
+
+        download_marc = PythonOperator(
+            task_id="download_marc",
             python_callable=get_from_s3,
         )
 
-        export_symphony_json = PythonOperator(
-            task_id="symphony_json_to_s3",
+        export_marc_json = PythonOperator(
+            task_id="marc_json_to_s3",
             python_callable=send_to_s3,
         )
 
@@ -73,7 +73,7 @@ with DAG(
             task_id="symphony_send", bash_command=connect_symphony_cmd
         )
 
-        download_symphony_marc >> export_symphony_json >> send_to_symphony
+        run_rdf2marc >> download_marc >> export_marc_json >> send_to_symphony
 
     with TaskGroup(group_id="process_folio") as folio_task_group:
         download_folio_marc = DummyOperator(task_id="download_folio_marc", dag=dag)
@@ -102,6 +102,11 @@ with DAG(
         python_callable=email_for_success,
     )
 
-listen_sns >> process_message >> run_rdf2marc
-run_rdf2marc >> [symphony_task_group, folio_task_group] >> processed_sinopia
+
+(
+    listen_sns
+    >> process_message
+    >> [symphony_task_group, folio_task_group]
+    >> processed_sinopia
+)
 processed_sinopia >> update_sinopia >> notify_sinopia_updated
