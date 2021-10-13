@@ -8,7 +8,6 @@ from botocore.stub import Stubber
 
 from airflow.models import Variable
 
-
 from ils_middleware.tasks.sinopia.login import sinopia_login
 
 
