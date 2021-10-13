@@ -8,8 +8,7 @@ from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
 
 def Rdf2Marc(**kwargs):
     """Runs rdf2marc on a BF Instance URL"""
-    task_instance = kwargs["task_instance"]
-    instance_uri = task_instance.xcom_pull(task_ids="sqs-sensor")
+    instance_uri = kwargs.get("instance_uri")
 
     instance_path = urlparse(instance_uri).path
     instance_id = path.split(instance_path)[-1]

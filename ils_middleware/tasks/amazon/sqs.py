@@ -1,6 +1,13 @@
 """Custom Operator using AWS SQSSensor."""
+import logging
+import json
+
+import requests  # type: ignore
+
 from airflow.models import Variable
 from airflow.providers.amazon.aws.sensors.sqs import SQSSensor
+
+logger = logging.getLogger(__name__)
 
 
 # Should return aws_sqs_sensor operator
@@ -16,4 +23,27 @@ def SubscribeOperator(**kwargs) -> SQSSensor:
         sqs_queue=f"{aws_sqs_url}{queue_name}",
         task_id="sqs-sensor",
         dag=kwargs.get("dag"),
+        max_messages=1,
     )
+
+
+def get_group(resource_uri: str) -> str:
+    """Retrieves the Resource's Group."""
+    result = requests.get(resource_uri)
+    if result.status_code < 400:
+        return result.json().get("group")
+    return f"{resource_uri} returned error {result.status_code}"
+
+
+def parse_messages(**kwargs) -> str:
+    """Parses SQS Message Body into constituent part."""
+    task_instance = kwargs["task_instance"]
+    raw_sqs_message = task_instance.xcom_pull(key="messages", task_ids=["sqs-sensor"])[
+        0
+    ]
+    message_body = json.loads(raw_sqs_message[0].get("Body"))
+    resource_uri = message_body["resource"]["uri"]
+    task_instance.xcom_push(key="email", value=message_body["user"]["email"])
+    task_instance.xcom_push(key="resource_uri", value=resource_uri)
+    task_instance.xcom_push(key="group", value=get_group(resource_uri))
+    return "completed_parse"
