@@ -18,7 +18,7 @@ def get_from_s3(**kwargs) -> dict:
     return {"id": instance_id, "temp_file": temp_file}
 
 
-def send_to_s3(**kwargs) -> dict:
+def send_to_s3(**kwargs) -> str:
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     instance = get_temp_instances(kwargs["task_instance"])
     marc_record = marc_record_from_temp_file(instance)
@@ -30,7 +30,7 @@ def send_to_s3(**kwargs) -> dict:
         replace=True,
     )
 
-    return {"marc_json": json.dumps(marc_record.as_json())}
+    return json.dumps(marc_record.as_json())
 
 
 def get_temp_instances(task_instance):
