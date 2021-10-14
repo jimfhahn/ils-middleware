@@ -11,7 +11,7 @@ def sinopia_login(**kwargs):
     sinopia_password = Variable.get("sinopia_password")
     cognito_app_client_id = Variable.get(f"{sinopia_env}_cognito_client_id")
 
-    client = kwargs.get('client', boto3.client("cognito-idp", region))
+    client = kwargs.get("client", boto3.client("cognito-idp", region))
 
     login_response = client.initiate_auth(
         AuthFlow="USER_PASSWORD_AUTH",

@@ -10,6 +10,7 @@ from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.sinopia import UpdateIdentifier
 from ils_middleware.tasks.sinopia.email import email_for_success
+from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 from ils_middleware.tasks.symphony.login import SymphonyLogin
 from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
@@ -143,11 +144,25 @@ with DAG(
         task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"
     )
 
-    # Updates Sinopia URLS with ILS Identifier
-    update_sinopia = PythonOperator(
-        task_id="sinopia-id-update",
-        python_callable=UpdateIdentifier,
-    )
+    with TaskGroup(group_id="update_sinopia") as sinopia_update_group:
+
+        # Sinopia Login
+        login_sinopia = PythonOperator(
+            task_id="sinopia-login",
+            python_callable=sinopia_login,
+            op_kwargs={
+                "region": "us-west-1",
+                "sinopia_env": "dev",
+            },
+        )
+
+        # Updates Sinopia URLS with HRID
+        update_sinopia = PythonOperator(
+            task_id="sinopia-id-update",
+            python_callable=UpdateIdentifier,
+        )
+
+        login_sinopia >> update_sinopia
 
     notify_sinopia_updated = PythonOperator(
         task_id="sinopia_update_success_notification",
@@ -163,4 +178,4 @@ with DAG(
     >> [symphony_task_group, folio_task_group]
     >> processed_sinopia
 )
-processed_sinopia >> update_sinopia >> notify_sinopia_updated
+processed_sinopia >> sinopia_update_group >> notify_sinopia_updated
