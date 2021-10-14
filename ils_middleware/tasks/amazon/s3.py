@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -17,7 +18,7 @@ def get_from_s3(**kwargs) -> dict:
     return {"id": instance_id, "temp_file": temp_file}
 
 
-def send_to_s3(**kwargs) -> None:
+def send_to_s3(**kwargs) -> dict:
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     instance = get_temp_instances(kwargs["task_instance"])
     marc_record = marc_record_from_temp_file(instance)
@@ -29,10 +30,12 @@ def send_to_s3(**kwargs) -> None:
         replace=True,
     )
 
+    return {"marc_json": json.dumps(marc_record.as_json())}
+
 
 def get_temp_instances(task_instance):
     """Returns the temp file location from the prior task"""
-    return task_instance.xcom_pull(task_ids="process_symphony.download_symphony_marc")
+    return task_instance.xcom_pull(task_ids="process_symphony.download_marc")
 
 
 def marc_record_from_temp_file(instance):
