@@ -72,7 +72,7 @@ with DAG(
             task_id="convert_to_symphony_json",
             python_callable=to_symphony_json,
             op_kwargs={
-                "marc_json": "{{ task_instance.xcom_pull(task_ids='marc_json_to_s3', key='marc_json') }}"
+                "marc_json": "{{ task_instance.xcom_pull(task_ids='marc_json_to_s3', key='return_value') }}"
             },
         )
 
