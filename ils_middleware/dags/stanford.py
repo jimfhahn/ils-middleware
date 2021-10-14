@@ -1,17 +1,20 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Variable
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.utils.task_group import TaskGroup
+
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.sinopia import UpdateIdentifier
 from ils_middleware.tasks.sinopia.email import email_for_success
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
+from ils_middleware.tasks.symphony.login import SymphonyLogin
+from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
+from ils_middleware.tasks.symphony.mod_json import to_symphony_json
 
-
-from airflow import DAG
-from airflow.utils.task_group import TaskGroup
-from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
-from airflow.operators.python import PythonOperator
 
 default_args = {
     "owner": "airflow",
@@ -65,15 +68,48 @@ with DAG(
             python_callable=send_to_s3,
         )
 
-        connect_symphony_cmd = """echo send POST to Symphony Web Services, returns CATKEY
-        exit 0"""
-
-        #  Send to Symphony Web API
-        send_to_symphony = BashOperator(
-            task_id="symphony_send", bash_command=connect_symphony_cmd
+        convert_to_symphony_json = PythonOperator(
+            task_id="convert_to_symphony_json",
+            python_callable=to_symphony_json,
         )
 
-        run_rdf2marc >> download_marc >> export_marc_json >> send_to_symphony
+        # Symphony Dev Server Settings
+        library_key = "GREEN"
+        home_location = "STACKS"
+        symphony_app_id = "SINOPIA_DEV"
+        symphony_client_id = "SymWSStaffClient"
+        symphony_conn_id = "symphony_dev"
+        symphony_item_type = (
+            "STKS-MONO"  # This could be mapped from the Instance RDF template
+        )
+
+        # Log in and retrieve token
+        symphony_login = SymphonyLogin(
+            app_id=symphony_app_id,
+            client_id=symphony_client_id,
+            conn_id=symphony_conn_id,
+            login=Variable.get("stanford_symphony_dev_login"),
+            password=Variable.get("stanford_symphony_dev_password"),
+        )
+
+        symphony_add_record = NewMARCtoSymphony(
+            app_id=symphony_app_id,
+            client_id=symphony_client_id,
+            conn_id=symphony_conn_id,
+            library_key=library_key,
+            marc_json="{{ task_instance.xcom_pull(key='return_value', task_ids=['convert_to_symphony_json'])[0]}}",
+            item_type=symphony_item_type,
+            home_location=home_location,
+            token="{{ task_instance.xcom_pull(key='message', task_ids=['listen'])[0]}}",
+        )
+
+        (
+            run_rdf2marc
+            >> download_marc
+            >> export_marc_json
+            >> convert_to_symphony_json
+            >> [symphony_login >> symphony_add_record]
+        )
 
     with TaskGroup(group_id="process_folio") as folio_task_group:
         download_folio_marc = DummyOperator(task_id="download_folio_marc", dag=dag)
