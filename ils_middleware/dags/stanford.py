@@ -71,6 +71,9 @@ with DAG(
         convert_to_symphony_json = PythonOperator(
             task_id="convert_to_symphony_json",
             python_callable=to_symphony_json,
+            op_kwargs={
+                "marc_json": "{{ task_instance.xcom_pull(task_ids='marc_json_to_s3', key='marc_json') }}"
+            },
         )
 
         # Symphony Dev Server Settings
@@ -100,7 +103,7 @@ with DAG(
             marc_json="{{ task_instance.xcom_pull(key='return_value', task_ids=['convert_to_symphony_json'])[0]}}",
             item_type=symphony_item_type,
             home_location=home_location,
-            token="{{ task_instance.xcom_pull(key='message', task_ids=['listen'])[0]}}",
+            token="{{ task_instance.xcom_pull(key='return_value', task_ids=['symphony_login'])[0]}}",
         )
 
         (
