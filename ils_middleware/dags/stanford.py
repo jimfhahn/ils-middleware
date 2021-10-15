@@ -89,29 +89,36 @@ with DAG(
         home_location = "STACKS"
         symphony_app_id = "SINOPIA_DEV"
         symphony_client_id = "SymWSStaffClient"
-        symphony_conn_id = "symphony_dev"
-        symphony_item_type = (
-            "STKS-MONO"  # This could be mapped from the Instance RDF template
+        symphony_conn_id = "stanford_symphony_dev"
+        # This could be mapped from the Instance RDF template
+        symphony_item_type = "STKS-MONO"
+
+        symphony_login = PythonOperator(
+            task_id="symphony-login",
+            python_callable=SymphonyLogin,
+            op_kwargs={
+                "app_id": symphony_app_id,
+                "client_id": symphony_client_id,
+                "conn_id": symphony_conn_id,
+                "login": Variable.get("stanford_symphony_dev_login"),
+                "password": Variable.get("stanford_symphony_dev_password"),
+            },
         )
 
-        # Log in and retrieve token
-        symphony_login = SymphonyLogin(
-            app_id=symphony_app_id,
-            client_id=symphony_client_id,
-            conn_id=symphony_conn_id,
-            login=Variable.get("stanford_symphony_dev_login"),
-            password=Variable.get("stanford_symphony_dev_password"),
-        )
-
-        symphony_add_record = NewMARCtoSymphony(
-            app_id=symphony_app_id,
-            client_id=symphony_client_id,
-            conn_id=symphony_conn_id,
-            library_key=library_key,
-            marc_json="{{ task_instance.xcom_pull(key='return_value', task_ids=['convert_to_symphony_json'])[0]}}",
-            item_type=symphony_item_type,
-            home_location=home_location,
-            token="{{ task_instance.xcom_pull(key='return_value', task_ids=['symphony_login'])[0]}}",
+        symphony_add_record = PythonOperator(
+            task_id="post_new_symphony",
+            python_callable=NewMARCtoSymphony,
+            op_kwargs={
+                "app_id": symphony_app_id,
+                "client_id": symphony_client_id,
+                "conn_id": symphony_conn_id,
+                "home_location": home_location,
+                "item_type": symphony_item_type,
+                "library_key": library_key,
+                "marc_json": """{{ task_instance.xcom_pull(key='return_value',
+                                      task_ids='process_symphony.convert_to_symphony_json')}}""",
+                "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='process_symphony.symphony-login')}}",
+            },
         )
 
         (
@@ -136,7 +143,7 @@ with DAG(
         task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"
     )
 
-    # Updates Sinopia URLS with HRID
+    # Updates Sinopia URLS with ILS Identifier
     update_sinopia = PythonOperator(
         task_id="sinopia-id-update",
         python_callable=UpdateIdentifier,

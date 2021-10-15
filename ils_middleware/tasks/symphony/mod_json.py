@@ -14,6 +14,7 @@ def _get_subfields(subfields: dict) -> list:
 
 def _get_variable_field(value, new_field):
     if "ind1" in value:
+
         new_field["inds"] = "".join([value["ind1"], value["ind2"]])
     new_field["subfields"] = []
     for row in value["subfields"]:
@@ -40,5 +41,5 @@ def to_symphony_json(**kwargs):
     record["leader"] = pymarc_json.get("leader")
     for field in pymarc_json["fields"]:
         record["fields"].append(_get_fields(field))
-    logger.debug("Converted pymarc json to Symphony JSON")
-    return json.dumps(record)
+
+    return record

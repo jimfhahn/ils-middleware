@@ -2,10 +2,9 @@
 import json
 
 from ils_middleware.tasks.symphony.request import SymphonyRequest
-from airflow.providers.http.operators.http import SimpleHttpOperator
 
 
-def SymphonyLogin(**kwargs) -> SimpleHttpOperator:
+def SymphonyLogin(**kwargs) -> str:
     login = kwargs.get("login")
     password = kwargs.get("password")
 
