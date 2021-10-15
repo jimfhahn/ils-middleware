@@ -1,5 +1,8 @@
 """Converts PYMARC JSON to Symphony JSON"""
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def _get_subfields(subfields: dict) -> list:
@@ -37,4 +40,5 @@ def to_symphony_json(**kwargs):
     record["leader"] = pymarc_json.get("leader")
     for field in pymarc_json["fields"]:
         record["fields"].append(_get_fields(field))
+    logger.debug("Converted pymarc json to Symphony JSON")
     return json.dumps(record)

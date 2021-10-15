@@ -1,9 +1,11 @@
 import logging
 import json
 from urllib.parse import urlparse
-from os import path, getenv
+from os import path
 
-from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
+from airflow.providers.amazon.aws.hooks.lambda_function import AwsLambdaHook
+
+logger = logging.getLogger(__name__)
 
 
 def Rdf2Marc(**kwargs):
@@ -13,9 +15,9 @@ def Rdf2Marc(**kwargs):
     instance_path = urlparse(instance_uri).path
     instance_id = path.split(instance_path)[-1]
 
-    sinopia_env = kwargs.get("sinopia_env", "dev")
-    rdf2marc_lambda = f"{getenv('RDF2MARC_LAMBDA')}_{sinopia_env.upper()}"
-    s3_bucket = f"{getenv('MARC_S3_BUCKET')}_{sinopia_env.upper()}"
+    rdf2marc_lambda = kwargs.get("rdf2marc_lambda")
+
+    s3_bucket = kwargs.get("s3_bucket")
     s3_record_path = f"airflow/{instance_id}/record"
     marc_path = f"{s3_record_path}.mar"
     marc_text_path = f"{s3_record_path}.txt"
@@ -39,12 +41,21 @@ def Rdf2Marc(**kwargs):
     }
 
     result = lambda_hook.invoke_lambda(payload=json.dumps(params))
-    print(f"RESULT = {result['StatusCode']}")
+
+    logger.debug(f"RESULT = {result['StatusCode']}")
+
+    payload = json.loads(result["Payload"].read())
+
+    if "x-amz-function-error" in result["ResponseMetadata"].get("HTTPHeaders"):
+        msg = f"RDF2MARC conversion failed for {instance_uri}, error: {payload.get('errorMessage')}"
+        logger.error(msg)
+
+        raise Exception(msg)
 
     if result["StatusCode"] == 200:
         return instance_id
 
-    logging.error(
+    logger.error(
         f"RDF2MARC conversion failed for {instance_uri}: {result['FunctionError']}"
     )
     raise Exception()

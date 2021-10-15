@@ -62,8 +62,6 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
     AIRFLOW_VAR_SQS_DEV: 'https://sqs.us-west-2.amazonaws.com/418214828013/stanford-ils'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
-    MARC_S3_BUCKET: 'sinopia-marc-development'
-    RDF2MARC_LAMBDA: 'sinopia-rdf2marc-development'
     LOGLEVEL: ${LOGLEVEL:-DEBUG}
   volumes:
     - ./ils_middleware:/opt/airflow/ils_middleware

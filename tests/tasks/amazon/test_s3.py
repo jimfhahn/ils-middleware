@@ -1,11 +1,10 @@
 """Test the AWS S3 tasks properly name and load files."""
-
+import json
 import pytest
 from datetime import datetime
 from unittest import mock
 
 from airflow import DAG
-from airflow.models.taskinstance import TaskInstance
 from airflow.operators.dummy import DummyOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
@@ -20,14 +19,6 @@ def test_task():
             default_args={"owner": "airflow", "start_date": datetime(2021, 9, 20)},
         ),
     )
-
-
-@pytest.fixture
-def mock_get_task_instance(monkeypatch):
-    def mock_xcom_pull(*args, **kwargs):
-        return "0000-1111-2222-3333"
-
-    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
 
 
 @pytest.fixture
@@ -46,25 +37,19 @@ def mock_s3_load_string():
         yield mocked
 
 
-def test_get_from_s3(mock_get_task_instance, mock_s3_hook):
+def test_get_from_s3(mock_s3_hook):
     """Test downloading a file from S3 into a temp file"""
-    task_instance = TaskInstance(test_task(), datetime(2021, 9, 21))
-    assert get_from_s3(task_instance=task_instance) == {
+    result = get_from_s3(instance_id="0000-1111-2222-3333")
+    assert json.loads(result) == {
         "id": "0000-1111-2222-3333",
         "temp_file": "path/to/temp/file",
     }
 
 
-@pytest.fixture
-def mock_send_task_instance(monkeypatch):
-    def mock_xcom_pull(*args, **kwargs):
-        return {"id": "0000-1111-2222-3333", "temp_file": "tests/fixtures/record.mar"}
-
-    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
-
-
-def test_send_to_s3(mock_send_task_instance, mock_s3_load_string):
+def test_send_to_s3(mock_s3_load_string):
     """Test sending a file to s3"""
-    task_instance = TaskInstance(test_task(), datetime(2021, 9, 21))
-    send_to_s3(task_instance=task_instance)
+
+    send_to_s3(
+        instance="""{"id": "0000-1111-2222-3333", "temp_file": "tests/fixtures/record.mar"}"""
+    )
     mock_s3_load_string.assert_called_once()

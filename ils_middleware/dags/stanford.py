@@ -54,25 +54,33 @@ with DAG(
             task_id="rdf2marc",
             python_callable=Rdf2Marc,
             op_kwargs={
-                "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}"
+                "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
+                "rdf2marc_lambda": "sinopia-rdf2marc-development",
+                "s3_bucket": "sinopia-marc-development",
             },
         )
 
         download_marc = PythonOperator(
             task_id="download_marc",
             python_callable=get_from_s3,
+            op_kwargs={
+                "instance_id": "{{ task_instance.xcom_pull(task_ids='process_symphony.rdf2marc', key='return_value') }}"
+            },
         )
 
         export_marc_json = PythonOperator(
             task_id="marc_json_to_s3",
             python_callable=send_to_s3,
+            op_kwargs={
+                "instance": "{{ task_instance.xcom_pull(task_ids='process_symphony.download_marc', key='return_value') }}"
+            },
         )
 
         convert_to_symphony_json = PythonOperator(
             task_id="convert_to_symphony_json",
             python_callable=to_symphony_json,
             op_kwargs={
-                "marc_json": "{{ task_instance.xcom_pull(task_ids='marc_json_to_s3', key='return_value') }}"
+                "marc_json": "{{ task_instance.xcom_pull(task_ids='process_symphony.marc_json_to_s3', key='return_value') }}"
             },
         )
 
