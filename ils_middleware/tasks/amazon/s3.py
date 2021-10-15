@@ -6,10 +6,11 @@ from pymarc import MARCReader
 
 logger = logging.getLogger(__name__)
 
-def get_from_s3(**kwargs) -> dict:
+
+def get_from_s3(**kwargs) -> str:
     instance_id = kwargs.get("instance_id")
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
-    
+
     temp_file = s3_hook.download_file(
         key=f"marc/airflow/{instance_id}/record.mar",
         bucket_name="sinopia-marc-development",
@@ -33,7 +34,6 @@ def send_to_s3(**kwargs) -> dict:
     )
 
     return marc_record.as_json()
-
 
 
 def marc_record_from_temp_file(instance):

@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def _get_subfields(subfields: dict) -> list:
     output = []
     for subfield, value in subfields.items():

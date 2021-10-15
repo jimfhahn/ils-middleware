@@ -63,9 +63,9 @@ with DAG(
         download_marc = PythonOperator(
             task_id="download_marc",
             python_callable=get_from_s3,
-            op_kwargs= {
+            op_kwargs={
                 "instance_id": "{{ task_instance.xcom_pull(task_ids='process_symphony.rdf2marc', key='return_value') }}"
-            }
+            },
         )
 
         export_marc_json = PythonOperator(
@@ -73,7 +73,7 @@ with DAG(
             python_callable=send_to_s3,
             op_kwargs={
                 "instance": "{{ task_instance.xcom_pull(task_ids='process_symphony.download_marc', key='return_value') }}"
-            }
+            },
         )
 
         convert_to_symphony_json = PythonOperator(
