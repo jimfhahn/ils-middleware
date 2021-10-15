@@ -7,6 +7,7 @@ from airflow.providers.amazon.aws.hooks.lambda_function import AwsLambdaHook
 
 logger = logging.getLogger(__name__)
 
+
 def Rdf2Marc(**kwargs):
     """Runs rdf2marc on a BF Instance URL"""
     instance_uri = kwargs.get("instance_uri")
@@ -14,7 +15,7 @@ def Rdf2Marc(**kwargs):
     instance_path = urlparse(instance_uri).path
     instance_id = path.split(instance_path)[-1]
 
-    rdf2marc_lambda = kwargs.get('rdf2marc_lambda')
+    rdf2marc_lambda = kwargs.get("rdf2marc_lambda")
 
     s3_bucket = kwargs.get("s3_bucket")
     s3_record_path = f"airflow/{instance_id}/record"
@@ -40,14 +41,21 @@ def Rdf2Marc(**kwargs):
     }
 
     result = lambda_hook.invoke_lambda(payload=json.dumps(params))
-    for key, result in result.items():
-        logger.debug(f"{key}: {result}")
-    #logger.debug(f"RESULT = {result['StatusCode']} {result.keys()}")
+
+    logger.debug(f"RESULT = {result['StatusCode']}")
+
+    payload = json.loads(result["Payload"].read())
+
+    if "x-amz-function-error" in result["ResponseMetadata"].get("HTTPHeaders"):
+        msg = f"RDF2MARC conversion failed for {instance_uri}, error: {payload.get('errorMessage')}"
+        logger.error(msg)
+
+        raise Exception(msg)
 
     if result["StatusCode"] == 200:
         return instance_id
 
-    logging.error(
+    logger.error(
         f"RDF2MARC conversion failed for {instance_uri}: {result['FunctionError']}"
     )
     raise Exception()
