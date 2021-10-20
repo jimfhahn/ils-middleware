@@ -5,7 +5,7 @@ from airflow.models import Variable
 
 def sinopia_login(**kwargs):
     """Log into Sinopia using Airflow Variables."""
-    region = kwargs.get("aws_region", "us-west-1")
+    region = kwargs.get("aws_region", "us-west-2")
     sinopia_env = kwargs.get("sinopia_env", "dev")
     sinopia_user = Variable.get("sinopia_user")
     sinopia_password = Variable.get("sinopia_password")

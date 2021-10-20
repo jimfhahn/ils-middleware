@@ -7,10 +7,7 @@ from ils_middleware.tasks.symphony.request import SymphonyRequest
 
 logger = logging.getLogger(__name__)
 
-<<<<<<< HEAD
-=======
 
->>>>>>> Refactor Symphony functions running as PythonOperators
 def NewMARCtoSymphony(**kwargs) -> str:
     """Creates a new record in Symphony and returns the new CatKey"""
     marc_json = kwargs.get("marc_json", "")
@@ -18,12 +15,7 @@ def NewMARCtoSymphony(**kwargs) -> str:
     item_type = kwargs.get("item_type")
     home_location = kwargs.get("home_location")
 
-<<<<<<< HEAD
     marc_json = ast.literal_eval(marc_json)
-=======
-    token = kwargs.get("token")
-    logging.error(f"Initial token is {token}")
->>>>>>> Refactor Symphony functions running as PythonOperators
 
     payload = {
         "@resource": "/catalog/bib",
