@@ -1,8 +1,9 @@
 """Adds Sinopia localAdminMetadata record."""
 
 import json
-import logging
 import datetime
+import logging
+import uuid
 
 import rdflib
 import requests  # type: ignore
@@ -25,19 +26,20 @@ def _add_local_system_id(
     graph.add((id_blank_node, rdflib.RDF.value, rdflib.Literal(identifier)))
     source_blank_node = rdflib.BNode()
     graph.add((id_blank_node, BF.source, source_blank_node))
+    graph.add((source_blank_node, rdflib.RDF.type, BF.Source))
     graph.add((source_blank_node, rdflib.RDFS.label, rdflib.Literal(ils)))
     return id_blank_node
 
 
 def create_admin_metadata(**kwargs) -> str:
     """Creates a Sinopia Local Admin Metadata graph and returns as JSON-LD."""
-    admin_metadata_url = kwargs.get("admin_metadata_url", "")
+    admin_metadata_uri = kwargs.get("admin_metadata_uri", "")
     instance_uri = kwargs.get("instance_uri")
-    identifier_ils = kwargs.get("identifier_ils", {})
+    ils_identifiers = kwargs.get("ils_identifiers", {})
     cataloger_id = kwargs.get("cataloger_id")
 
     graph = rdflib.Graph()
-    local_admin_metadata = rdflib.URIRef(admin_metadata_url)
+    local_admin_metadata = rdflib.URIRef(admin_metadata_uri)
     graph.add((local_admin_metadata, rdflib.RDF.type, SINOPIA.LocalAdminMetadata))
     graph.add(
         (
@@ -57,9 +59,10 @@ def create_admin_metadata(**kwargs) -> str:
         graph.add(
             (local_admin_metadata, BFLC.catalogerId, rdflib.Literal(cataloger_id))
         )
-    for identifier, ils in identifier_ils.items():
-        ident_bnode = _add_local_system_id(graph, identifier, ils)
-        graph.add((local_admin_metadata, BF.identifier, ident_bnode))
+    for ils, identifier in ils_identifiers.items():
+        if identifier:
+            ident_bnode = _add_local_system_id(graph, identifier, ils)
+            graph.add((local_admin_metadata, BF.identifier, ident_bnode))
     export_date = datetime.datetime.utcnow().isoformat()
     graph.add((local_admin_metadata, SINOPIA.exportDate, rdflib.Literal(export_date)))
     return graph.serialize(format="json-ld")
@@ -74,7 +77,16 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
 
     kwargs["cataloger_id"] = user
     sinopia_env = kwargs.get("sinopia_env", "dev")
-    local_metadata_rdf = create_admin_metadata(**kwargs)
+    logger.info(f"ILS Identifier {kwargs.get('ils_identifiers')}")
+
+    sinopia_api_uri = Variable.get(f"{sinopia_env}_sinopia_api_uri")
+
+    admin_metadata_uri = f"{sinopia_api_uri}/{uuid.uuid4()}"
+    local_metadata_rdf = create_admin_metadata(
+        **kwargs, admin_metadata_uri=admin_metadata_uri
+    )
+
+    local_metadata_rdf = json.loads(local_metadata_rdf)
 
     headers = {"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"}
 
@@ -93,14 +105,19 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
         "bfWorkRefs": [],
     }
 
-    sinopia_api_uri = Variable.get(f"{sinopia_env}_sinopia_api_uri")
+    logger.info(sinopia_doc)
 
     new_admin_result = requests.post(
-        sinopia_api_uri,
-        data=json.dumps(sinopia_doc),
+        admin_metadata_uri,
+        json=sinopia_doc,
         headers=headers,
     )
 
-    admin_metadata_uri = new_admin_result.text
+    if new_admin_result.status_code > 399:
+        msg = f"Failed to add localAdminMetadata, {new_admin_result.status_code}\n{new_admin_result.text}"
+        logger.error(msg)
+        raise Exception(msg)
+
+    logger.debug(f"Results of new_admin_result {new_admin_result.text}")
 
     return admin_metadata_uri

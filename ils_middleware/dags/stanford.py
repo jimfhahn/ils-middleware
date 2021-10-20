@@ -161,9 +161,12 @@ with DAG(
             task_id="sinopia-new-metadata",
             python_callable=new_local_admin_metadata,
             op_kwargs={
-                "jwt": "{{ task_instance.xcom_pull(key='return_value', task_ids='sinopia-login') }}",
+                "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
                 "group": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='group') }}",
                 "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
+                "ils_identifiers": {
+                    "symphony": "{{ task_instance.xcom_pull(task_ids='process_symphony.post_new_symphony', key='return_value') }}"
+                },
             },
         )
 
