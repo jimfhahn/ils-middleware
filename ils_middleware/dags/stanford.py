@@ -165,7 +165,7 @@ with DAG(
                 "group": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='group') }}",
                 "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
                 "ils_identifiers": {
-                    "symphony": "{{ task_instance.xcom_pull(task_ids='process_symphony.post_new_symphony', key='return_value') }}"
+                    "SIRSI": "{{ task_instance.xcom_pull(task_ids='process_symphony.post_new_symphony', key='return_value') }}"
                 },
             },
         )
