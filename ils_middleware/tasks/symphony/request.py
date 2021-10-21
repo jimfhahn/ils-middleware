@@ -1,19 +1,21 @@
 """Request function for Symphony Web Services"""
+import logging
+import requests  # type: ignore
 
-from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.hooks.base_hook import BaseHook
+
+logger = logging.getLogger(__name__)
 
 
-def SymphonyRequest(**kwargs) -> SimpleHttpOperator:
+def SymphonyRequest(**kwargs) -> str:
     app_id = kwargs.get("app_id")
     client_id = kwargs.get("client_id")
-    conn_id = kwargs.get("conn_id")
-    dag = kwargs.get("dag")
+    conn_id = kwargs.get("conn_id", "")
     data = kwargs.get("data")
-    endpoint = kwargs.get("endpoint")
+    endpoint = kwargs.get("endpoint", "")
     override_headers = kwargs.get("headers", {})
     response_filter = kwargs.get("filter")
-    session_token = kwargs.get("session_token")
-    task_id = kwargs.get("task_id")
+    session_token = kwargs.get("token")
 
     headers = {
         "Content-Type": "application/vnd.sirsidynix.roa.resource.v2+json",
@@ -29,12 +31,21 @@ def SymphonyRequest(**kwargs) -> SimpleHttpOperator:
     for key, value in override_headers.items():
         headers[key] = value
 
-    return SimpleHttpOperator(
-        task_id=task_id,
-        http_conn_id=conn_id,
-        endpoint=endpoint,
-        data=data,
-        headers=headers,
-        response_filter=response_filter,
-        dag=dag,
+    logger.info(f"Headers {headers}")
+    # Generate Symphony URL based on the Airflow Connection and endpoint
+    symphony_conn = BaseHook.get_connection(conn_id)
+
+    symphony_uri = symphony_conn.host + endpoint
+
+    symphony_result = requests.post(symphony_uri, data=data, headers=headers)
+    if symphony_result.status_code > 399:
+        msg = f"Symphony Web Service Call to {symphony_uri} Failed with {symphony_result.status_code}\n{symphony_result.text}"
+        logger.error(msg)
+        raise Exception(msg)
+
+    logger.debug(
+        f"Symphony Results symphony_result {symphony_result.status_code}\n{symphony_result.text}"
     )
+    if response_filter:
+        return response_filter(symphony_result)
+    return symphony_result.text
