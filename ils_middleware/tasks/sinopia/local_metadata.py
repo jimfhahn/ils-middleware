@@ -77,7 +77,7 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
 
     kwargs["cataloger_id"] = user
     sinopia_env = kwargs.get("sinopia_env", "dev")
-    logger.info(f"ILS Identifier {kwargs.get('ils_identifiers')}")
+    logger.debug(f"ILS Identifier {kwargs.get('ils_identifiers')}")
 
     sinopia_api_uri = Variable.get(f"{sinopia_env}_sinopia_api_uri")
 
@@ -105,7 +105,7 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
         "bfWorkRefs": [],
     }
 
-    logger.info(sinopia_doc)
+    logger.debug(sinopia_doc)
 
     new_admin_result = requests.post(
         admin_metadata_uri,
