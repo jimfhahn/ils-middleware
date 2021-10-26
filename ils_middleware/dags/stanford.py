@@ -156,7 +156,7 @@ with DAG(
             },
         )
 
-        # Updates Sinopia URLS with HRID
+        # Updates Sinopia URLS with ILS identifier
         update_sinopia = PythonOperator(
             task_id="sinopia-id-update",
             python_callable=UpdateIdentifier,
