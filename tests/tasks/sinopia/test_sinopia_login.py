@@ -13,16 +13,6 @@ from ils_middleware.tasks.sinopia.login import sinopia_login
 
 
 @pytest.fixture
-def mock_botocore_client(monkeypatch):
-    def mock_initiate_auth(*args, **kwargs):
-        return {"AuthenticationResult": {"AccessToken": "abc12345"}}
-
-    monkeypatch.setattr(
-        botocore.client.CognitoIdentityProvider, "initiate_auth", mock_initiate_auth
-    )
-
-
-@pytest.fixture
 def mock_variable(monkeypatch):
     def mock_get(key, default=None):
         if key == "sinopia_user":
