@@ -151,7 +151,7 @@ with DAG(
             task_id="sinopia-login",
             python_callable=sinopia_login,
             op_kwargs={
-                "region": "us-west-1",
+                "region": "us-west-2",
                 "sinopia_env": "dev",
             },
         )

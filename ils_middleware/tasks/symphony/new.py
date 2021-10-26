@@ -1,11 +1,8 @@
 """New Record in Symphony"""
 import ast
 import json
-import logging
 
 from ils_middleware.tasks.symphony.request import SymphonyRequest
-
-logger = logging.getLogger(__name__)
 
 
 def NewMARCtoSymphony(**kwargs) -> str:
