@@ -40,7 +40,7 @@ def create_admin_metadata(**kwargs) -> str:
 
     graph = rdflib.Graph()
     local_admin_metadata = rdflib.URIRef(admin_metadata_uri)
-    graph.add((local_admin_metadata, rdflib.RDF.type, SINOPIA.LocalAdminMetadata))
+    graph.add((local_admin_metadata, rdflib.RDF.type, BF.AdminMetadata))
     graph.add(
         (
             local_admin_metadata,
