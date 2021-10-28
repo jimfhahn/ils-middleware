@@ -13,6 +13,7 @@ def SymphonyRequest(**kwargs) -> str:
     conn_id = kwargs.get("conn_id", "")
     data = kwargs.get("data")
     endpoint = kwargs.get("endpoint", "")
+    http_verb = kwargs.get("http_verb", "post")
     override_headers = kwargs.get("headers", {})
     response_filter = kwargs.get("filter")
     session_token = kwargs.get("token")
@@ -37,7 +38,15 @@ def SymphonyRequest(**kwargs) -> str:
 
     symphony_uri = symphony_conn.host + endpoint
 
-    symphony_result = requests.post(symphony_uri, data=data, headers=headers)
+    if http_verb.startswith("post"):
+        symphony_result = requests.post(symphony_uri, data=data, headers=headers)
+    elif http_verb.startswith("put"):
+        symphony_result = requests.put(symphony_uri, data=data, headers=headers)
+    else:
+        msg = f"{http_verb} not available for {symphony_uri}"
+        logger.error(msg)
+        raise ValueError(msg)
+
     if symphony_result.status_code > 399:
         msg = f"Symphony Web Service Call to {symphony_uri} Failed with {symphony_result.status_code}\n{symphony_result.text}"
         logger.error(msg)

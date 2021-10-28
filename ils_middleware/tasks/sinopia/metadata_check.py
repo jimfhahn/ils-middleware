@@ -53,7 +53,9 @@ def existing_metadata_check(*args, **kwargs) -> Optional[str]:
     """Queries Sinopia API for related resources of an instance."""
     task_instance = kwargs["task_instance"]
     resource_uri = kwargs.get("resource_uri")
+    ils_tasks = kwargs.get("ils_tasks", {})
     resource_refs_uri = f"{resource_uri}/references"
+
     resource_ref_results = requests.get(resource_refs_uri)
     if resource_ref_results.status_code > 399:
         msg = f"{resource_refs_uri} retrieval failed {resource_ref_results.status_code}\n{resource_ref_results.text}"
@@ -63,7 +65,7 @@ def existing_metadata_check(*args, **kwargs) -> Optional[str]:
         "bfAdminMetadataAllRefs", []
     )
     if len(bf_admin_metadata_all) < 1:
-        return "no_existing_metadata"
+        return ils_tasks.get("new")
 
     ils_info = []
     for metadata_uri in bf_admin_metadata_all:
@@ -72,7 +74,7 @@ def existing_metadata_check(*args, **kwargs) -> Optional[str]:
             ils_info.append(metadata)
 
     if len(ils_info) < 1:
-        return "no_existing_metadata"
+        return ils_tasks.get("new")
 
     # Sort retrieved ILS by date
     ils_info = sorted(ils_info, key=lambda x: x["export_date"], reverse=True)
@@ -82,4 +84,4 @@ def existing_metadata_check(*args, **kwargs) -> Optional[str]:
         if key.startswith("export_date"):
             continue
         task_instance.xcom_push(key=key, value=value)
-    return "metadata_exists"
+    return ils_tasks.get("overlay")

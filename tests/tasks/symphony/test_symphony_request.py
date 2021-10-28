@@ -34,3 +34,8 @@ def mock_request(monkeypatch, mocker: MockerFixture):
 def test_missing_request_filter(mock_connection, mock_request):
     result = SymphonyRequest(token="34567")
     assert result.startswith("Successful request")
+
+
+def test_unknown_http_verb(mock_connection, mock_request):
+    with pytest.raises(ValueError, match="get not available"):
+        SymphonyRequest(token="45567", http_verb="get", endpoint="catalog/bib/3455")

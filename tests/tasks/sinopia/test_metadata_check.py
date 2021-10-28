@@ -104,26 +104,29 @@ def test_check_one_metadata_record(mock_requests, mock_datetime, mock_task_insta
     result = existing_metadata_check(
         task_instance=task_instance,
         resource_uri="https://api.sinopia.io/resource/gh1234",
+        ils_tasks={"overlay": "post_ils_overlay"},
     )
-    assert result.startswith("metadata_exists")
+    assert result.startswith("post_ils_overlay")
 
 
 def test_no_admin_metadata_records(mock_requests, mock_datetime, mock_task_instance):
     result = existing_metadata_check(
         task_instance=task_instance,
         resource_uri="https://api.sinopia.io/resource/oprt5531",
+        ils_tasks={"new": "post_ils_new"},
     )
 
-    assert result.startswith("no_existing_metadata")
+    assert result.startswith("post_ils_new")
 
 
 def test_no_local_metadata_records(mock_requests, mock_datetime, mock_task_instance):
     result = existing_metadata_check(
         task_instance=task_instance,
         resource_uri="https://api.sinopia.io/resource/ku333aa555",
+        ils_tasks={"new": "post_ils_new"},
     )
 
-    assert result.startswith("no_existing_metadata")
+    assert result.startswith("post_ils_new")
 
 
 def test_resource_uri_not_found(mock_requests, mock_datetime, mock_task_instance):
