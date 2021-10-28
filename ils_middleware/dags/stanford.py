@@ -8,7 +8,7 @@ from airflow.utils.task_group import TaskGroup
 
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
-from ils_middleware.tasks.sinopia.sinopia import UpdateIdentifier
+from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import email_for_success
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
@@ -156,13 +156,21 @@ with DAG(
             },
         )
 
-        # Updates Sinopia URLS with ILS identifier
-        update_sinopia = PythonOperator(
-            task_id="sinopia-id-update",
-            python_callable=UpdateIdentifier,
+        # Adds localAdminMetadata
+        local_admin_metadata = PythonOperator(
+            task_id="sinopia-new-metadata",
+            python_callable=new_local_admin_metadata,
+            op_kwargs={
+                "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
+                "group": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='group') }}",
+                "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
+                "ils_identifiers": {
+                    "SIRSI": "{{ task_instance.xcom_pull(task_ids='process_symphony.post_new_symphony', key='return_value') }}"
+                },
+            },
         )
 
-        login_sinopia >> update_sinopia
+        login_sinopia >> local_admin_metadata
 
     notify_sinopia_updated = PythonOperator(
         task_id="sinopia_update_success_notification",

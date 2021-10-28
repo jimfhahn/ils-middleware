@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 
 from ils_middleware.tasks.folio.map import map_to_folio
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator
-from ils_middleware.tasks.sinopia.sinopia import UpdateIdentifier
+from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
+from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.folio.request import FolioRequest
 from ils_middleware.tasks.folio.login import FolioLogin
 
@@ -57,10 +58,27 @@ with DAG(
         endpoint="",
     )
 
-    # Updates Sinopia URLS with HRID
-    update_sinopia = PythonOperator(
-        task_id="sinopia-id-update",
-        python_callable=UpdateIdentifier,
+    # Sinopia Login
+    login_sinopia = PythonOperator(
+        task_id="sinopia-login",
+        python_callable=sinopia_login,
+        op_kwargs={
+            "region": "us-west-1",
+            "sinopia_env": "dev",
+        },
     )
 
-listen_sns >> map_sinopia_to_inventory_records >> update_sinopia
+    # Adds localAdminMetadata
+    local_admin_metadata = PythonOperator(
+        task_id="sinopia-new-metadata",
+        python_callable=new_local_admin_metadata,
+        op_kwargs={
+            "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
+            "group": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='group') }}",
+            "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
+            "ils_identifiers": {
+                "folio": "{{ task_instance.xcom_pull(task_ids='send_to_folio', key='return_value') }}"
+            },
+        },
+    )
+listen_sns >> map_sinopia_to_inventory_records >> login_sinopia >> local_admin_metadata
