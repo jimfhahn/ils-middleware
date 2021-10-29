@@ -73,7 +73,7 @@ def existing_metadata_check(*args, **kwargs) -> Optional[str]:
     resource_uri = kwargs.get("resource_uri")
     ils_tasks = kwargs.get("ils_tasks", {})
 
-    bf_admin_metadata_all = check_return_refs(f"{resource_uri}/references")
+    bf_admin_metadata_all = check_return_refs(f"{resource_uri}/relationships")
 
     if len(bf_admin_metadata_all) < 1:
         return ils_tasks.get("new")

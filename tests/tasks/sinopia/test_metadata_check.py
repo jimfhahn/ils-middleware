@@ -48,7 +48,7 @@ admin_metadata = [
 
 sinopia_api = {
     # Happy Path
-    "https://api.sinopia.io/resource/gh1234/references": {
+    "https://api.sinopia.io/resource/gh1234/relationships": {
         "bfAdminMetadataAllRefs": ["https://api.sinopia.io/resource/1234abcde"]
     },
     "https://api.sinopia.io/resource/1234abcde": {
@@ -56,16 +56,18 @@ sinopia_api = {
         "data": json.dumps(admin_metadata),
     },
     # Not a localAdmin record
-    "https://api.sinopia.io/resource/ku333aa555/references": {
+    "https://api.sinopia.io/resource/ku333aa555/relationships": {
         "bfAdminMetadataAllRefs": ["https://api.sinopia.io/resource/753878c"]
     },
     "https://api.sinopia.io/resource/753878c": {"templateId": "pcc:bf2:AdminMetadata"},
     # No bfAdminMetadata
-    "https://api.sinopia.io/resource/oprt5531/references": {
+    "https://api.sinopia.io/resource/oprt5531/relationships": {
         "bfAdminMetadataAllRefs": []
     },
     # Missing AdminMetadata URI
-    "https://s.io/11ec/references": {"bfAdminMetadataAllRefs": ["https://s.io/3818"]},
+    "https://s.io/11ec/relationships": {
+        "bfAdminMetadataAllRefs": ["https://s.io/3818"]
+    },
 }
 
 
@@ -131,7 +133,9 @@ def test_no_local_metadata_records(mock_requests, mock_datetime, mock_task_insta
 
 def test_resource_uri_not_found(mock_requests, mock_datetime, mock_task_instance):
 
-    with pytest.raises(Exception, match="https://s.io/references retrieval failed 401"):
+    with pytest.raises(
+        Exception, match="https://s.io/relationships retrieval failed 401"
+    ):
         existing_metadata_check(
             task_instance=task_instance, resource_uri="https://s.io"
         )
