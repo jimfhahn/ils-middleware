@@ -8,7 +8,7 @@ from pytest_mock import MockerFixture
 from ils_middleware.tasks.symphony.overlay import overlay_marc_in_symphony
 
 MARC_JSON = """{"leader": "11222999   adf", "fields": [{"tag": "245"}]}"""
-MODIFIED_DATE = "2021-10-28T14:09:00-07:00"
+CATKEY = "320011"
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def mock_new_request(monkeypatch, mocker: MockerFixture):
         new_result.token = "234566"
         new_result.status_code = 201
         new_result.text = "Successful modified"
-        new_result.json = lambda: {"systemModifiedDate": MODIFIED_DATE}
+        new_result.json = lambda: {"@key": CATKEY}
         return new_result
 
     monkeypatch.setattr(requests, "put", mock_put)
@@ -39,11 +39,11 @@ def test_overlay_marc_in_symphony(mock_new_request, mock_connection):
     task_result = overlay_marc_in_symphony(
         conn_id="symphony_dev_login",
         session_token="abcde4590",
-        catkey="330021",
+        catkey=CATKEY,
         marc_json=MARC_JSON,
     )
 
-    assert task_result.startswith(MODIFIED_DATE)
+    assert task_result.startswith(CATKEY)
 
 
 def test_missing_catkey(mock_new_request, mock_connection):
