@@ -1,7 +1,6 @@
 """Tests metadata checks"""
 
 import datetime
-import json
 
 import pytest
 import requests  # type: ignore
@@ -53,7 +52,7 @@ sinopia_api = {
     },
     "https://api.sinopia.io/resource/1234abcde": {
         "templateId": "pcc:sinopia:localAdminMetadata",
-        "data": json.dumps(admin_metadata),
+        "data": admin_metadata,
     },
     # Not a localAdmin record
     "https://api.sinopia.io/resource/ku333aa555/relationships": {

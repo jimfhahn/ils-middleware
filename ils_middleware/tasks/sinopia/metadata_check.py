@@ -1,5 +1,6 @@
 """Retrieves related AdminMetadata resource info for downstream tasks."""
 import datetime
+import json
 import logging
 
 import rdflib
@@ -46,7 +47,7 @@ def get_retrieve_metadata(uri: str) -> Optional[dict]:
     # Ignore and return if not using the pcc:sinopia:localAdminMetadata template
     if not resource.get("templateId").startswith("pcc:sinopia:localAdminMetadata"):
         return None
-    return query_for_ils_info(resource.get("data"), uri)
+    return query_for_ils_info(json.dumps(resource.get("data")), uri)
 
 
 def check_return_refs(resource_refs_uri: str) -> list:

@@ -34,5 +34,5 @@ def overlay_marc_in_symphony(*args, **kwargs) -> str:
         data=json.dumps(payload),
         http_verb="put",
         endpoint=f"catalog/bib/key/{catkey}",
-        filter=lambda response: response.json().get("systemModifiedDate"),
+        filter=lambda response: response.json().get("@key"),
     )

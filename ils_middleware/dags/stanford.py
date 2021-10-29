@@ -144,6 +144,7 @@ with DAG(
             python_callable=overlay_marc_in_symphony,
             op_kwargs={
                 "app_id": symphony_app_id,
+                "catkey": "{{ task_instance.xcom_pull(key='SIRSI', task_ids='process_symphony.new-or-overlay') }}",
                 "client_id": symphony_client_id,
                 "conn_id": symphony_conn_id,
                 "marc_json": """{{ task_instance.xcom_pull(key='return_value',
