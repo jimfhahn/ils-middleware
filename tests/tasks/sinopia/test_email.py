@@ -10,7 +10,7 @@ from airflow.models.taskinstance import TaskInstance
 from airflow.operators.dummy import DummyOperator
 
 from ils_middleware.tasks.sinopia.email import (
-    email_for_success,
+    send_update_success_emails,
     send_task_failure_notifications,
     honeybadger,  # for spying on notifications
     logger,  # for spying on logging
@@ -43,7 +43,7 @@ def test_task():
 
 @pytest.fixture
 def mock_success_task_instance(monkeypatch):
-    def mock_xcom_pull(*args, **kwargs):
+    def mock_xcom_pull(*args, **kwargs) -> list:
         return [mock_messages_list]
 
     monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
@@ -72,7 +72,9 @@ def mock_failure_no_user_available_task_instance(monkeypatch):
     monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
 
 
-def test_email_for_success(mock_success_task_instance, mocker: MockerFixture) -> None:
+def test_send_update_success_emails(
+    mock_success_task_instance, mocker: MockerFixture
+) -> None:
     execution_date = datetime(2021, 9, 21)
     task_instance = TaskInstance(test_task(), execution_date)
 
@@ -80,7 +82,7 @@ def test_email_for_success(mock_success_task_instance, mocker: MockerFixture) ->
     patched_ses_hook_class = mocker.patch(
         "ils_middleware.tasks.sinopia.email.SESHook", return_value=mock_ses_hook_obj
     )
-    email_for_success(task_instance=task_instance)
+    send_update_success_emails(task_instance=task_instance)
 
     patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_dev")
     mock_ses_hook_obj.send_email.assert_any_call(
@@ -139,7 +141,7 @@ def test_send_task_failure_notifications(
     expected_uri = (
         "https://api.sinopia.io/resource/9d3b525e-2d8f-4192-8456-0fb804d34fd1"
     )
-    mock_ses_hook_obj.send_email.assert_any_call(
+    mock_ses_hook_obj.send_email.assert_called_once_with(
         **{
             "mail_from": "sinopia-devs@lists.stanford.edu",
             "to": ["user@institution.edu"],

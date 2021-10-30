@@ -10,7 +10,7 @@ from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
-    email_for_success,
+    send_update_success_emails,
     send_task_failure_notifications,
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
@@ -179,7 +179,7 @@ with DAG(
         task_id="sinopia_update_success_notification",
         dag=dag,
         trigger_rule="none_failed",
-        python_callable=email_for_success,
+        python_callable=send_update_success_emails,
     )
 
     # the advantage of using a task for failure notification, vs on_failure_callback for the dag, is

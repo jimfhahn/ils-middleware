@@ -4,6 +4,7 @@ from airflow.providers.amazon.aws.hooks.ses import SESHook
 import json
 import logging
 
+from airflow.models.taskinstance import TaskInstance
 from honeybadger import honeybadger
 
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 # see:
 # https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/operators/email/index.html
 # https://airflow.apache.org/docs/apache-airflow/stable/howto/email-config.html?highlight=ses#send-email-using-aws-ses
-def email_for_success(**kwargs) -> None:
+def send_update_success_emails(**kwargs) -> None:
     task_instance = kwargs["task_instance"]
     ses_hook = SESHook(aws_conn_id=f"aws_ses_{_sinopia_env(kwargs)}")
     for email_attributes in _email_on_success_info_list(task_instance):
@@ -44,14 +45,18 @@ def _sinopia_env(kwargs: dict) -> str:
     return kwargs.get("sinopia_env", "dev")
 
 
-def _send_task_failure_email(user_email, kwargs, task_instance) -> None:
+def _send_task_failure_email(
+    user_email: str, kwargs: dict, task_instance: TaskInstance
+) -> None:
     ses_hook = SESHook(aws_conn_id=f"aws_ses_{_sinopia_env(kwargs)}")
     ses_hook.send_email(
         **_email_on_failure_attributes(user_email, kwargs, task_instance)
     )
 
 
-def _email_on_failure_attributes(user_email, kwargs, task_instance) -> dict:
+def _email_on_failure_attributes(
+    user_email: str, kwargs: dict, task_instance: TaskInstance
+) -> dict:
     execution_date = kwargs["execution_date"]
     resource_uri = task_instance.xcom_pull(
         key="resource_uri", task_ids=["sqs-message-parse"]
@@ -66,7 +71,7 @@ def _email_on_failure_attributes(user_email, kwargs, task_instance) -> dict:
     }
 
 
-def _email_on_success_info_list(task_instance) -> list:
+def _email_on_success_info_list(task_instance: TaskInstance) -> list:
     raw_sqs_messages = task_instance.xcom_pull(key="messages", task_ids=["sqs-sensor"])[
         0
     ]
