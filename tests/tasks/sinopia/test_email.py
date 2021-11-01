@@ -9,7 +9,12 @@ from airflow.providers.amazon.aws.hooks.ses import SESHook
 from airflow.models.taskinstance import TaskInstance
 from airflow.operators.dummy import DummyOperator
 
-from ils_middleware.tasks.sinopia.email import email_for_success
+from ils_middleware.tasks.sinopia.email import (
+    send_update_success_emails,
+    send_task_failure_notifications,
+    honeybadger,  # for spying on notifications
+    logger,  # for spying on logging
+)
 
 
 mock_messages_list = [
@@ -37,14 +42,39 @@ def test_task():
 
 
 @pytest.fixture
-def mock_task_instance(monkeypatch):
-    def mock_xcom_pull(*args, **kwargs):
+def mock_success_task_instance(monkeypatch):
+    def mock_xcom_pull(*args, **kwargs) -> list:
         return [mock_messages_list]
 
     monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
 
 
-def test_email_for_success(mock_task_instance, mocker: MockerFixture) -> None:
+@pytest.fixture
+def mock_failure_task_instance(monkeypatch):
+    def mock_xcom_pull(*args, **kwargs) -> list:
+        if kwargs["key"] == "email":
+            return ["user@institution.edu"]
+        if kwargs["key"] == "resource_uri":
+            return [
+                "https://api.sinopia.io/resource/9d3b525e-2d8f-4192-8456-0fb804d34fd1"
+            ]
+
+        return [None]
+
+    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
+
+
+@pytest.fixture
+def mock_failure_no_user_available_task_instance(monkeypatch):
+    def mock_xcom_pull(*args, **kwargs) -> list:
+        return []
+
+    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
+
+
+def test_send_update_success_emails(
+    mock_success_task_instance, mocker: MockerFixture
+) -> None:
     execution_date = datetime(2021, 9, 21)
     task_instance = TaskInstance(test_task(), execution_date)
 
@@ -52,7 +82,7 @@ def test_email_for_success(mock_task_instance, mocker: MockerFixture) -> None:
     patched_ses_hook_class = mocker.patch(
         "ils_middleware.tasks.sinopia.email.SESHook", return_value=mock_ses_hook_obj
     )
-    email_for_success(task_instance=task_instance)
+    send_update_success_emails(task_instance=task_instance)
 
     patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_dev")
     mock_ses_hook_obj.send_email.assert_any_call(
@@ -72,3 +102,92 @@ def test_email_for_success(mock_task_instance, mocker: MockerFixture) -> None:
         }
     )
     assert mock_ses_hook_obj.send_email.call_count == 2
+
+
+def test_send_task_failure_notifications(
+    mock_failure_task_instance, mocker: MockerFixture
+) -> None:
+    execution_date = datetime(2021, 9, 21)
+    task_instance = TaskInstance(test_task(), execution_date)
+
+    hb_notify_spy = mocker.spy(honeybadger, "notify")
+    logger_spy = mocker.spy(logger, "error")
+
+    mock_ses_hook_obj = mocker.Mock(SESHook)
+    patched_ses_hook_class = mocker.patch(
+        "ils_middleware.tasks.sinopia.email.SESHook", return_value=mock_ses_hook_obj
+    )
+
+    send_task_failure_notifications(
+        execution_date=execution_date, task=test_task(), task_instance=task_instance
+    )
+
+    expected_kwargs = {
+        "execution_date": execution_date,
+        "task": test_task(),
+        "task_instance": task_instance,
+    }
+    expected_err_context = {"parent_task_ids": [], "kwargs": expected_kwargs}
+    hb_notify_spy.assert_called_once_with(
+        "Error executing upstream task",
+        context=expected_err_context,
+    )
+    logger_spy.assert_called_once_with(
+        f"Error executing upstream task: err_msg_context={expected_err_context}"
+    )
+
+    patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_dev")
+    expected_exec_date_str = "2021-09-21 00:00:00"
+    expected_uri = (
+        "https://api.sinopia.io/resource/9d3b525e-2d8f-4192-8456-0fb804d34fd1"
+    )
+    mock_ses_hook_obj.send_email.assert_called_once_with(
+        **{
+            "mail_from": "sinopia-devs@lists.stanford.edu",
+            "to": ["user@institution.edu"],
+            "subject": "Error executing Sinopia to ILS task on your behalf",
+            "html_content": f"execution_date: {expected_exec_date_str} / resource_uri (if available): ['{expected_uri}'] / group (if available): [None]",  # noqa: E501 line too long
+        }
+    )
+    assert mock_ses_hook_obj.send_email.call_count == 1
+
+
+def test_send_task_failure_notifications_no_user_available(
+    mock_failure_no_user_available_task_instance, mocker: MockerFixture
+) -> None:
+    execution_date = datetime(2021, 9, 21)
+    task_instance = TaskInstance(test_task(), execution_date)
+
+    hb_notify_spy = mocker.spy(honeybadger, "notify")
+    logger_spy = mocker.spy(logger, "error")
+
+    mock_ses_hook_obj = mocker.Mock(SESHook)
+    patched_ses_hook_class = mocker.patch(
+        "ils_middleware.tasks.sinopia.email.SESHook", return_value=mock_ses_hook_obj
+    )
+
+    send_task_failure_notifications(
+        execution_date=execution_date, task=test_task(), task_instance=task_instance
+    )
+
+    expected_kwargs = {
+        "execution_date": execution_date,
+        "task": test_task(),
+        "task_instance": task_instance,
+    }
+    expected_err_context = {"parent_task_ids": [], "kwargs": expected_kwargs}
+    hb_notify_spy.assert_any_call(
+        "Error executing upstream task",
+        context=expected_err_context,
+    )
+    logger_spy.assert_called_once_with(
+        f"Error executing upstream task: err_msg_context={expected_err_context}"
+    )
+    hb_notify_spy.assert_any_call(
+        "Unable to determine user to notify for task failure",
+        context=expected_err_context,
+    )
+    assert hb_notify_spy.call_count == 2
+
+    assert patched_ses_hook_class.call_count == 0
+    assert mock_ses_hook_obj.send_email.call_count == 0

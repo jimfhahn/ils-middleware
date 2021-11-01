@@ -9,7 +9,10 @@ from airflow.utils.task_group import TaskGroup
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
-from ils_middleware.tasks.sinopia.email import email_for_success
+from ils_middleware.tasks.sinopia.email import (
+    send_update_success_emails,
+    send_task_failure_notifications,
+)
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 from ils_middleware.tasks.symphony.login import SymphonyLogin
@@ -176,9 +179,18 @@ with DAG(
         task_id="sinopia_update_success_notification",
         dag=dag,
         trigger_rule="none_failed",
-        python_callable=email_for_success,
+        python_callable=send_update_success_emails,
     )
 
+    # the advantage of using a task for failure notification, vs on_failure_callback for the dag, is
+    # that the task gets all the retry behavior and such of a task, whereas the callback will just be
+    # fired once without any retry behavior by default (not ideal for sending an alert over a network)
+    notify_on_task_failure = PythonOperator(
+        task_id="task_failure_notification",
+        dag=dag,
+        trigger_rule="one_failed",
+        python_callable=send_task_failure_notifications,
+    )
 
 (
     listen_sns
@@ -187,3 +199,13 @@ with DAG(
     >> processed_sinopia
 )
 processed_sinopia >> sinopia_update_group >> notify_sinopia_updated
+
+[
+    listen_sns,
+    process_message,
+    symphony_task_group,
+    folio_task_group,
+    processed_sinopia,
+    sinopia_update_group,
+    notify_sinopia_updated,
+] >> notify_on_task_failure
