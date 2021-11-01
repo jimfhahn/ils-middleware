@@ -77,9 +77,9 @@ dags:
 
 extraEnv:
   - name: AIRFLOW__SECRETS__BACKEND
-    value: "airflow.contrib.secrets.hashicorp_vault.VaultBackend"
+    value: "airflow.providers.hashicorp.secrets.vault.VaultBackend"
   - name: AIRFLOW__SECRETS__BACKEND_KWARGS
-    value: '{"url":"http://vault:8200","token": "vault-plaintext-root-token","connections_path": "connections","variables_path": "variables","kv_engine_version":1}'
+    value: '{"token": "vault-plaintext-root-token","connections_path": "app/airflow/connections","variables_path": "app/airflow/variables","url": "http://vault:8200"}'
   - name: RDF2MARC_LAMBDA_DEV
     value: "sinopia-rdf2marc-development"
   - name: MARC_S3_BUCKET_DEV

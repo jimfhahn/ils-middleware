@@ -64,10 +64,8 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-pymarc}
     MARC_S3_BUCKET_DEV: 'sinopia-marc-development'
     RDF2MARC_LAMBDA_DEV: 'sinopia-rdf2marc-development'
-    VAULT__ROOT_TOKEN: 'vault-plaintext-root-token'
-    VAULT__URL: 'http://vault:8200'
-    AIRFLOW__SECRETS__BACKEND: "airflow.contrib.secrets.hashicorp_vault.VaultBackend"
-    AIRFLOW__SECRETS__BACKEND_KWARGS: '{"url":"http://vault:8200","token": "vault-plaintext-root-token","connections_path": "connections","variables_path": "variables","kv_engine_version":1}'
+    AIRFLOW__SECRETS__BACKEND: "airflow.providers.hashicorp.secrets.vault.VaultBackend"
+    AIRFLOW__SECRETS__BACKEND_KWARGS: '{"token": "vault-plaintext-root-token","connections_path": "app/airflow/connections","variables_path": "app/airflow/variables","url": "http://vault:8200"}'
   volumes:
     - ./ils_middleware:/opt/airflow/ils_middleware
     - ./logs:/opt/airflow/logs
@@ -112,7 +110,10 @@ services:
     cap_add:
       - IPC_LOCK
     environment:
+      VAULT_ADDR: 'http://0.0.0.0:8200'
       VAULT_DEV_ROOT_TOKEN_ID: 'vault-plaintext-root-token'
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    command: vault server -dev
 
   airflow-webserver:
     <<: *airflow-common
