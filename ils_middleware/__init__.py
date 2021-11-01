@@ -7,7 +7,6 @@ from honeybadger import honeybadger
 
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO").upper()
 logging.basicConfig(level=LOGLEVEL)
-print(f"LOGLEVEL={LOGLEVEL}")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGLEVEL)
