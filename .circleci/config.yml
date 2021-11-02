@@ -70,6 +70,12 @@ jobs:
     executor: docker-publisher
     steps:
       - checkout
+      - python/install-packages:
+          pkg-manager: poetry
+      - run:
+          name: Build wheel distribution
+          command: |
+            poetry build --format=wheel
       - setup_remote_docker
       - run:
           name: Build Docker
@@ -97,4 +103,4 @@ workflows:
       - publish_to_dockerhub:
           filters:
             branches:
-              only: main
+              only: 87-build-wheel-in-circle
