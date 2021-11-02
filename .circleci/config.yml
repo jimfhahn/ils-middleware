@@ -97,4 +97,4 @@ workflows:
       - publish_to_dockerhub:
           filters:
             branches:
-              only: 87-build-wheel-in-circle
+              only: main

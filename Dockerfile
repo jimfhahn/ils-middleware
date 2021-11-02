@@ -11,9 +11,4 @@ COPY --chown=airflow:root poetry.lock pyproject.toml /opt/airflow/
 COPY --chown=airflow:root ./ils_middleware /opt/airflow/ils_middleware
 
 RUN poetry build --format=wheel
-# COPY --chown=airflow:root dist/ils_middleware-0.1.0-py3-none-any.whl .
-RUN pip install dist/ils_middleware-0.1.0-py3-none-any.whl
-
-RUN poetry config virtualenvs.create false \ 
-    && poetry install --no-dev --no-interaction --no-ansi
-
+RUN pip install dist/*.whl
