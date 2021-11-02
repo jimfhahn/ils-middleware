@@ -66,6 +66,10 @@ x-airflow-common:
     LOGLEVEL: ${LOGLEVEL:-DEBUG}
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     LOGLEVEL: ${LOGLEVEL:-DEBUG}
+    MARC_S3_BUCKET_DEV: 'sinopia-marc-development'
+    RDF2MARC_LAMBDA_DEV: 'sinopia-rdf2marc-development'
+    AIRFLOW__SECRETS__BACKEND: "airflow.providers.hashicorp.secrets.vault.VaultBackend"
+    AIRFLOW__SECRETS__BACKEND_KWARGS: '{"token": "vault-plaintext-root-token","connections_path": "app/airflow/connections","variables_path": "app/airflow/variables","url": "http://vault:8200"}'
   volumes:
     - ./ils_middleware:/opt/airflow/ils_middleware
     - ./logs:/opt/airflow/logs
@@ -102,6 +106,18 @@ services:
       timeout: 30s
       retries: 50
     restart: always
+
+  vault:
+    image: vault:latest
+    ports:
+      - 8200:8200
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: 'http://0.0.0.0:8200'
+      VAULT_DEV_ROOT_TOKEN_ID: 'vault-plaintext-root-token'
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    command: vault server -dev
 
   airflow-webserver:
     <<: *airflow-common
@@ -146,7 +162,6 @@ services:
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-
 
   flower:
     <<: *airflow-common
