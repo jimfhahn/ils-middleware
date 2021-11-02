@@ -2,8 +2,7 @@ import pathlib
 import pytest
 
 from airflow import models
-from airflow.utils.dag_cycle_tester import test_cycle as cycle_test
-
+from airflow.utils.dag_cycle_tester import check_cycle
 
 DAG_PATHS = [
     p
@@ -32,7 +31,7 @@ def test_dag_integrity(dag_path, mock_variable):
 
     # For every DAG object, test for cycles
     for dag in dag_objects:
-        cycle_test(dag)
+        check_cycle(dag)
 
 
 def _import_file(module_name, module_path):

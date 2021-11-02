@@ -79,7 +79,7 @@ def mock_sinopia_get(monkeypatch):
 def test_parse_messages(test_dag, mock_task_instance, mock_variable, mock_sinopia_get):
     """Test parse_messages function."""
     task = SubscribeOperator(queue="stanford-ils", sinopia_env="stage", dag=test_dag)
-    task_instance = TaskInstance(task, datetime(2021, 10, 12))
+    task_instance = TaskInstance(task)
     result = parse_messages(task_instance=task_instance)
     assert result == "completed_parse"
 
