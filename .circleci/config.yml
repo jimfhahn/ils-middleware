@@ -3,19 +3,12 @@ version: 2.1
 orbs:
   python: circleci/python@1.2
 
-workflows:
-  build:
-    jobs:
-      - build
-      - linting:
-          requires:
-            - build
-      - typechecking:
-          requires:
-            - build
-      - test:
-          requires:
-            - build
+executors:
+  docker-publisher:
+    environment:
+      IMAGE_NAME: ld4p/ils-middleware
+    docker:
+      - image: circleci/buildpack-deps:stretch
 
 jobs:
   build:
@@ -25,6 +18,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: poetry
+
   linting:
      executor: python/default
      steps:
@@ -39,6 +33,7 @@ jobs:
           name: Lint with Black
           command: |
              poetry run black --diff --check .
+
   typechecking:
     executor: python/default
     steps:
@@ -49,6 +44,7 @@ jobs:
           name: Type check with mypy
           command: |
              poetry run mypy --ignore-missing-imports .
+
   test:
       executor: python/default
       steps:
@@ -69,3 +65,36 @@ jobs:
             name: Report test coverage results to CodeClimate
             command: |
               ./cc-test-reporter after-build --coverage-input-type 'coverage.py' --exit-code $?
+
+  publish_to_dockerhub:
+    executor: docker-publisher
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker
+          command: |
+              docker build . -t $IMAGE_NAME:latest
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push $IMAGE_NAME:latest
+
+workflows:
+  build:
+    jobs:
+      - build
+      - linting:
+          requires:
+            - build
+      - typechecking:
+          requires:
+            - build
+      - test:
+          requires:
+            - build
+      - publish_to_dockerhub:
+          filters:
+            branches:
+              only: main
