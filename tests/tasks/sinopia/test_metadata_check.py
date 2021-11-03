@@ -24,7 +24,7 @@ def test_task():
     return DummyOperator(task_id="test", dag=test_dag)
 
 
-task_instance = TaskInstance(test_task(), datetime.datetime(2021, 10, 28))
+task_instance = TaskInstance(test_task())
 
 admin_metadata = [
     {

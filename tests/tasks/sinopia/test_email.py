@@ -75,8 +75,7 @@ def mock_failure_no_user_available_task_instance(monkeypatch):
 def test_send_update_success_emails(
     mock_success_task_instance, mocker: MockerFixture
 ) -> None:
-    execution_date = datetime(2021, 9, 21)
-    task_instance = TaskInstance(test_task(), execution_date)
+    task_instance = TaskInstance(test_task())
 
     mock_ses_hook_obj = mocker.Mock(SESHook)
     patched_ses_hook_class = mocker.patch(
@@ -108,7 +107,7 @@ def test_send_task_failure_notifications(
     mock_failure_task_instance, mocker: MockerFixture
 ) -> None:
     execution_date = datetime(2021, 9, 21)
-    task_instance = TaskInstance(test_task(), execution_date)
+    task_instance = TaskInstance(test_task())
 
     hb_notify_spy = mocker.spy(honeybadger, "notify")
     logger_spy = mocker.spy(logger, "error")
@@ -156,7 +155,7 @@ def test_send_task_failure_notifications_no_user_available(
     mock_failure_no_user_available_task_instance, mocker: MockerFixture
 ) -> None:
     execution_date = datetime(2021, 9, 21)
-    task_instance = TaskInstance(test_task(), execution_date)
+    task_instance = TaskInstance(test_task())
 
     hb_notify_spy = mocker.spy(honeybadger, "notify")
     logger_spy = mocker.spy(logger, "error")
