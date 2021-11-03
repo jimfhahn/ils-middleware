@@ -32,7 +32,7 @@ def get_resource(resource_uri: str) -> dict:
     result = requests.get(resource_uri)
     if result.status_code < 400:
         return result.json()
-    return f"{resource_uri} returned error {result.status_code}"
+    raise ValueError(f"{resource_uri} returned error {result.status_code}")
 
 
 def parse_messages(**kwargs) -> str:
@@ -45,6 +45,9 @@ def parse_messages(**kwargs) -> str:
     resource_uri = message_body["resource"]["uri"]
     task_instance.xcom_push(key="email", value=message_body["user"]["email"])
     task_instance.xcom_push(key="resource_uri", value=resource_uri)
-    task_instance.xcom_push(key="resource", value=get_resource(resource_uri))
+    try:
+        task_instance.xcom_push(key="resource", value=get_resource(resource_uri))
+    except ValueError:
+        task_instance.xcom_push(key="resource", value={})
 
     return "completed_parse"
