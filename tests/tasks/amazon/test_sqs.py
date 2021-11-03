@@ -140,5 +140,5 @@ def mock_failed_get_resource(monkeypatch):
 
 def test_failed_get_resource(mock_failed_get_resource):
     uri = "http://sinopia.io/resource/456abc"
-    failed_message = get_resource(uri)
-    assert failed_message.startswith(f"{uri} returned error 404")
+    resource = get_resource(uri)
+    assert resource == {}
