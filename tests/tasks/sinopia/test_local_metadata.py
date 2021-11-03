@@ -45,12 +45,35 @@ def mock_uuid(monkeypatch):
     monkeypatch.setattr(uuid, "uuid4", mock_uuid4)
 
 
+@pytest.fixture
+def mock_resource():
+    return {
+        "user": "jpnelson",
+        "group": "stanford",
+        "editGroups": ["other", "pcc"],
+        "templateId": "ld4p:RT:bf2:Monograph:Instance:Un-nested",
+        "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
+        "bfAdminMetadataRefs": [
+            "https://api.development.sinopia.io/resource/7f775ec2-4fe8-48a6-9cb4-5b218f9960f1",
+            "https://api.development.sinopia.io/resource/bc9e9939-45b3-4122-9b6d-d800c130c576",
+        ],
+        "bfItemRefs": [],
+        "bfInstanceRefs": [],
+        "bfWorkRefs": [
+            "https://api.development.sinopia.io/resource/6497a461-42dc-42bf-b433-5e47c73f7e89"
+        ],
+        "id": "7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
+        "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
+        "timestamp": "2021-10-29T20:30:58.821Z",
+    }
+
+
 def test_new_local_admin_metadata(
-    mock_requests_post, mock_airflow_variables, mock_uuid
+    mock_requests_post, mock_airflow_variables, mock_uuid, mock_resource
 ):
     local_admin_metadata_uri = new_local_admin_metadata(
         jwt="abcd1234efg",
-        group="stanford",
+        resource=mock_resource,
         instance_uri="https://api.development.sinopia.io/resource/tyu8889asdf",
     )
 

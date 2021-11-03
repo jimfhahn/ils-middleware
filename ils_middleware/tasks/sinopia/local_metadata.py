@@ -71,7 +71,9 @@ def create_admin_metadata(**kwargs) -> str:
 def new_local_admin_metadata(*args, **kwargs) -> str:
     "Add Identifier to Sinopia localAdminMetadata."
     jwt = kwargs.get("jwt")
-    group = kwargs.get("group")
+    resource = kwargs.get("resource")
+    group = resource.get("group")
+    editGroups = resource.get("editGroups")
     instance_uri = kwargs.get("instance_uri")
     user = Variable.get("sinopia_user")
 
@@ -94,7 +96,7 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
         "data": local_metadata_rdf,
         "user": user,
         "group": group,
-        "editGroups": [],
+        "editGroups": editGroups,
         "templateId": "pcc:sinopia:localAdminMetadata",
         "types": [],
         "bfAdminMetadataRefs": [],

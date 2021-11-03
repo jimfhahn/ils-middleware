@@ -165,7 +165,7 @@ with DAG(
             python_callable=new_local_admin_metadata,
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
-                "group": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='group') }}",
+                "resource": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource') }}",
                 "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
                 "ils_identifiers": {
                     "SIRSI": "{{ task_instance.xcom_pull(task_ids='process_symphony.post_new_symphony', key='return_value') }}"
