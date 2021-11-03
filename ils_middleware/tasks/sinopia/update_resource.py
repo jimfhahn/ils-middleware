@@ -10,15 +10,15 @@ logger = logging.getLogger(__name__)
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 
 
-def get_update_rdf(resource_uri, metadata_uri, raw_json_ld: str) -> str:
+def _get_update_rdf(resource_uri, metadata_uri, raw_json_ld: str) -> str:
 
-    resource_uri = rdflib.URIRef(resource_uri)
-    metadata_uri = rdflib.URIRef(metadata_uri)
+    resource_uri_node = rdflib.URIRef(resource_uri)
+    metadata_uri_node = rdflib.URIRef(metadata_uri)
 
     graph = rdflib.Graph()
 
     graph.parse(data=raw_json_ld, format="json-ld")
-    graph.add((resource_uri, BF.adminMetadata, metadata_uri))
+    graph.add((resource_uri_node, BF.adminMetadata, metadata_uri_node))
     return graph.serialize(format="json-ld")
 
 
@@ -36,7 +36,7 @@ def update_resource_new_metadata(*args, **kwargs) -> str:
         raise Exception(msg)
 
     sinopia_doc = result.json()
-    updated_json_ld = get_update_rdf(
+    updated_json_ld = _get_update_rdf(
         resource_uri, metadata_uri, json.dumps(sinopia_doc.get("data"))
     )
 

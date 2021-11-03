@@ -11,12 +11,14 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
-def query_for_ils_info(graph_jsonld: str, uri: str) -> dict:
+def _query_for_ils_info(graph_jsonld: str, uri: str) -> dict:
     graph = rdflib.Graph()
     graph.parse(data=graph_jsonld, format="json-ld")
     output = {}
-    for row in graph.query(
-        f"""PREFIX sinopia: <http://sinopia.io/vocabulary/>
+
+    # In localAdminMetadata the identifier is modeled with a blank
+    # node and is represented as ?ident_bnode in query below
+    ils_info_query = f"""PREFIX sinopia: <http://sinopia.io/vocabulary/>
     PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 
     SELECT ?export_date ?identifier ?ils
@@ -28,13 +30,13 @@ def query_for_ils_info(graph_jsonld: str, uri: str) -> dict:
         ?source rdfs:label ?ils .
     }}
     """
-    ):
+    for row in graph.query(ils_info_query):
         output["export_date"] = datetime.datetime.fromisoformat(str(row[0]))
         output[str(row[2])] = str(row[1])  # type: ignore
     return output
 
 
-def get_retrieve_metadata(uri: str) -> Optional[dict]:
+def _get_retrieve_metadata_resource(uri: str) -> Optional[dict]:
     """Retrieves AdminMetadata resource and extracts any ILS identifiers"""
     metadata_result = requests.get(uri)
     if metadata_result.status_code > 399:
@@ -47,10 +49,10 @@ def get_retrieve_metadata(uri: str) -> Optional[dict]:
     # Ignore and return if not using the pcc:sinopia:localAdminMetadata template
     if not resource.get("templateId").startswith("pcc:sinopia:localAdminMetadata"):
         return None
-    return query_for_ils_info(json.dumps(resource.get("data")), uri)
+    return _query_for_ils_info(json.dumps(resource.get("data")), uri)
 
 
-def check_return_refs(resource_refs_uri: str) -> list:
+def _check_return_refs(resource_refs_uri: str) -> list:
     resource_ref_results = requests.get(resource_refs_uri)
     if resource_ref_results.status_code > 399:
         msg = f"{resource_refs_uri} retrieval failed {resource_ref_results.status_code}\n{resource_ref_results.text}"
@@ -59,10 +61,10 @@ def check_return_refs(resource_refs_uri: str) -> list:
     return resource_ref_results.json().get("bfAdminMetadataAllRefs", [])
 
 
-def retrieve_metadata(bf_admin_metadata_all: list) -> list:
+def _retrieve_all_metadata(bf_admin_metadata_all: list) -> list:
     ils_info = []
     for metadata_uri in bf_admin_metadata_all:
-        metadata = get_retrieve_metadata(metadata_uri)
+        metadata = _get_retrieve_metadata_resource(metadata_uri)
         if metadata:
             ils_info.append(metadata)
     return ils_info
@@ -74,12 +76,12 @@ def existing_metadata_check(*args, **kwargs) -> Optional[str]:
     resource_uri = kwargs.get("resource_uri")
     ils_tasks = kwargs.get("ils_tasks", {})
 
-    bf_admin_metadata_all = check_return_refs(f"{resource_uri}/relationships")
+    bf_admin_metadata_all = _check_return_refs(f"{resource_uri}/relationships")
 
     if len(bf_admin_metadata_all) < 1:
         return ils_tasks.get("new")
 
-    ils_info = retrieve_metadata(bf_admin_metadata_all)
+    ils_info = _retrieve_all_metadata(bf_admin_metadata_all)
 
     if len(ils_info) < 1:
         return ils_tasks.get("new")
