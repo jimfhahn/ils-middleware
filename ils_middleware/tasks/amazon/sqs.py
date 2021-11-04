@@ -27,12 +27,12 @@ def SubscribeOperator(**kwargs) -> SQSSensor:
     )
 
 
-def get_group(resource_uri: str) -> str:
-    """Retrieves the Resource's Group."""
+def get_resource(resource_uri: str) -> dict:
+    """Retrieves the Resource"""
     result = requests.get(resource_uri)
     if result.status_code < 400:
-        return result.json().get("group")
-    return f"{resource_uri} returned error {result.status_code}"
+        return result.json()
+    return {}
 
 
 def parse_messages(**kwargs) -> str:
@@ -45,5 +45,5 @@ def parse_messages(**kwargs) -> str:
     resource_uri = message_body["resource"]["uri"]
     task_instance.xcom_push(key="email", value=message_body["user"]["email"])
     task_instance.xcom_push(key="resource_uri", value=resource_uri)
-    task_instance.xcom_push(key="group", value=get_group(resource_uri))
+    task_instance.xcom_push(key="resource", value=get_resource(resource_uri))
     return "completed_parse"
