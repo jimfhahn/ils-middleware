@@ -73,7 +73,7 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
     jwt = kwargs.get("jwt")
     resource = kwargs.get("resource", {})
     group = resource.get("group")
-    editGroups = resource.get("editGroups")
+    editGroups = resource.get("editGroups", [])
     instance_uri = kwargs.get("instance_uri")
     user = Variable.get("sinopia_user")
 
