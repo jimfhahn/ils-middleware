@@ -1,0 +1,143 @@
+@prefix bf: <http://id.loc.gov/ontologies/bibframe/> .
+@prefix bflc: <http://id.loc.gov/ontologies/bflc/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sinopia: <http://sinopia.io/vocabulary/> .
+
+<http://id.loc.gov/authorities/genreForms/gf2014026113> rdfs:label "Informational works@en"@eng .
+
+<http://id.loc.gov/authorities/names/n2012041708> a bf:Person ;
+    rdfs:label "Brioni, Simone"@eng .
+
+<http://id.loc.gov/authorities/names/n79018142> rdfs:label "Venice (Italy)"@eng .
+
+<http://id.loc.gov/authorities/names/n79021783> rdfs:label "Italy@en"@eng .
+
+<http://id.loc.gov/authorities/names/n97060063> a bf:Person ;
+    rdfs:label "Ramzanali Fazel, Shirin"@eng .
+
+<http://id.loc.gov/authorities/names/nb2002005989> a bf:Person ;
+    rdfs:label "Blow, C. Joe"@eng .
+
+<http://id.loc.gov/authorities/subjects/sh2005004457> rdfs:label "Islamophobia@en"@eng .
+
+<http://id.loc.gov/authorities/subjects/sh85103571> rdfs:label "Cultural pluralism@en"@eng .
+
+<http://id.loc.gov/authorities/subjects/sh85120595> rdfs:label "Sex discrimination against women@en"@eng .
+
+bf:Electronic rdfs:label "Electronic"@eng .
+
+bf:Text rdfs:label "Text"@eng .
+
+bf:Work rdfs:label "http://id.loc.gov/ontologies/bibframe/Work" .
+
+<http://id.loc.gov/vocabulary/carriers/cr> rdfs:label "online resource"@eng .
+
+<http://id.loc.gov/vocabulary/contentTypes/txt> rdfs:label "Text"@eng .
+
+<http://id.loc.gov/vocabulary/issuance/mono> rdfs:label "single unit"@eng .
+
+<http://id.loc.gov/vocabulary/languages/ita> rdfs:label "Italian" .
+
+<http://id.loc.gov/vocabulary/mediaTypes/c> rdfs:label "computer"@eng .
+
+<http://id.loc.gov/vocabulary/mstatus/incorrect> rdfs:label "incorrect" .
+
+<https://api.stage.sinopia.io/resource/238101af-86ce-473f-abcb-9ff038622c21> rdfs:label "Stanford University"@eng .
+
+<https://api.stage.sinopia.io/resource/48e954be-4b9b-4589-b2a2-776551807d50> rdfs:label "Resource Description and Access"@eng .
+
+<https://api.stage.sinopia.io/resource/992c99e5-adde-4d63-afcd-3391128136fe> rdfs:label "Resource Description and Access"@eng .
+
+<https://api.stage.sinopia.io/resource/b0319047-acd0-4f30-bd8b-98e6c1bac6b0> a bf:Instance ;
+    rdfs:label "OCLC"@eng ;
+    bflc:relationship [ a bflc:Relationship ;
+            bf:hasEquivalent "Also issued in print"@eng ] ;
+    bf:adminMetadata <https://api.stage.sinopia.io/resource/992c99e5-adde-4d63-afcd-3391128136fe> ;
+    bf:carrier <http://id.loc.gov/vocabulary/carriers/cr> ;
+    bf:copyrightDate "©2020" ;
+    bf:dimensions "30 cm by 15 cm"@eng ;
+    bf:editionStatement "1a edizione"@ita ;
+    bf:electronicLocator <https://phaidra.cab.unipd.it/detail/o:445140?mycoll=o:432583>,
+        <https://purl.stanford.edu/mf283yt5578> ;
+    bf:extent [ a bf:Extent ;
+            rdfs:label "1 online resource (128 pages)"@eng ] ;
+    bf:hasItem <https://api.stage.sinopia.io/resource/238101af-86ce-473f-abcb-9ff038622c21> ;
+    bf:identifiedBy [ a bf:Isbn ;
+            bf:qualifier "(ebook)"@eng ;
+            rdf:value "9788869694110" ],
+        [ a bf:Isbn ;
+            bf:qualifier "(print)"@eng ;
+            bf:status <http://id.loc.gov/vocabulary/mstatus/incorrect> ;
+            rdf:value "9788869694103"@eng ],
+        [ a bf:Local ;
+            bf:source [ a bf:Source ;
+                    rdfs:label "OCLC"@eng ] ;
+            rdf:value "1272909598"@eng ] ;
+    bf:instanceOf <https://api.stage.sinopia.io/resource/c96d8b55-e0ac-48a5-9a9b-b0684758c99e> ;
+    bf:issuance <http://id.loc.gov/vocabulary/issuance/mono> ;
+    bf:media <http://id.loc.gov/vocabulary/mediaTypes/c> ;
+    bf:note [ a bf:Note ;
+            rdfs:label "Includes bibliographical references (page 117-128)"@eng ],
+        [ a bf:Note ;
+            rdfs:label "Description based on online resource (Stanford Digital Repository, viewed October 1, 2021)"@eng ] ;
+    bf:provisionActivity [ a bf:Publication ;
+            bf:agent [ a bf:Agent ;
+                    rdfs:label "Edizioni Ca'Foscari"@eng ] ;
+            bf:date "2020"@eng ;
+            bf:place <http://id.loc.gov/authorities/names/n79018142> ] ;
+    bf:provisionActivityStatement "Venezia : Edizioni Ca'Foscari, 2020"@ita ;
+    bf:responsibilityStatement "Simone Brioni e Shirin Ramzanali Fazel"@ita ;
+    bf:seriesStatement "Diaspore, 2610-9387 ;  13"@ita ;
+    bf:title [ a bf:Title ;
+            bf:mainTitle "Scrivere di Islam"@ita ;
+            bf:note [ a bf:Note ;
+                    rdfs:label " Title from PDF title page "@eng ] ;
+            bf:subtitle "raccontere la diaspora"@ita ],
+        [ a bf:ParallelTitle ;
+            bf:mainTitle "Writing about Islam"@eng ;
+            bf:subtitle "narrating a diaspora"@eng ] ;
+    sinopia:hasResourceTemplate "pcc:bf2:Monograph:Instance" ;
+
+    rdf:type bf:Electronic .
+
+<https://api.stage.sinopia.io/resource/c96d8b55-e0ac-48a5-9a9b-b0684758c99e> a bf:Text,
+        bf:Work ;
+    rdfs:label "\"Scrivere di Islam. Raccontare la diaspora (Writing About Islam. Narrating a Diaspora) is a meditation on our multireligious, multicultural, and multilingual reality. It is the result of a personal and collaborative exploration of the necessity to rethink national culture and identity in a more diverse, inclusive, and anti-racist way. The central part of this volume - both symbolically and physically - includes Shirin Ramzanali Fazel's reflections on the discrimination of Muslims, and especially Muslim women, in Italy and the UK. Looking at school textbooks, newspapers, TV programs, and sharing her own personal experience, this section invites us to change the way Muslim immigrants are narrated in scholarly research and news reports. Most importantly, this section urges us to consider minorities not just as 'topics' of cultural analysis, but as audiences and cultural agents. Following Shirin's invitation to question prevailing modes of representations of immigrants, the volume continues with a dialogue between the co-authors and discusses how collaboration can be a way to avoid reproducing a 'colonial model' of knowledge production, in which the white male scholar takes as object of analysis the work of an African female writer. The last chapter also asserts that immigration literature cannot be approached with the same expectations and questions readers would have when reading 'canonised' texts. A new critical terminology is needed in order to understand the innovative linguistic choices and narrative forms that immigrant writers have invented in order to describe a reality that has lacked representation or which has frequently been misrepresented, especially in the discourse around the contemporary Muslim diaspora\"--Abstract"@eng ;
+    bf:adminMetadata <https://api.stage.sinopia.io/resource/48e954be-4b9b-4589-b2a2-776551807d50> ;
+    bf:classification [ a bf:ClassificationLcc ;
+            bf:classificationPortion "BP52.5"@eng ] ;
+    bf:content <http://id.loc.gov/vocabulary/contentTypes/txt> ;
+    bf:contribution [ a bflc:PrimaryContribution ;
+            bf:agent <http://id.loc.gov/authorities/names/n2012041708>,
+                <http://id.loc.gov/authorities/names/nb2002005989> ;
+            bf:role <http://id.loc.gov/vocabulary/relators/aut> ],
+        [ a bf:Contribution ;
+            bf:agent <http://id.loc.gov/authorities/names/n97060063> ;
+            bf:role <http://id.loc.gov/vocabulary/relators/aut> ] ;
+    bf:editionStatement "1st edition"@eng ;
+    bf:genreForm <http://id.loc.gov/authorities/genreForms/gf2014026113> ;
+    bf:hasInstance <https://api.stage.sinopia.io/resource/b0319047-acd0-4f30-bd8b-98e6c1bac6b0> ;
+    bf:language <http://id.loc.gov/vocabulary/languages/ita> ;
+    bf:notation [ a bf:Script ;
+            rdfs:label "Latin"@eng ] ;
+    bf:originDate "2020"@eng ;
+    bf:originPlace <http://id.loc.gov/authorities/names/n79021783> ;
+    bf:subject <http://id.loc.gov/authorities/subjects/sh2005004457>,
+        <http://id.loc.gov/authorities/subjects/sh85103571>,
+        <http://id.loc.gov/authorities/subjects/sh85120595>,
+        "Immigrants' writings--History and criticism"@eng ;
+    bf:summary [ a bf:Summary ;
+            rdfs:label "\"Scrivere di Islam. Raccontare la diaspora (Writing About Islam. Narrating a Diaspora) is a meditation on our multireligious, multicultural, and multilingual reality. It is the result of a personal and collaborative exploration of the necessity to rethink national culture and identity in a more diverse, inclusive, and anti-racist way. The central part of this volume - both symbolically and physically - includes Shirin Ramzanali Fazel's reflections on the discrimination of Muslims, and especially Muslim women, in Italy and the UK. Looking at school textbooks, newspapers, TV programs, and sharing her own personal experience, this section invites us to change the way Muslim immigrants are narrated in scholarly research and news reports. Most importantly, this section urges us to consider minorities not just as 'topics' of cultural analysis, but as audiences and cultural agents. Following Shirin's invitation to question prevailing modes of representations of immigrants, the volume continues with a dialogue between the co-authors and discusses how collaboration can be a way to avoid reproducing a 'colonial model' of knowledge production, in which the white male scholar takes as object of analysis the work of an African female writer. The last chapter also asserts that immigration literature cannot be approached with the same expectations and questions readers would have when reading 'canonised' texts. A new critical terminology is needed in order to understand the innovative linguistic choices and narrative forms that immigrant writers have invented in order to describe a reality that has lacked representation or which has frequently been misrepresented, especially in the discourse around the contemporary Muslim diaspora\"--Abstract"@eng ] ;
+    bf:supplementaryContent [ a bf:SupplementaryContent ;
+            rdfs:label "Includes bibliographical references"@eng ] ;
+    bf:title [ a bf:Title ;
+            bf:mainTitle "Scrivere di Islam "@ita ] ;
+    sinopia:hasResourceTemplate "pcc:bf2:Monograph:Work" .
+
+<https://phaidra.cab.unipd.it/detail/o:445140?mycoll=o:432583> rdfs:label "https://phaidra.cab.unipd.it/detail/o:445140?mycoll=o:432583"@eng .
+
+<https://purl.stanford.edu/mf283yt5578> rdfs:label "Stanford Digital Repository"@eng .
+
+<http://id.loc.gov/vocabulary/relators/aut> rdfs:label "Author" .
+
