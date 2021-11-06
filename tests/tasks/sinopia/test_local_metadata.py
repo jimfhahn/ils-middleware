@@ -31,7 +31,7 @@ def mock_airflow_variables(monkeypatch):
     def mock_get(*args, **kwargs):
         if args[0].startswith("sinopia_user"):
             return "ils_middleware"
-        if args[0].startswith("dev_sinopia_api_uri"):
+        if args[0].startswith("sinopia_api_uri"):
             return "https://api.development.sinopia.io/resource"
 
     monkeypatch.setattr(Variable, "get", mock_get)

@@ -80,8 +80,8 @@ extraEnv:
     value: "airflow.providers.hashicorp.secrets.vault.VaultBackend"
   - name: AIRFLOW__SECRETS__BACKEND_KWARGS
     value: '{"token": "vault-plaintext-root-token","connections_path": "app/airflow/connections","variables_path": "app/airflow/variables","url": "http://vault:8200"}'
-  - name: RDF2MARC_LAMBDA_DEV
+  - name: AIRFLOW_VAR_RDF2MARC_LAMBDA
     value: "sinopia-rdf2marc-development"
-  - name: MARC_S3_BUCKET_DEV
+  - name: AIRFLOW_VAR_MARC_S3_BUCKET
     value: "sinopia-marc-development"
 

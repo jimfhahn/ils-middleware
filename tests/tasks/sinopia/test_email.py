@@ -83,7 +83,7 @@ def test_send_update_success_emails(
     )
     send_update_success_emails(task_instance=task_instance)
 
-    patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_dev")
+    patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_connection")
     mock_ses_hook_obj.send_email.assert_any_call(
         **{
             "mail_from": "sinopia-devs@lists.stanford.edu",
@@ -135,7 +135,7 @@ def test_send_task_failure_notifications(
         f"Error executing upstream task: err_msg_context={expected_err_context}"
     )
 
-    patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_dev")
+    patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_connection")
     expected_exec_date_str = "2021-09-21 00:00:00"
     expected_uri = (
         "https://api.sinopia.io/resource/9d3b525e-2d8f-4192-8456-0fb804d34fd1"

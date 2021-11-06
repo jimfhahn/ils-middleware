@@ -10,6 +10,7 @@ from ils_middleware.tasks.folio.request import FolioRequest
 from ils_middleware.tasks.folio.login import FolioLogin
 
 from airflow import DAG
+from airflow.models import Variable
 from airflow.operators.python import PythonOperator
 
 
@@ -64,7 +65,7 @@ with DAG(
         python_callable=sinopia_login,
         op_kwargs={
             "region": "us-west-1",
-            "sinopia_env": "dev",
+            "sinopia_env": Variable.get("sinopia_env"),
         },
     )
 

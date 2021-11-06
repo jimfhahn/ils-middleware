@@ -78,10 +78,9 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
     user = Variable.get("sinopia_user")
 
     kwargs["cataloger_id"] = user
-    sinopia_env = kwargs.get("sinopia_env", "dev")
     logger.debug(f"ILS Identifier {kwargs.get('ils_identifiers')}")
 
-    sinopia_api_uri = Variable.get(f"{sinopia_env}_sinopia_api_uri")
+    sinopia_api_uri = Variable.get("sinopia_api_uri")
 
     admin_metadata_uri = f"{sinopia_api_uri}/{uuid.uuid4()}"
     local_metadata_rdf = create_admin_metadata(

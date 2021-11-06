@@ -62,8 +62,8 @@ with DAG(
             python_callable=Rdf2Marc,
             op_kwargs={
                 "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
-                "rdf2marc_lambda": "sinopia-rdf2marc-development",
-                "s3_bucket": "sinopia-marc-development",
+                "rdf2marc_lambda": Variable.get("rdf2marc_lambda"),
+                "s3_bucket": Variable.get("marc_s3_bucket"),
             },
         )
 
@@ -94,9 +94,9 @@ with DAG(
         # Symphony Dev Server Settings
         library_key = "GREEN"
         home_location = "STACKS"
-        symphony_app_id = "SINOPIA_DEV"
+        symphony_app_id = Variable.get("symphony_app_id")
         symphony_client_id = "SymWSStaffClient"
-        symphony_conn_id = "stanford_symphony_dev"
+        symphony_conn_id = "stanford_symphony_connection"
         # This could be mapped from the Instance RDF template
         symphony_item_type = "STKS-MONO"
 
@@ -107,8 +107,8 @@ with DAG(
                 "app_id": symphony_app_id,
                 "client_id": symphony_client_id,
                 "conn_id": symphony_conn_id,
-                "login": Variable.get("stanford_symphony_dev_login"),
-                "password": Variable.get("stanford_symphony_dev_password"),
+                "login": Variable.get("stanford_symphony_login"),
+                "password": Variable.get("stanford_symphony_password"),
             },
         )
 
@@ -186,7 +186,7 @@ with DAG(
             python_callable=sinopia_login,
             op_kwargs={
                 "region": "us-west-2",
-                "sinopia_env": "dev",
+                "sinopia_env": Variable.get("sinopia_env"),
             },
         )
 

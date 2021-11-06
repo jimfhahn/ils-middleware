@@ -24,8 +24,8 @@ def test_dag():
 
 @pytest.fixture
 def mock_variable(monkeypatch):
-    def mock_get(key, default=None):
-        if key == "SQS_STAGE":
+    def mock_get(key):
+        if key == "sqs_url":
             return "http://aws.com/12345/"
 
     monkeypatch.setattr(Variable, "get", mock_get)
@@ -36,15 +36,15 @@ def test_subscribe_operator_missing_kwargs(test_dag, mock_variable):
 
     task = SubscribeOperator(dag=test_dag)
     assert task is not None
-    assert task.sqs_queue == "None"
-    assert task.aws_conn_id == "aws_sqs_dev"
+    assert task.sqs_queue == "http://aws.com/12345/"
+    assert task.aws_conn_id == "aws_sqs_connection"
 
 
 def test_subscribe_operator(test_dag, mock_variable):
     """Test with typical kwargs for SubscribeOperator."""
-    task = SubscribeOperator(queue="stanford-ils", sinopia_env="stage", dag=test_dag)
+    task = SubscribeOperator(queue="stanford-ils", dag=test_dag)
     assert task.sqs_queue.startswith("http://aws.com/12345/stanford-ils")
-    assert task.aws_conn_id == "aws_sqs_stage"
+    assert task.aws_conn_id == "aws_sqs_connection"
 
 
 @pytest.fixture
@@ -116,7 +116,7 @@ def test_parse_messages(
     test_dag, mock_task_instance, mock_variable, mock_get_resource, mock_resource
 ):
     """Test parse_messages function."""
-    task = SubscribeOperator(queue="stanford-ils", sinopia_env="stage", dag=test_dag)
+    task = SubscribeOperator(queue="stanford-ils", dag=test_dag)
     task_instance = TaskInstance(task)
     result = parse_messages(task_instance=task_instance)
     assert result == "completed_parse"
