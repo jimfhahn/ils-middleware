@@ -78,16 +78,40 @@ def mock_message():
                 "Body": """{ "user": { "email": "dscully@stanford.edu"},
                             "resource": { "uri": "https://sinopia.io/1245" }}"""
             }
-        ]
+        ],
+        [
+            {
+                "Body": """{ "user": { "email": "fmulder@stanford.edu"},
+                            "resource": { "uri": "https://sinopia.io/9876" }}"""
+            }
+        ],
     ]
 
 
 @pytest.fixture
-def mock_task_instance(monkeypatch, mock_message, mock_resource):
+def mock_resources(mock_resource):
+    return [
+        {
+            "email": "dscully@stanford.edu",
+            "resource_uri": "https://sinopia.io/1245",
+            "resource": mock_resource,
+        },
+        {
+            "email": "fmulder@stanford.edu",
+            "resource_uri": "https://sinopia.io/9876",
+            "resource": mock_resource,
+        },
+    ]
+
+
+@pytest.fixture
+def mock_task_instance(monkeypatch, mock_message, mock_resource, mock_resources):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
         if key == "resource":
             return mock_resource
+        elif key == "resources":
+            return mock_resources
         else:
             return mock_message
 
@@ -113,14 +137,14 @@ def mock_get_resource(monkeypatch, mock_resource):
 
 
 def test_parse_messages(
-    test_dag, mock_task_instance, mock_variable, mock_get_resource, mock_resource
+    test_dag, mock_task_instance, mock_variable, mock_get_resource, mock_resources
 ):
     """Test parse_messages function."""
     task = SubscribeOperator(queue="stanford-ils", dag=test_dag)
     task_instance = TaskInstance(task)
     result = parse_messages(task_instance=task_instance)
     assert result == "completed_parse"
-    assert task_instance.xcom_pull(key="resource") == mock_resource
+    assert task_instance.xcom_pull(key="resources") == mock_resources
 
 
 def test_get_resource(mock_get_resource, mock_resource):

@@ -21,7 +21,7 @@ def SubscribeOperator(**kwargs) -> SQSSensor:
         sqs_queue=f"{aws_sqs_url}{queue_name}",
         task_id="sqs-sensor",
         dag=kwargs.get("dag"),
-        max_messages=1,
+        max_messages=50,
     )
 
 
@@ -36,12 +36,20 @@ def get_resource(resource_uri: str) -> dict:
 def parse_messages(**kwargs) -> str:
     """Parses SQS Message Body into constituent part."""
     task_instance = kwargs["task_instance"]
-    raw_sqs_message = task_instance.xcom_pull(key="messages", task_ids=["sqs-sensor"])[
-        0
-    ]
-    message_body = json.loads(raw_sqs_message[0].get("Body"))
-    resource_uri = message_body["resource"]["uri"]
-    task_instance.xcom_push(key="email", value=message_body["user"]["email"])
-    task_instance.xcom_push(key="resource_uri", value=resource_uri)
-    task_instance.xcom_push(key="resource", value=get_resource(resource_uri))
+    raw_sqs_messages = task_instance.xcom_pull(key="messages", task_ids=["sqs-sensor"])
+
+    resources = []
+    for message in raw_sqs_messages:
+        message = message[0]
+        message_body = json.loads(message.get("Body"))
+        resource_uri = message_body["resource"]["uri"]
+        resources.append(
+            {
+                "email": message_body["user"]["email"],
+                "resource_uri": resource_uri,
+                "resource": get_resource(resource_uri),
+            }
+        )
+
+    task_instance.xcom_push(key="resources", value=resources)
     return "completed_parse"
