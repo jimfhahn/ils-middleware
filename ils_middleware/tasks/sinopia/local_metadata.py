@@ -1,5 +1,5 @@
 """Adds Sinopia localAdminMetadata record."""
-
+import ast
 import json
 import datetime
 import logging
@@ -71,7 +71,7 @@ def create_admin_metadata(**kwargs) -> str:
 def new_local_admin_metadata(*args, **kwargs) -> str:
     "Add Identifier to Sinopia localAdminMetadata."
     jwt = kwargs.get("jwt")
-    resource = kwargs.get("resource", {})
+    resource = ast.literal_eval(kwargs.get("resource", "{}"))
     group = resource.get("group")
     editGroups = resource.get("editGroups", [])
     instance_uri = kwargs.get("instance_uri")

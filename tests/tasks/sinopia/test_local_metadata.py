@@ -73,7 +73,7 @@ def test_new_local_admin_metadata(
 ):
     local_admin_metadata_uri = new_local_admin_metadata(
         jwt="abcd1234efg",
-        resource=mock_resource,
+        resource=str(mock_resource),
         instance_uri="https://api.development.sinopia.io/resource/tyu8889asdf",
     )
 
