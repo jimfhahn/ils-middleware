@@ -61,9 +61,8 @@ with DAG(
             task_id="rdf2marc",
             python_callable=Rdf2Marc,
             op_kwargs={
-                "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
-                "rdf2marc_lambda": Variable.get("rdf2marc_lambda"),
-                "s3_bucket": Variable.get("marc_s3_bucket"),
+                "rdf2marc_lambda": "sinopia-rdf2marc-development",
+                "s3_bucket": "sinopia-marc-development",
             },
         )
 
