@@ -22,6 +22,11 @@ def test_task():
 
 
 @pytest.fixture
+def mock_env_vars(monkeypatch) -> None:
+    monkeypatch.setenv("AIRFLOW_VAR_MARC_S3_BUCKET", "sinopia-marc-test")
+
+
+@pytest.fixture
 def mock_s3_hook(monkeypatch):
     def mock_download_file(*args, **kwargs):
         return "path/to/temp/file"
@@ -37,7 +42,7 @@ def mock_s3_load_string():
         yield mocked
 
 
-def test_get_from_s3(mock_s3_hook):
+def test_get_from_s3(mock_env_vars, mock_s3_hook):
     """Test downloading a file from S3 into a temp file"""
     result = get_from_s3(instance_id="0000-1111-2222-3333")
     assert json.loads(result) == {
@@ -46,7 +51,7 @@ def test_get_from_s3(mock_s3_hook):
     }
 
 
-def test_send_to_s3(mock_s3_load_string):
+def test_send_to_s3(mock_env_vars, mock_s3_load_string):
     """Test sending a file to s3"""
 
     send_to_s3(

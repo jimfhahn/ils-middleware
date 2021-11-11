@@ -14,8 +14,8 @@ DAG_PATHS = [
 
 @pytest.fixture
 def mock_variable(monkeypatch):
-    def mock_get(key, default=None):
-        if key == "SQS_DEV":
+    def mock_get(key):
+        if key == "sqs_url":
             return "http://aws.com/12345/"
 
     monkeypatch.setattr(models.Variable, "get", mock_get)

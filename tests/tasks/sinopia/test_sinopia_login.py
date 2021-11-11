@@ -20,7 +20,7 @@ def mock_variable(monkeypatch):
         if key == "sinopia_password":
             return "a_pwd_1234"
 
-        if key == "dev_cognito_client_id":
+        if key == "cognito_client_id":
             return "abcd3445efg"
 
     monkeypatch.setattr(Variable, "get", mock_get)

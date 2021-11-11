@@ -17,6 +17,6 @@ HONEYBADGER_API_KEY = os.environ.get("HONEYBADGER_API_KEY")
 logger.info(f"HONEYBADGER_API_KEY={HONEYBADGER_API_KEY}")
 
 honeybadger.configure(
-    api_key=HONEYBADGER_API_KEY, environment=os.environ.get("DEPLOYMENT_ENV")
+    api_key=HONEYBADGER_API_KEY, environment=os.environ.get("AIRFLOW_VAR_SINOPIA_ENV")
 )
 logging.getLogger("honeybadger").addHandler(logging.StreamHandler())

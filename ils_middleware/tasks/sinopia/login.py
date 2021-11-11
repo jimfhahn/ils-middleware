@@ -6,10 +6,9 @@ from airflow.models import Variable
 def sinopia_login(**kwargs):
     """Log into Sinopia using Airflow Variables."""
     region = kwargs.get("aws_region", "us-west-2")
-    sinopia_env = kwargs.get("sinopia_env", "dev")
     sinopia_user = Variable.get("sinopia_user")
     sinopia_password = Variable.get("sinopia_password")
-    cognito_app_client_id = Variable.get(f"{sinopia_env}_cognito_client_id")
+    cognito_app_client_id = Variable.get("cognito_client_id")
 
     client = kwargs.get("client", boto3.client("cognito-idp", region))
 

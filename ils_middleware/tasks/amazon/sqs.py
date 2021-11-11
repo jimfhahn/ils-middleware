@@ -15,11 +15,9 @@ logger = logging.getLogger(__name__)
 def SubscribeOperator(**kwargs) -> SQSSensor:
     """Subscribe to a topic to filter SQS messages."""
     queue_name = kwargs.get("queue", "")
-    # Defaults to Sinopia dev environment
-    sinopia_env = kwargs.get("sinopia_env", "dev")
-    aws_sqs_url = Variable.get(f"SQS_{sinopia_env.upper()}")
+    aws_sqs_url = Variable.get("sqs_url")
     return SQSSensor(
-        aws_conn_id=f"aws_sqs_{sinopia_env}",
+        aws_conn_id="aws_sqs_connection",
         sqs_queue=f"{aws_sqs_url}{queue_name}",
         task_id="sqs-sensor",
         dag=kwargs.get("dag"),

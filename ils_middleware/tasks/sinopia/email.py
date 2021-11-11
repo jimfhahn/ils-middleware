@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # https://airflow.apache.org/docs/apache-airflow/stable/howto/email-config.html?highlight=ses#send-email-using-aws-ses
 def send_update_success_emails(**kwargs) -> None:
     task_instance = kwargs["task_instance"]
-    ses_hook = SESHook(aws_conn_id=f"aws_ses_{_sinopia_env(kwargs)}")
+    ses_hook = SESHook(aws_conn_id="aws_ses_connection")
     for email_attributes in _email_on_success_info_list(task_instance):
         ses_hook.send_email(**email_attributes)
 
@@ -41,14 +41,10 @@ def send_task_failure_notifications(**kwargs) -> None:
         )
 
 
-def _sinopia_env(kwargs: dict) -> str:
-    return kwargs.get("sinopia_env", "dev")
-
-
 def _send_task_failure_email(
     user_email: str, kwargs: dict, task_instance: TaskInstance
 ) -> None:
-    ses_hook = SESHook(aws_conn_id=f"aws_ses_{_sinopia_env(kwargs)}")
+    ses_hook = SESHook(aws_conn_id="aws_ses_connection")
     ses_hook.send_email(
         **_email_on_failure_attributes(user_email, kwargs, task_instance)
     )
