@@ -112,8 +112,12 @@ def mock_task_instance(monkeypatch, mock_message, mock_resource, mock_resources)
             return mock_resource
         elif key == "resources":
             return mock_resources
-        else:
+        elif key == "messages":
             return mock_message
+        else:
+            for resource in mock_resources:
+                if resource["resource_uri"] == key:
+                    return resource
 
     def mock_xcom_push(*args, **kwargs):
         return None
@@ -144,7 +148,8 @@ def test_parse_messages(
     task_instance = TaskInstance(task)
     result = parse_messages(task_instance=task_instance)
     assert result == "completed_parse"
-    assert task_instance.xcom_pull(key="resources") == mock_resources
+    for resource in mock_resources:
+        assert task_instance.xcom_pull(key=resource["resource_uri"]) == resource
 
 
 def test_get_resource(mock_get_resource, mock_resource):

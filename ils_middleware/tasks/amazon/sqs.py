@@ -43,8 +43,10 @@ def parse_messages(**kwargs) -> str:
         message = message[0]
         message_body = json.loads(message.get("Body"))
         resource_uri = message_body["resource"]["uri"]
-        resources.append(
-            {
+        resources.append(resource_uri)
+        task_instance.xcom_push(
+            key=resource_uri,
+            value={
                 "email": message_body["user"]["email"],
                 "resource_uri": resource_uri,
                 "resource": get_resource(resource_uri),
