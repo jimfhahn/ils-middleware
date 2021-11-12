@@ -34,7 +34,7 @@ def mock_env_vars(monkeypatch) -> None:
 @pytest.fixture
 def mock_s3_hook(monkeypatch):
     def mock_download_file(*args, **kwargs):
-        return "path/to/temp/file"
+        return "tests/fixtures/record.mar"
 
     monkeypatch.setattr(S3Hook, "download_file", mock_download_file)
 
@@ -66,24 +66,23 @@ def mock_s3_load_string():
         yield mocked
 
 
+@pytest.fixture
+def mock_marc_as_json():
+    with open('tests/fixtures/record.json') as data:
+        return json.load(data)
+
+
 def test_get_from_s3(mock_s3_hook, mock_task_instance):
     """Test downloading a file from S3 into a temp file"""
     get_from_s3(task_instance=task_instance)
-    assert task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333") == "path/to/temp/file"
-    assert task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777") == "path/to/temp/file"
+    assert task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333") == "tests/fixtures/record.mar"
+    assert task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777") == "tests/fixtures/record.mar"
 
 
-# @pytest.fixture
-# def mock_instances():
-#     return [{
-#         "id": "0000-1111-2222-3333",
-#         "temp_file": "path/to/temp/file",
-#     }]
+def test_send_to_s3(mock_s3_load_string, mock_task_instance, mock_marc_as_json):
+    """Test sending a file to s3"""
 
-# def test_send_to_s3(mock_s3_load_string, mock_instances):
-#     """Test sending a file to s3"""
-
-#     send_to_s3(
-#         instances=mock_instances
-#     )
-#     mock_s3_load_string.assert_called_once()
+    send_to_s3(task_instance=task_instance)
+    mock_s3_load_string.call_count == 2
+    assert json.loads(task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333")) == mock_marc_as_json
+    assert json.loads(task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777")) == mock_marc_as_json

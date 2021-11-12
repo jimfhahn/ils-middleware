@@ -34,15 +34,13 @@ def send_to_s3(**kwargs) -> dict:
         instance_id = path.split(instance_path)[-1]
         temp_file = task_instance.xcom_pull(key=instance_uri, task_ids=["process_symphony.download_marc"])
         marc_record = marc_record_from_temp_file(instance_id, temp_file)
-
         s3_hook.load_string(
             marc_record.as_json(),
             f"marc/airflow/{instance_id}/record.json",
             "sinopia-marc-development",
             replace=True,
         )
-
-    return marc_record.as_json()
+        task_instance.xcom_push(key=instance_uri, value=marc_record.as_json())
 
 
 def marc_record_from_temp_file(instance_id, temp_file):
@@ -51,4 +49,3 @@ def marc_record_from_temp_file(instance_id, temp_file):
             return next(MARCReader(marc))
     else:
         logger.error(f"MARC data for {instance_id} missing or empty.")
-        # raise Exception()
