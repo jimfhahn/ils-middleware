@@ -44,12 +44,12 @@ with DAG(
     tags=["symphony", "folio"],
     catchup=False,
 ) as dag:
-    # Monitors SQS for Stanford topic
+    # Monitors SQS for Stanford queue
     # By default, SubscribeOperator will make the message available via XCom: "Get messages from an SQS queue and then
     # deletes the message from the SQS queue. If deletion of messages fails an AirflowException is thrown otherwise, the
     # message is pushed through XCom with the key 'messages'."
     # https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/_api/airflow/providers/amazon/aws/sensors/sqs/index.html
-    listen_sns = SubscribeOperator(topic="stanford")
+    listen_sns = SubscribeOperator(queue="stanford-ils")
 
     process_message = PythonOperator(
         task_id="sqs-message-parse",
