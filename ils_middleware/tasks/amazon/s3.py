@@ -1,7 +1,7 @@
 import json
 import logging
-import os
-from airflow.models import Variable
+from urllib.parse import urlparse
+from os import path
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from pymarc import MARCReader
 
@@ -9,30 +9,33 @@ logger = logging.getLogger(__name__)
 
 
 def get_from_s3(**kwargs) -> str:
-    instance_id = kwargs.get("instance_id")
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
+    task_instance = kwargs.get("task_instance")
+    resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
 
-    temp_file = s3_hook.download_file(
-        key=f"marc/airflow/{instance_id}/record.mar",
-        bucket_name=Variable.get("marc_s3_bucket"),
-    )
+    for instance_uri in resources:
+        instance_path = urlparse(instance_uri).path
+        instance_id = path.split(instance_path)[-1]
 
-    return json.dumps({"id": instance_id, "temp_file": temp_file})
+        temp_file = s3_hook.download_file(
+            key=f"marc/airflow/{instance_id}/record.mar",
+            bucket_name="sinopia-marc-development",
+        )
+        task_instance.xcom_push(key=instance_uri, value=temp_file)
 
 
 def send_to_s3(**kwargs) -> dict:
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
-    instance = kwargs.get("instance")
-    if isinstance(instance, str):
-        instance = json.loads(instance)
-    marc_record = marc_record_from_temp_file(instance)
+    instances = kwargs.get("instances")
+    for instance in instances:
+        marc_record = marc_record_from_temp_file(instance)
 
-    s3_hook.load_string(
-        marc_record.as_json(),
-        f"marc/airflow/{instance['id']}/record.json",
-        Variable.get("marc_s3_bucket"),
-        replace=True,
-    )
+        s3_hook.load_string(
+            marc_record.as_json(),
+            f"marc/airflow/{instance['id']}/record.json",
+            "sinopia-marc-development",
+            replace=True,
+        )
 
     return marc_record.as_json()
 
