@@ -25,6 +25,7 @@ def test_task():
 
 
 task_instance = TaskInstance(test_task())
+mock_push_store = {}
 
 admin_metadata = [
     {
@@ -47,7 +48,10 @@ admin_metadata = [
 
 sinopia_api = {
     # Happy Path
-    "https://api.sinopia.io/resource/gh1234/relationships": {
+    "http://example.com/rdf/0000-1111-2222-3333/relationships": {
+        "bfAdminMetadataAllRefs": ["https://api.sinopia.io/resource/1234abcde"]
+    },
+    "http://example.com/rdf/4444-5555-6666-7777/relationships": {
         "bfAdminMetadataAllRefs": ["https://api.sinopia.io/resource/1234abcde"]
     },
     "https://api.sinopia.io/resource/1234abcde": {
@@ -95,53 +99,49 @@ def mock_datetime(monkeypatch):
 
 @pytest.fixture
 def mock_task_instance(monkeypatch):
+    def mock_xcom_pull(*args, **kwargs):
+        key = kwargs.get("key")
+        task_ids = kwargs.get("task_ids")
+        if key == "resources":
+            return ["http://example.com/rdf/0000-1111-2222-3333", "http://example.com/rdf/4444-5555-6666-7777", "https://api.sinopia.io/resource/oprt5531"]
+        else:
+            return mock_push_store[key]
+
     def mock_xcom_push(*args, **kwargs):
-        return []
+        key = kwargs.get("key")
+        value = kwargs.get("value")
+        mock_push_store[key] = value
+        return None
 
     monkeypatch.setattr(TaskInstance, "xcom_push", mock_xcom_push)
+    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
 
 
 def test_check_one_metadata_record(mock_requests, mock_datetime, mock_task_instance):
-    result = existing_metadata_check(
+    existing_metadata_check(
         task_instance=task_instance,
         resource_uri="https://api.sinopia.io/resource/gh1234",
         ils_tasks={"overlay": "post_ils_overlay"},
     )
-    assert result.startswith("post_ils_overlay")
+    overlay_resources = task_instance.xcom_pull(key="overlay_resources")
+    assert len(overlay_resources) == 2
 
 
 def test_no_admin_metadata_records(mock_requests, mock_datetime, mock_task_instance):
-    result = existing_metadata_check(
+    existing_metadata_check(
         task_instance=task_instance,
         resource_uri="https://api.sinopia.io/resource/oprt5531",
         ils_tasks={"new": "post_ils_new"},
     )
-
-    assert result.startswith("post_ils_new")
+    new_resources = task_instance.xcom_pull(key="new_resources")
+    assert len(new_resources) == 1
 
 
 def test_no_local_metadata_records(mock_requests, mock_datetime, mock_task_instance):
-    result = existing_metadata_check(
+    existing_metadata_check(
         task_instance=task_instance,
         resource_uri="https://api.sinopia.io/resource/ku333aa555",
         ils_tasks={"new": "post_ils_new"},
     )
-
-    assert result.startswith("post_ils_new")
-
-
-def test_resource_uri_not_found(mock_requests, mock_datetime, mock_task_instance):
-
-    with pytest.raises(
-        Exception, match="https://s.io/relationships retrieval failed 401"
-    ):
-        existing_metadata_check(
-            task_instance=task_instance, resource_uri="https://s.io"
-        )
-
-
-def test_metadata_uri_not_found(mock_requests, mock_datetime, mock_task_instance):
-    with pytest.raises(Exception, match="https://s.io/3818 retrieval failed 401"):
-        existing_metadata_check(
-            task_instance=task_instance, resource_uri="https://s.io/11ec"
-        )
+    new_resources = task_instance.xcom_pull(key="new_resources")
+    assert len(new_resources) == 1

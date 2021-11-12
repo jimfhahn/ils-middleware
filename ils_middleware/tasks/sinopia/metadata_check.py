@@ -73,26 +73,34 @@ def _retrieve_all_metadata(bf_admin_metadata_all: list) -> list:
 def existing_metadata_check(*args, **kwargs) -> Optional[str]:
     """Queries Sinopia API for related resources of an instance."""
     task_instance = kwargs["task_instance"]
-    resource_uri = kwargs.get("resource_uri")
-    ils_tasks = kwargs.get("ils_tasks", {})
+    resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
+    new_resources = []
+    overlay_resources = []
+    for resource_uri in resources:
+        bf_admin_metadata_all = _check_return_refs(f"{resource_uri}/relationships")
 
-    bf_admin_metadata_all = _check_return_refs(f"{resource_uri}/relationships")
-
-    if len(bf_admin_metadata_all) < 1:
-        return ils_tasks.get("new")
-
-    ils_info = _retrieve_all_metadata(bf_admin_metadata_all)
-
-    if len(ils_info) < 1:
-        return ils_tasks.get("new")
-
-    # Sort retrieved ILS by date
-    ils_info = sorted(ils_info, key=lambda x: x["export_date"], reverse=True)
-
-    # Add only the latest ILS information to XCOM
-    for key, value in ils_info[0].items():
-        if key.startswith("export_date"):
+        if len(bf_admin_metadata_all) < 1:
+            new_resources.append(resource_uri)
             continue
-        task_instance.xcom_push(key=key, value=value)
 
-    return ils_tasks.get("overlay")
+        ils_info = _retrieve_all_metadata(bf_admin_metadata_all)
+
+        if len(ils_info) < 1:
+            new_resources.append(resource_uri)
+            continue
+
+        # Sort retrieved ILS by date
+        ils_info = sorted(ils_info, key=lambda x: x["export_date"], reverse=True)
+
+        # Add only the latest ILS information to XCOM        
+        overlay_data = {}
+        for key, value in ils_info[0].items():
+            if key.startswith("export_date"):
+                continue
+
+            overlay_data[key] = value
+        
+        overlay_resources.append({f"{resource_uri}": overlay_data})
+
+    task_instance.xcom_push(key="new_resources", value=new_resources)
+    task_instance.xcom_push(key="overlay_resources", value=overlay_resources)
