@@ -14,6 +14,7 @@ from pytest_mock import MockerFixture
 
 from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
 
+
 def test_task():
     return DummyOperator(
         task_id="test_task",

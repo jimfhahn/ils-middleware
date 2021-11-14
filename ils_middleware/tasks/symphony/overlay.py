@@ -12,27 +12,39 @@ logger = logging.getLogger(__name__)
 
 def overlay_marc_in_symphony(*args, **kwargs) -> str:
     """Overlays an existing record in Symphony"""
-    marc_json = kwargs.get("marc_json", "")
-    catkey = kwargs.get("catkey")
+    task_instance = kwargs.get("task_instance")
+    resources = task_instance.xcom_pull(key="overlay_resources", task_ids=["process_symphony.new-or-overlay"])
 
-    if not catkey:
-        msg = "Catalog ID is required"
-        logger.error(msg)
-        raise ValueError(msg)
+    missing_catkeys = []
 
-    marc_json = ast.literal_eval(marc_json)
+    for resource in resources:
+        resource_uri = resource["resource_uri"]
+        catkey = resource["data"].get("catkey")
+        marc_json = task_instance.xcom_pull(key=resource_uri, task_ids=["process_symphony.convert_to_symphony_json"])
 
-    payload = {
-        "@resource": "/catalog/bib",
-        "@key": catkey,
-        "catalogDate": datetime.datetime.now().strftime("%Y-%m-%d"),
-        "bib": marc_json,
-    }
+        if not catkey:
+            msg = f"Catalog ID is required for {resource_uri}"
+            missing_catkeys.append(resource_uri)
+            logger.error(msg)
 
-    return SymphonyRequest(
-        **kwargs,
-        data=json.dumps(payload),
-        http_verb="put",
-        endpoint=f"catalog/bib/key/{catkey}",
-        filter=lambda response: response.json().get("@key"),
-    )
+        marc_json = ast.literal_eval(marc_json)
+
+        payload = {
+            "@resource": "/catalog/bib",
+            "@key": catkey,
+            "catalogDate": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "bib": marc_json,
+        }
+
+        task_instance.xcom_push(
+            key=resource_uri,
+            value=SymphonyRequest(
+                **kwargs,
+                data=json.dumps(payload),
+                http_verb="put",
+                endpoint=f"catalog/bib/key/{catkey}",
+                filter=lambda response: response.json().get("@key"),
+            )
+        )
+    
+    task_instance.xcom_push(key="missing_catkeys", value=missing_catkeys)

@@ -100,7 +100,7 @@ def existing_metadata_check(*args, **kwargs) -> Optional[str]:
 
             overlay_data[key] = value
         
-        overlay_resources.append({f"{resource_uri}": overlay_data})
+        overlay_resources.append({"resource_uri": resource_uri, "data": overlay_data})
 
     task_instance.xcom_push(key="new_resources", value=new_resources)
     task_instance.xcom_push(key="overlay_resources", value=overlay_resources)
