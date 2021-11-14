@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.dummy import DummyOperator
-from airflow.operators.python import BranchPythonOperator, PythonOperator
+from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
@@ -69,25 +69,16 @@ with DAG(
         download_marc = PythonOperator(
             task_id="download_marc",
             python_callable=get_from_s3,
-            op_kwargs={
-                "instance_id": "{{ task_instance.xcom_pull(task_ids='process_symphony.rdf2marc', key='return_value') }}"
-            },
         )
 
         export_marc_json = PythonOperator(
             task_id="marc_json_to_s3",
             python_callable=send_to_s3,
-            op_kwargs={
-                "instance": "{{ task_instance.xcom_pull(task_ids='process_symphony.download_marc', key='return_value') }}"
-            },
         )
 
         convert_to_symphony_json = PythonOperator(
             task_id="convert_to_symphony_json",
             python_callable=to_symphony_json,
-            op_kwargs={
-                "marc_json": "{{ task_instance.xcom_pull(task_ids='process_symphony.marc_json_to_s3', key='return_value') }}"
-            },
         )
 
         # Symphony Dev Server Settings
@@ -111,16 +102,9 @@ with DAG(
             },
         )
 
-        new_or_overlay = BranchPythonOperator(
+        new_or_overlay = PythonOperator(
             task_id="new-or-overlay",
             python_callable=existing_metadata_check,
-            op_kwargs={
-                "resource_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
-                "ils_tasks": {
-                    "new": "process_symphony.post_new_symphony",
-                    "overlay": "process_symphony.post_overlay_symphony",
-                },
-            },
         )
 
         symphony_add_record = PythonOperator(
@@ -133,8 +117,6 @@ with DAG(
                 "home_location": home_location,
                 "item_type": symphony_item_type,
                 "library_key": library_key,
-                "marc_json": """{{ task_instance.xcom_pull(key='return_value',
-                                      task_ids='process_symphony.convert_to_symphony_json')}}""",
                 "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='process_symphony.symphony-login')}}",
             },
         )
@@ -144,11 +126,8 @@ with DAG(
             python_callable=overlay_marc_in_symphony,
             op_kwargs={
                 "app_id": symphony_app_id,
-                "catkey": "{{ task_instance.xcom_pull(key='SIRSI', task_ids='process_symphony.new-or-overlay') }}",
                 "client_id": symphony_client_id,
                 "conn_id": symphony_conn_id,
-                "marc_json": """{{ task_instance.xcom_pull(key='return_value',
-                                   task_ids='process_symphony.convert_to_symphony_json')}}""",
                 "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='process_symphony.symphony-login')}}",
             },
         )
@@ -195,8 +174,6 @@ with DAG(
             python_callable=new_local_admin_metadata,
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
-                "resource": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource') }}",
-                "instance_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
                 "ils_identifiers": {
                     "SIRSI": """{{ task_instance.xcom_pull(task_ids='process_symphony.post_new_symphony', key='return_value') or task_instance.xcom_pull(task_ids='process_symphony.post_overlay_symphony', key='return_value') }}"""  # noqa: E501
                 },
@@ -209,8 +186,6 @@ with DAG(
             python_callable=update_resource_new_metadata,
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
-                "resource_uri": "{{ task_instance.xcom_pull(task_ids='sqs-message-parse', key='resource_uri') }}",
-                "metadata_uri": "{{task_instance.xcom_pull(task_ids='update_sinopia.sinopia-new-metadata', key='return_value')}}",
             },
         )
 
