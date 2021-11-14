@@ -50,7 +50,7 @@ def parse_messages(**kwargs) -> str:
                 "email": message_body["user"]["email"],
                 "resource_uri": resource_uri,
                 "resource": get_resource(resource_uri),
-            }
+            },
         )
 
     task_instance.xcom_push(key="resources", value=resources)

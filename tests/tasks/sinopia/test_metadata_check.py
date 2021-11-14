@@ -101,9 +101,12 @@ def mock_datetime(monkeypatch):
 def mock_task_instance(monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
-        task_ids = kwargs.get("task_ids")
         if key == "resources":
-            return ["http://example.com/rdf/0000-1111-2222-3333", "http://example.com/rdf/4444-5555-6666-7777", "https://api.sinopia.io/resource/oprt5531"]
+            return [
+                "http://example.com/rdf/0000-1111-2222-3333",
+                "http://example.com/rdf/4444-5555-6666-7777",
+                "https://api.sinopia.io/resource/oprt5531",
+            ]
         else:
             return mock_push_store[key]
 

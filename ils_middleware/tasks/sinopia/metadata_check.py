@@ -92,14 +92,14 @@ def existing_metadata_check(*args, **kwargs) -> Optional[str]:
         # Sort retrieved ILS by date
         ils_info = sorted(ils_info, key=lambda x: x["export_date"], reverse=True)
 
-        # Add only the latest ILS information to XCOM        
+        # Add only the latest ILS information to XCOM
         overlay_data = {}
         for key, value in ils_info[0].items():
             if key.startswith("export_date"):
                 continue
 
             overlay_data[key] = value
-        
+
         overlay_resources.append({"resource_uri": resource_uri, "data": overlay_data})
 
     task_instance.xcom_push(key="new_resources", value=new_resources)

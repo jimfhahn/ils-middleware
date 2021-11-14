@@ -28,8 +28,10 @@ def test_task():
         ),
     )
 
+
 task_instance = TaskInstance(test_task())
 mock_push_store = {}
+
 
 @pytest.fixture
 def mock_requests_post(monkeypatch, mocker: MockerFixture):
@@ -90,19 +92,19 @@ def mock_resources(mock_resource):
     return [
         {
             "resource_uri": "http://example.com/rdf/0000-1111-2222-3333",
-            "resource": mock_resource
+            "resource": mock_resource,
         },
         {
             "resource_uri": "http://example.com/rdf/4444-5555-6666-7777",
-            "resource": mock_resource
-        }
+            "resource": mock_resource,
+        },
     ]
 
+
 @pytest.fixture
-def mock_task_instance(mock_resources, monkeypatch): # , mock_resources):
+def mock_task_instance(mock_resources, monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
-        task_ids = kwargs.get("task_ids")
         if key == "resources":
             return mock_resources
         else:
@@ -119,9 +121,13 @@ def mock_task_instance(mock_resources, monkeypatch): # , mock_resources):
 
 
 def test_new_local_admin_metadata(
-    mock_requests_post, mock_airflow_variables, mock_uuid, mock_resource, mock_task_instance
+    mock_requests_post,
+    mock_airflow_variables,
+    mock_uuid,
+    mock_resource,
+    mock_task_instance,
 ):
-    local_admin_metadata_uri = new_local_admin_metadata(
+    new_local_admin_metadata(
         task_instance=task_instance,
         jwt="abcd1234efg",
         resource=str(mock_resource),
@@ -130,7 +136,7 @@ def test_new_local_admin_metadata(
 
     assert task_instance.xcom_pull(key="admin_metadata") == [
         "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76",
-        "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76"
+        "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76",
     ]
 
 

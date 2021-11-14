@@ -43,6 +43,7 @@ def test_task():
         ),
     )
 
+
 task_instance = TaskInstance(test_task())
 mock_push_store = {}
 
@@ -103,25 +104,24 @@ def mock_resources(mock_resource):
         {
             "resource_uri": "http://example.com/rdf/0000-1111-2222-3333",
             "metadata_uri": "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76",
-            "resource": mock_resource
+            "resource": mock_resource,
         },
         {
             "resource_uri": "http://example.com/rdf/4444-5555-6666-7777",
             "metadata_uri": "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76",
-            "resource": mock_resource
+            "resource": mock_resource,
         },
         {
             "resource_uri": "https://s.io/resources/11ec",
             "metadata_uri": "https://s.io/resources/b5db",
-        }
+        },
     ]
 
 
 @pytest.fixture
-def mock_task_instance(mock_resources, monkeypatch): # , mock_resources):
+def mock_task_instance(mock_resources, monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
-        task_ids = kwargs.get("task_ids")
         if key == "resources":
             return mock_resources
         else:
@@ -138,7 +138,7 @@ def mock_task_instance(mock_resources, monkeypatch): # , mock_resources):
 
 
 def test_update_resource(mock_requests, mock_task_instance):
-    result = update_resource_new_metadata(
+    update_resource_new_metadata(
         task_instance=task_instance,
         jwt="3445676",
     )

@@ -15,6 +15,7 @@ CATKEY = "320011"
 MARC_JSON = {"leader": "11222999   adf", "fields": [{"tag": "245"}], "catkey": CATKEY}
 MARC_JSON_NO_CAT_KEY = {"leader": "11222999   adf", "fields": [{"tag": "245"}]}
 
+
 def test_task():
     return DummyOperator(
         task_id="test_task",
@@ -27,7 +28,7 @@ def test_task():
 
 @pytest.fixture
 def mock_marc_as_json():
-    with open('tests/fixtures/record.json') as data:
+    with open("tests/fixtures/record.json") as data:
         return data.read()
 
 
@@ -36,12 +37,12 @@ mock_push_store = {
     "overlay_resources": [
         {
             "resource_uri": "http://example.com/rdf/0000-1111-2222-3333",
-            "data": MARC_JSON
+            "data": MARC_JSON,
         },
         {
             "resource_uri": "http://example.com/rdf/4444-5555-6666-7777",
-            "data": MARC_JSON_NO_CAT_KEY
-        }
+            "data": MARC_JSON_NO_CAT_KEY,
+        },
     ]
 }
 
@@ -71,7 +72,7 @@ def mock_new_request(monkeypatch, mocker: MockerFixture):
 
 
 @pytest.fixture
-def mock_task_instance(mock_marc_as_json, monkeypatch): # , mock_resources):
+def mock_task_instance(mock_marc_as_json, monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
         task_ids = kwargs.get("task_ids")
@@ -90,7 +91,9 @@ def mock_task_instance(mock_marc_as_json, monkeypatch): # , mock_resources):
     monkeypatch.setattr(TaskInstance, "xcom_push", mock_xcom_push)
 
 
-def test_overlay_marc_in_symphony(mock_new_request, mock_connection, mock_task_instance):
+def test_overlay_marc_in_symphony(
+    mock_new_request, mock_connection, mock_task_instance
+):
     overlay_marc_in_symphony(
         task_instance=task_instance,
         conn_id="symphony_dev_login",
@@ -98,7 +101,9 @@ def test_overlay_marc_in_symphony(mock_new_request, mock_connection, mock_task_i
         catkey=CATKEY,
         marc_json=MARC_JSON,
     )
-    assert task_instance.xcom_pull(key='http://example.com/rdf/0000-1111-2222-3333').startswith(CATKEY)
+    assert task_instance.xcom_pull(
+        key="http://example.com/rdf/0000-1111-2222-3333"
+    ).startswith(CATKEY)
 
 
 def test_missing_catkey(mock_new_request, mock_connection, mock_task_instance):

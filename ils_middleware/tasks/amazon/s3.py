@@ -1,4 +1,3 @@
-import json
 import logging
 from urllib.parse import urlparse
 import os
@@ -32,7 +31,9 @@ def send_to_s3(**kwargs) -> dict:
     for instance_uri in resources:
         instance_path = urlparse(instance_uri).path
         instance_id = path.split(instance_path)[-1]
-        temp_file = task_instance.xcom_pull(key=instance_uri, task_ids=["process_symphony.download_marc"])
+        temp_file = task_instance.xcom_pull(
+            key=instance_uri, task_ids=["process_symphony.download_marc"]
+        )
         marc_record = marc_record_from_temp_file(instance_id, temp_file)
         s3_hook.load_string(
             marc_record.as_json(),

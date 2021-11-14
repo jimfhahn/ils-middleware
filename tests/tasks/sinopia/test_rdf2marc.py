@@ -3,8 +3,6 @@ import io
 
 import pytest
 from datetime import datetime
-from urllib.parse import urlparse
-from os import path
 
 from airflow import DAG
 
@@ -22,6 +20,7 @@ mock_200_response = {
 
 mock_push_store = {}
 
+
 def test_task():
     start_date = datetime(2021, 9, 20)
     test_dag = DAG(
@@ -34,11 +33,14 @@ task_instance = TaskInstance(test_task())
 
 
 @pytest.fixture
-def mock_task_instance(monkeypatch): # , mock_resources):
+def mock_task_instance(monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
         if key == "resources":
-            return ["http://example.com/rdf/0000-1111-2222-3333", "http://example.com/rdf/4444-5555-6666-7777"]
+            return [
+                "http://example.com/rdf/0000-1111-2222-3333",
+                "http://example.com/rdf/4444-5555-6666-7777",
+            ]
         else:
             return mock_push_store[key]
 
@@ -62,8 +64,14 @@ def mock_lambda(monkeypatch):
 
 def test_Rdf2Marc(mock_task_instance, mock_lambda):
     Rdf2Marc(task_instance=task_instance)
-    assert task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333") == "airflow/0000-1111-2222-3333/record.mar"
-    assert task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777") == "airflow/4444-5555-6666-7777/record.mar"
+    assert (
+        task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333")
+        == "airflow/0000-1111-2222-3333/record.mar"
+    )
+    assert (
+        task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777")
+        == "airflow/4444-5555-6666-7777/record.mar"
+    )
 
 
 @pytest.fixture
@@ -82,5 +90,11 @@ def mock_failed_lambda(monkeypatch):
 
 def test_Rdf2Marc_LambdaError(mock_task_instance, mock_failed_lambda):
     Rdf2Marc(task_instance=task_instance)
-    assert task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333") == {"error_message": "RDF2MARC conversion failed for http://example.com/rdf/0000-1111-2222-3333, error: AdminMetadata (bf:adminMetadata) not specified for Instance"}
-    assert task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777") == {"error_message": "RDF2MARC conversion failed for http://example.com/rdf/4444-5555-6666-7777, error: AdminMetadata (bf:adminMetadata) not specified for Instance"}
+    err1 = task_instance.xcom_pull(
+        key="http://example.com/rdf/0000-1111-2222-3333"
+    ).get("error_message")
+    err2 = task_instance.xcom_pull(
+        key="http://example.com/rdf/4444-5555-6666-7777"
+    ).get("error_message")
+    assert "http://example.com/rdf/0000-1111-2222-3333" in err1
+    assert "http://example.com/rdf/4444-5555-6666-7777" in err2

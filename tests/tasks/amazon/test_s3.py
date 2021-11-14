@@ -40,11 +40,14 @@ def mock_s3_hook(monkeypatch):
 
 
 @pytest.fixture
-def mock_task_instance(monkeypatch): # , mock_resources):
+def mock_task_instance(monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
         if key == "resources":
-            return ["http://example.com/rdf/0000-1111-2222-3333", "http://example.com/rdf/4444-5555-6666-7777"]
+            return [
+                "http://example.com/rdf/0000-1111-2222-3333",
+                "http://example.com/rdf/4444-5555-6666-7777",
+            ]
         else:
             return mock_push_store[key]
 
@@ -68,15 +71,21 @@ def mock_s3_load_string():
 
 @pytest.fixture
 def mock_marc_as_json():
-    with open('tests/fixtures/record.json') as data:
+    with open("tests/fixtures/record.json") as data:
         return json.load(data)
 
 
 def test_get_from_s3(mock_s3_hook, mock_task_instance):
     """Test downloading a file from S3 into a temp file"""
     get_from_s3(task_instance=task_instance)
-    assert task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333") == "tests/fixtures/record.mar"
-    assert task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777") == "tests/fixtures/record.mar"
+    assert (
+        task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333")
+        == "tests/fixtures/record.mar"
+    )
+    assert (
+        task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777")
+        == "tests/fixtures/record.mar"
+    )
 
 
 def test_send_to_s3(mock_s3_load_string, mock_task_instance, mock_marc_as_json):
@@ -84,5 +93,15 @@ def test_send_to_s3(mock_s3_load_string, mock_task_instance, mock_marc_as_json):
 
     send_to_s3(task_instance=task_instance)
     mock_s3_load_string.call_count == 2
-    assert json.loads(task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333")) == mock_marc_as_json
-    assert json.loads(task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777")) == mock_marc_as_json
+    assert (
+        json.loads(
+            task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333")
+        )
+        == mock_marc_as_json
+    )
+    assert (
+        json.loads(
+            task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777")
+        )
+        == mock_marc_as_json
+    )

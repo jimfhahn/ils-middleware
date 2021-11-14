@@ -31,17 +31,20 @@ mock_push_store = {}
 
 @pytest.fixture
 def mock_marc_as_json():
-    with open('tests/fixtures/record.json') as data:
+    with open("tests/fixtures/record.json") as data:
         return data.read()
 
 
 @pytest.fixture
-def mock_task_instance(mock_marc_as_json, monkeypatch): # , mock_resources):
+def mock_task_instance(mock_marc_as_json, monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
         task_ids = kwargs.get("task_ids")
         if key == "new_resources":
-            return ["http://example.com/rdf/0000-1111-2222-3333", "http://example.com/rdf/4444-5555-6666-7777"]
+            return [
+                "http://example.com/rdf/0000-1111-2222-3333",
+                "http://example.com/rdf/4444-5555-6666-7777",
+            ]
         elif task_ids == ["process_symphony.convert_to_symphony_json"]:
             return mock_marc_as_json
         else:
@@ -90,7 +93,10 @@ def test_NewMARCtoSymphony(mock_connection, mock_new_request, mock_task_instance
         library_key="GREEN",
         marc_json="""{"leader": "11222999   adf", "fields": [{"tag": "245"}]}""",
     )
-    assert task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333") == "45678"
+    assert (
+        task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333")
+        == "45678"
+    )
 
 
 @pytest.fixture
