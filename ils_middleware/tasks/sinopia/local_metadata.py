@@ -70,55 +70,60 @@ def create_admin_metadata(**kwargs) -> str:
 
 def new_local_admin_metadata(*args, **kwargs) -> str:
     "Add Identifier to Sinopia localAdminMetadata."
+    task_instance = kwargs["task_instance"]
+    resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
     jwt = kwargs.get("jwt")
-    resource = ast.literal_eval(kwargs.get("resource", "{}"))
-    group = resource.get("group")
-    editGroups = resource.get("editGroups", [])
-    instance_uri = kwargs.get("instance_uri")
+    sinopia_env = kwargs.get("sinopia_env", "dev")
     user = Variable.get("sinopia_user")
-
     kwargs["cataloger_id"] = user
-    logger.debug(f"ILS Identifier {kwargs.get('ils_identifiers')}")
+    sinopia_api_uri = Variable.get(f"{sinopia_env}_sinopia_api_uri")
 
-    sinopia_api_uri = Variable.get("sinopia_api_uri")
+    admin_metadata = []
 
-    admin_metadata_uri = f"{sinopia_api_uri}/{uuid.uuid4()}"
-    local_metadata_rdf = create_admin_metadata(
-        **kwargs, admin_metadata_uri=admin_metadata_uri
-    )
+    for instance in resources:
+        resource_uri = instance["resource_uri"]
+        resource = instance["resource"]
+        group = resource.get("group")
+        editGroups = resource.get("editGroups", [])
 
-    local_metadata_rdf = json.loads(local_metadata_rdf)
+        admin_metadata_uri = f"{sinopia_api_uri}/{uuid.uuid4()}"
+        local_metadata_rdf = create_admin_metadata(
+            **kwargs, admin_metadata_uri=admin_metadata_uri
+        )
 
-    headers = {"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"}
+        local_metadata_rdf = json.loads(local_metadata_rdf)
 
-    sinopia_doc = {
-        "data": local_metadata_rdf,
-        "user": user,
-        "group": group,
-        "editGroups": editGroups,
-        "templateId": "pcc:sinopia:localAdminMetadata",
-        "types": [],
-        "bfAdminMetadataRefs": [],
-        "bfItemRefs": [],
-        "bfInstanceRefs": [
-            instance_uri,
-        ],
-        "bfWorkRefs": [],
-    }
+        headers = {"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"}
 
-    logger.debug(sinopia_doc)
+        sinopia_doc = {
+            "data": local_metadata_rdf,
+            "user": user,
+            "group": group,
+            "editGroups": editGroups,
+            "templateId": "pcc:sinopia:localAdminMetadata",
+            "types": [],
+            "bfAdminMetadataRefs": [],
+            "bfItemRefs": [],
+            "bfInstanceRefs": [
+                resource_uri,
+            ],
+            "bfWorkRefs": [],
+        }
 
-    new_admin_result = requests.post(
-        admin_metadata_uri,
-        json=sinopia_doc,
-        headers=headers,
-    )
+        logger.debug(sinopia_doc)
 
-    if new_admin_result.status_code > 399:
-        msg = f"Failed to add localAdminMetadata, {new_admin_result.status_code}\n{new_admin_result.text}"
-        logger.error(msg)
-        raise Exception(msg)
+        new_admin_result = requests.post(
+            admin_metadata_uri,
+            json=sinopia_doc,
+            headers=headers,
+        )
 
-    logger.debug(f"Results of new_admin_result {new_admin_result.text}")
+        if new_admin_result.status_code > 399:
+            msg = f"Failed to add localAdminMetadata, {new_admin_result.status_code}\n{new_admin_result.text}"
+            logger.error(msg)
+            raise Exception(msg)
 
-    return admin_metadata_uri
+        logger.debug(f"Results of new_admin_result {new_admin_result.text}")
+        admin_metadata.append(admin_metadata_uri)
+
+    task_instance.xcom_push(key="admin_metadata", value=admin_metadata)
