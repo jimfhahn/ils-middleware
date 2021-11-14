@@ -50,7 +50,7 @@ def mock_airflow_variables(monkeypatch):
     def mock_get(*args, **kwargs):
         if args[0].startswith("sinopia_user"):
             return "ils_middleware"
-        if args[0].startswith("sinopia_api_uri"):
+        if args[0].startswith("dev_sinopia_api_uri"):
             return "https://api.development.sinopia.io/resource"
 
     monkeypatch.setattr(Variable, "get", mock_get)
@@ -130,8 +130,6 @@ def test_new_local_admin_metadata(
     new_local_admin_metadata(
         task_instance=task_instance,
         jwt="abcd1234efg",
-        resource=str(mock_resource),
-        instance_uri="https://api.development.sinopia.io/resource/tyu8889asdf",
     )
 
     assert task_instance.xcom_pull(key="admin_metadata") == [

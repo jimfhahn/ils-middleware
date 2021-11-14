@@ -88,7 +88,7 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
 
         admin_metadata_uri = f"{sinopia_api_uri}/{uuid.uuid4()}"
         local_metadata_rdf = create_admin_metadata(
-            **kwargs, admin_metadata_uri=admin_metadata_uri
+            **kwargs, instance_uri=resource_uri, admin_metadata_uri=admin_metadata_uri
         )
 
         local_metadata_rdf = json.loads(local_metadata_rdf)
