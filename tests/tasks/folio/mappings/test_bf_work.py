@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: F401
 import rdflib
 
 import ils_middleware.tasks.folio.mappings.bf_work as bf_work_map
@@ -6,14 +6,15 @@ import ils_middleware.tasks.folio.mappings.bf_work as bf_work_map
 
 work_uri = "https://api.stage.sinopia.io/resource/c96d8b55-e0ac-48a5-9a9b-b0684758c99e"
 
+
 def test_contributor_author_person(test_graph: rdflib.Graph):
-    sparql = bf_work_map.contributor.format(bf_work=work_uri,
-                                            bf_class="bf:Person")
+    sparql = bf_work_map.contributor.format(bf_work=work_uri, bf_class="bf:Person")
 
     contributors = [row for row in test_graph.query(sparql)]
 
     assert str(contributors[0][0]).startswith("Ramzanali Fazel, Shirin")
     assert str(contributors[0][1]).startswith("Author")
+
 
 def test_edition(test_graph: rdflib.Graph):
     sparql = bf_work_map.editions.format(bf_work=work_uri)
@@ -30,6 +31,7 @@ def test_instance_type_id(test_graph: rdflib.Graph):
 
     assert str(type_idents[0]).startswith("Text")
 
+
 def test_language(test_graph: rdflib.Graph):
     sparql = bf_work_map.language.format(bf_work=work_uri)
 
@@ -37,8 +39,11 @@ def test_language(test_graph: rdflib.Graph):
 
     assert str(languages[0]).startswith("Italian")
 
+
 def test_primary_contributor(test_graph: rdflib.Graph):
-    sparql = bf_work_map.primary_contributor.format(bf_work=work_uri, bf_class="bf:Person")
+    sparql = bf_work_map.primary_contributor.format(
+        bf_work=work_uri, bf_class="bf:Person"
+    )
 
     primary_contributors = [row for row in test_graph.query(sparql)]
 
@@ -48,10 +53,10 @@ def test_primary_contributor(test_graph: rdflib.Graph):
     assert str(primary_contributors[1][0]).startswith("Blow, C. Joe")
     assert str(primary_contributors[1][1]).startswith("Author")
 
+
 def test_subject(test_graph: rdflib.Graph):
     sparql = bf_work_map.subject.format(bf_work=work_uri)
 
     subjects = [row for row in test_graph.query(sparql)]
 
     assert len(subjects) == 3
-

@@ -1,6 +1,6 @@
 date_of_publication = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?date
 WHERE {{
@@ -11,9 +11,9 @@ WHERE {{
 }}
 """
 
-identifier =  """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
+identifier = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?identifier
 WHERE {{
@@ -26,7 +26,7 @@ WHERE {{
 
 instance_format_category = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?format_category
 WHERE {{
@@ -37,9 +37,9 @@ WHERE {{
 
 instance_format_term = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?format_term 
+SELECT ?format_term
 WHERE {{
     <{bf_instance}> a bf:Instance .
     <{bf_instance}> bf:carrier ?format_term .
@@ -48,7 +48,7 @@ WHERE {{
 
 local_identifier = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?identifier
 WHERE {{
@@ -69,7 +69,7 @@ WHERE {{
 
 mode_of_issuance = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SElECT ?mode_of_issuance
 WHERE {{
@@ -80,7 +80,7 @@ WHERE {{
 
 note = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?note
 WHERE {{
@@ -93,7 +93,7 @@ WHERE {{
 
 physical_description_dimensions = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?dimensions
 WHERE {{
@@ -104,7 +104,7 @@ WHERE {{
 
 physical_description_extent = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?extent
 WHERE {{
@@ -117,7 +117,7 @@ WHERE {{
 
 place = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?place
 WHERE {{
@@ -131,7 +131,7 @@ WHERE {{
 
 publisher = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?publisher
 WHERE {{
@@ -146,7 +146,7 @@ WHERE {{
 
 title = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?main_title ?subtitle ?part_number ?part_name
 WHERE {{

@@ -1,7 +1,7 @@
 contributor = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX bflc: <http://id.loc.gov/ontologies/bflc/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?agent ?role
 WHERE {{
@@ -12,13 +12,13 @@ WHERE {{
     ?role_uri rdfs:label ?role .
     ?contrib_bnode bf:agent ?agent_uri .
     ?agent_uri a {bf_class} .
-    ?agent_uri rdfs:label ?agent .   
+    ?agent_uri rdfs:label ?agent .
 }}
 """
 
 editions = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?edition
 WHERE {{
@@ -29,7 +29,7 @@ WHERE {{
 
 instance_type_id = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 
-SELECT ?instance_type_id 
+SELECT ?instance_type_id
 WHERE {{
     <{bf_work}> a bf:Work .
     <{bf_work}> bf:content ?instance_type .
@@ -50,7 +50,7 @@ WHERE {{
 primary_contributor = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX bflc: <http://id.loc.gov/ontologies/bflc/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?agent ?role
 WHERE {{
@@ -61,13 +61,13 @@ WHERE {{
     ?role_uri rdfs:label ?role .
     ?contrib_bnode bf:agent ?agent_uri .
     ?agent_uri a {bf_class} .
-    ?agent_uri rdfs:label ?agent .   
+    ?agent_uri rdfs:label ?agent .
 }}
 """
 
 subject = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?subject
 WHERE {{
