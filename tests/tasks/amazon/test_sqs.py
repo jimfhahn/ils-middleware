@@ -14,7 +14,7 @@ from ils_middleware.tasks.amazon.sqs import (
     get_resource,
 )
 
-from tasks import test_task_instance, mock_task_instance
+from tasks import test_task_instance, mock_task_instance  # noqa: F401
 
 
 @pytest.fixture
@@ -77,10 +77,11 @@ def mock_resources():
         "https://api.development.sinopia.io/resource/4444-5555-6666-7777",
     ]
 
-resources = []
 
 @pytest.fixture
 def mock_get_resource(monkeypatch):
+    resources = []
+
     def mock_get(uri, *args, **kwargs):
         resources.append(mock_resource(uri))
         response = requests.models.Response()
@@ -95,13 +96,19 @@ def mock_get_resource(monkeypatch):
 
 
 def test_parse_messages(
-    test_dag, mock_task_instance, mock_variable, mock_get_resource, mock_resources
+    test_dag,
+    mock_task_instance,  # noqa: F811
+    mock_variable,
+    mock_get_resource,
+    mock_resources,  # noqa: F811
 ):
     """Test parse_messages function."""
     result = parse_messages(task_instance=test_task_instance())
     assert result == "completed_parse"
     for resource in mock_resources:
-        assert test_task_instance().xcom_pull(key=resource).get("resource") == mock_resource(resource)
+        assert test_task_instance().xcom_pull(key=resource).get(
+            "resource"
+        ) == mock_resource(resource)
 
 
 def test_get_resource(mock_get_resource):

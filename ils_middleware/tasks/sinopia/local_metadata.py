@@ -1,5 +1,4 @@
 """Adds Sinopia localAdminMetadata record."""
-import ast
 import json
 import datetime
 import logging
@@ -78,10 +77,10 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
     kwargs["cataloger_id"] = user
     sinopia_api_uri = Variable.get(f"{sinopia_env}_sinopia_api_uri")
 
-    admin_metadata = []
-
     for resource_uri in resources:
-        resource = task_instance.xcom_pull(key=resource_uri, task_ids=["sqs-message-parse"])
+        resource = task_instance.xcom_pull(
+            key=resource_uri, task_ids=["sqs-message-parse"]
+        )
         group = resource.get("group")
         editGroups = resource.get("editGroups", [])
 
@@ -123,6 +122,4 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
             raise Exception(msg)
 
         logger.debug(f"Results of new_admin_result {new_admin_result.text}")
-        # admin_metadata.append(admin_metadata_uri)
         task_instance.xcom_push(key=resource_uri, value=admin_metadata_uri)
-    # task_instance.xcom_push(key="admin_metadata", value=admin_metadata)

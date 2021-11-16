@@ -4,11 +4,6 @@ import uuid
 import pytest
 import rdflib
 import requests  # type: ignore
-from datetime import datetime
-
-from airflow import DAG
-from airflow.operators.dummy import DummyOperator
-from airflow.models.taskinstance import TaskInstance
 
 from airflow.models import Variable
 from pytest_mock import MockerFixture
@@ -18,7 +13,7 @@ from ils_middleware.tasks.sinopia.local_metadata import (
     new_local_admin_metadata,
 )
 
-from tasks import test_task_instance, mock_task_instance, mock_marc_as_json
+from tasks import test_task_instance, mock_task_instance  # noqa: F401
 
 
 @pytest.fixture
@@ -56,16 +51,27 @@ def test_new_local_admin_metadata(
     mock_requests_post,
     mock_airflow_variables,
     mock_uuid,
-    mock_task_instance,
+    mock_task_instance,  # noqa: F811
 ):
     new_local_admin_metadata(
         task_instance=test_task_instance(),
         jwt="abcd1234efg",
     )
 
-    assert test_task_instance().xcom_pull(key="https://api.development.sinopia.io/resource/0000-1111-2222-3333") == "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76"
-    assert test_task_instance().xcom_pull(key="https://api.development.sinopia.io/resource/4444-5555-6666-7777") == "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76"
-    
+    assert (
+        test_task_instance().xcom_pull(
+            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
+        )
+        == "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76"
+    )
+
+    assert (
+        test_task_instance().xcom_pull(
+            key="https://api.development.sinopia.io/resource/4444-5555-6666-7777"
+        )
+        == "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76"
+    )
+
 
 def test_create_admin_metadata():
     admin_metadata = rdflib.Graph()

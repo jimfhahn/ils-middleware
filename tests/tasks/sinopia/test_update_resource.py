@@ -1,16 +1,11 @@
 import pytest
 import requests  # type: ignore
-from datetime import datetime
-
-from airflow import DAG
-from airflow.operators.dummy import DummyOperator
-from airflow.models.taskinstance import TaskInstance
 
 from pytest_mock import MockerFixture
 
 from ils_middleware.tasks.sinopia.update_resource import update_resource_new_metadata
 
-from tasks import test_task_instance, mock_task_instance, mock_marc_as_json
+from tasks import test_task_instance, mock_task_instance  # noqa: F401
 
 SINOPIA_API = {
     "https://api.development.sinopia.io/resource/0000-1111-2222-3333": {
@@ -65,7 +60,7 @@ def mock_requests(monkeypatch, mocker: MockerFixture):
     monkeypatch.setattr(requests, "put", mock_put)
 
 
-def test_update_resource(mock_requests, mock_task_instance):
+def test_update_resource(mock_requests, mock_task_instance):  # noqa: F811
     update_resource_new_metadata(
         task_instance=task_instance,
         jwt="3445676",

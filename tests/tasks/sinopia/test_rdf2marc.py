@@ -1,18 +1,12 @@
 """Test Symphony Operators and functions."""
 import io
-
 import pytest
-from datetime import datetime
-
-from airflow import DAG
 
 from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
-from airflow.models.taskinstance import TaskInstance
-from airflow.operators.dummy import DummyOperator
 
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 
-from tasks import test_task_instance, mock_task_instance
+from tasks import test_task_instance, mock_task_instance  # noqa: F401
 
 mock_200_response = {
     "Payload": io.StringIO("{}"),
@@ -31,14 +25,18 @@ def mock_lambda(monkeypatch):
     monkeypatch.setattr(AwsLambdaHook, "invoke_lambda", mock_invoke_lambda)
 
 
-def test_Rdf2Marc(mock_task_instance, mock_lambda):
+def test_Rdf2Marc(mock_task_instance, mock_lambda):  # noqa: F811
     Rdf2Marc(task_instance=task_instance)
     assert (
-        task_instance.xcom_pull(key="https://api.development.sinopia.io/resource/0000-1111-2222-3333")
+        task_instance.xcom_pull(
+            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
+        )
         == "airflow/0000-1111-2222-3333/record.mar"
     )
     assert (
-        task_instance.xcom_pull(key="https://api.development.sinopia.io/resource/4444-5555-6666-7777")
+        task_instance.xcom_pull(
+            key="https://api.development.sinopia.io/resource/4444-5555-6666-7777"
+        )
         == "airflow/4444-5555-6666-7777/record.mar"
     )
 
@@ -57,7 +55,7 @@ def mock_failed_lambda(monkeypatch):
     monkeypatch.setattr(AwsLambdaHook, "invoke_lambda", mock_invoke_lambda)
 
 
-def test_Rdf2Marc_LambdaError(mock_task_instance, mock_failed_lambda):
+def test_Rdf2Marc_LambdaError(mock_task_instance, mock_failed_lambda):  # noqa: F811
     Rdf2Marc(task_instance=task_instance)
     err1 = task_instance.xcom_pull(
         key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"

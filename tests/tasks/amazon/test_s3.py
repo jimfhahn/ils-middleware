@@ -7,7 +7,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 
-from tasks import test_task_instance, mock_task_instance, mock_marc_as_json
+from tasks import test_task_instance, mock_task_instance, marc_as_json
 
 
 @pytest.fixture
@@ -35,27 +35,32 @@ def test_get_from_s3(mock_s3_hook, mock_task_instance):
     """Test downloading a file from S3 into a temp file"""
     get_from_s3(task_instance=test_task_instance())
     assert (
-        test_task_instance().xcom_pull(key="https://api.development.sinopia.io/resource/0000-1111-2222-3333")
+        test_task_instance().xcom_pull(
+            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
+        )
         == "tests/fixtures/record.mar"
     )
     assert (
-        test_task_instance().xcom_pull(key="https://api.development.sinopia.io/resource/4444-5555-6666-7777")
+        test_task_instance().xcom_pull(
+            key="https://api.development.sinopia.io/resource/4444-5555-6666-7777"
+        )
         == "tests/fixtures/record.mar"
     )
 
 
-def test_send_to_s3(mock_s3_load_string, mock_task_instance, mock_marc_as_json):
+def test_send_to_s3(mock_s3_load_string, mock_task_instance):
     """Test sending a file to s3"""
 
     send_to_s3(task_instance=test_task_instance())
     mock_s3_load_string.call_count == 2
+    marc_json = json.loads(marc_as_json())
     assert (
         json.loads(
             test_task_instance().xcom_pull(
                 key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
             )
         )
-        == mock_marc_as_json
+        == marc_json
     )
     assert (
         json.loads(
@@ -63,5 +68,5 @@ def test_send_to_s3(mock_s3_load_string, mock_task_instance, mock_marc_as_json):
                 key="https://api.development.sinopia.io/resource/4444-5555-6666-7777"
             )
         )
-        == mock_marc_as_json
+        == marc_json
     )

@@ -1,10 +1,13 @@
 import pytest
-import json
 from datetime import datetime
 
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.models.taskinstance import TaskInstance
+
+CATKEY = "320011"
+MARC_JSON = {"leader": "11222999   adf", "fields": [{"tag": "245"}], "catkey": CATKEY}
+MARC_JSON_NO_CAT_KEY = {"leader": "11222999   adf", "fields": [{"tag": "245"}]}
 
 
 def test_task():
@@ -59,10 +62,22 @@ mock_resources = {
         "id": "7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
         "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
         "timestamp": "2021-10-29T20:30:58.821Z",
-    }
+    },
 }
 
+overlay_resources = [
+    {
+        "resource_uri": "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+        "data": MARC_JSON,
+    },
+    {
+        "resource_uri": "https://api.development.sinopia.io/resource/4444-5555-6666-7777",
+        "data": MARC_JSON_NO_CAT_KEY,
+    },
+]
+
 mock_push_store = {}
+
 
 def mock_message():
     return [
@@ -81,11 +96,22 @@ def mock_message():
     ]
 
 
+def marc_as_json():
+    with open("tests/fixtures/record.json") as data:
+        return data.read()
+
+
+return_marc_tasks = [
+    "process_symphony.convert_to_symphony_json",
+    "process_symphony.marc_json_to_s3",
+]
+
+
 @pytest.fixture
 def mock_task_instance(monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
-        task_ids = kwargs.get("task_ids", [''])
+        task_ids = kwargs.get("task_ids", [""])
         if key == "resources":
             return [
                 "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
@@ -95,6 +121,12 @@ def mock_task_instance(monkeypatch):
             return mock_message()
         elif key in mock_resources and task_ids[0] == "sqs-message-parse":
             return mock_resources[key]
+        elif key == "overlay_resources":
+            return overlay_resources
+        elif task_ids[0] in return_marc_tasks:
+            return marc_as_json()
+        elif key == "new_resources":
+            return mock_resources
         else:
             return mock_push_store[key]
 
@@ -106,9 +138,3 @@ def mock_task_instance(monkeypatch):
 
     monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
     monkeypatch.setattr(TaskInstance, "xcom_push", mock_xcom_push)
-
-
-@pytest.fixture
-def mock_marc_as_json():
-    with open("tests/fixtures/record.json") as data:
-        return json.load(data)
