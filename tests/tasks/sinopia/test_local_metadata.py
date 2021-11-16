@@ -18,19 +18,7 @@ from ils_middleware.tasks.sinopia.local_metadata import (
     new_local_admin_metadata,
 )
 
-
-def test_task():
-    return DummyOperator(
-        task_id="test_task",
-        dag=DAG(
-            "test_dag",
-            default_args={"owner": "airflow", "start_date": datetime(2021, 9, 20)},
-        ),
-    )
-
-
-task_instance = TaskInstance(test_task())
-mock_push_store = {}
+from tasks import test_task_instance, mock_task_instance, mock_marc_as_json
 
 
 @pytest.fixture
@@ -64,75 +52,18 @@ def mock_uuid(monkeypatch):
     monkeypatch.setattr(uuid, "uuid4", mock_uuid4)
 
 
-@pytest.fixture
-def mock_resource():
-    return {
-        "user": "jpnelson",
-        "group": "stanford",
-        "editGroups": ["other", "pcc"],
-        "templateId": "ld4p:RT:bf2:Monograph:Instance:Un-nested",
-        "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
-        "bfAdminMetadataRefs": [
-            "https://api.development.sinopia.io/resource/7f775ec2-4fe8-48a6-9cb4-5b218f9960f1",
-            "https://api.development.sinopia.io/resource/bc9e9939-45b3-4122-9b6d-d800c130c576",
-        ],
-        "bfItemRefs": [],
-        "bfInstanceRefs": [],
-        "bfWorkRefs": [
-            "https://api.development.sinopia.io/resource/6497a461-42dc-42bf-b433-5e47c73f7e89"
-        ],
-        "id": "7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
-        "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
-        "timestamp": "2021-10-29T20:30:58.821Z",
-    }
-
-
-@pytest.fixture
-def mock_resources(mock_resource):
-    return [
-        {
-            "resource_uri": "http://example.com/rdf/0000-1111-2222-3333",
-            "resource": mock_resource,
-        },
-        {
-            "resource_uri": "http://example.com/rdf/4444-5555-6666-7777",
-            "resource": mock_resource,
-        },
-    ]
-
-
-@pytest.fixture
-def mock_task_instance(mock_resources, monkeypatch):
-    def mock_xcom_pull(*args, **kwargs):
-        key = kwargs.get("key")
-        if key == "resources":
-            return mock_resources
-        else:
-            return mock_push_store[key]
-
-    def mock_xcom_push(*args, **kwargs):
-        key = kwargs.get("key")
-        value = kwargs.get("value")
-        mock_push_store[key] = value
-        return None
-
-    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
-    monkeypatch.setattr(TaskInstance, "xcom_push", mock_xcom_push)
-
-
 def test_new_local_admin_metadata(
     mock_requests_post,
     mock_airflow_variables,
     mock_uuid,
-    mock_resource,
     mock_task_instance,
 ):
     new_local_admin_metadata(
-        task_instance=task_instance,
+        task_instance=test_task_instance(),
         jwt="abcd1234efg",
     )
 
-    assert task_instance.xcom_pull(key="admin_metadata") == [
+    assert test_task_instance().xcom_pull(key="admin_metadata") == [
         "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76",
         "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76",
     ]

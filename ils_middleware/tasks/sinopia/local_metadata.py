@@ -80,9 +80,8 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
 
     admin_metadata = []
 
-    for instance in resources:
-        resource_uri = instance["resource_uri"]
-        resource = instance["resource"]
+    for resource_uri in resources:
+        resource = task_instance.xcom_pull(key=resource_uri, task_ids=["sqs-message-parse"])
         group = resource.get("group")
         editGroups = resource.get("editGroups", [])
 
