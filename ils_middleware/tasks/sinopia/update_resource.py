@@ -31,9 +31,9 @@ def update_resource_new_metadata(*args, **kwargs) -> str:
     update_failed = []
     resource_not_found = []
 
-    for resource in resources:
-        resource_uri = resource.get("resource_uri")
-        metadata_uri = resource.get("metadata_uri")
+    for resource_uri in resources:
+        # resource_uri = resource.get("resource_uri")
+        metadata_uri = task_instance.xcom_pull(key=resource_uri, task_ids=["sinopia-new-metadata"])  # resource.get("metadata_uri")
 
         result = requests.get(resource_uri)
 

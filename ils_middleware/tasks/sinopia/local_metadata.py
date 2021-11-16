@@ -123,6 +123,6 @@ def new_local_admin_metadata(*args, **kwargs) -> str:
             raise Exception(msg)
 
         logger.debug(f"Results of new_admin_result {new_admin_result.text}")
-        admin_metadata.append(admin_metadata_uri)
-
-    task_instance.xcom_push(key="admin_metadata", value=admin_metadata)
+        # admin_metadata.append(admin_metadata_uri)
+        task_instance.xcom_push(key=resource_uri, value=admin_metadata_uri)
+    # task_instance.xcom_push(key="admin_metadata", value=admin_metadata)
