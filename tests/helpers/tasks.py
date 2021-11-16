@@ -21,18 +21,80 @@ def test_task_instance():
     return TaskInstance(test_task())
 
 
+mock_resources = {
+    "https://api.development.sinopia.io/resource/0000-1111-2222-3333": {
+        "user": "jpnelson",
+        "group": "stanford",
+        "editGroups": ["other", "pcc"],
+        "templateId": "ld4p:RT:bf2:Monograph:Instance:Un-nested",
+        "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
+        "bfAdminMetadataRefs": [
+            "https://api.development.sinopia.io/resource/7f775ec2-4fe8-48a6-9cb4-5b218f9960f1",
+            "https://api.development.sinopia.io/resource/bc9e9939-45b3-4122-9b6d-d800c130c576",
+        ],
+        "bfItemRefs": [],
+        "bfInstanceRefs": [],
+        "bfWorkRefs": [
+            "https://api.development.sinopia.io/resource/6497a461-42dc-42bf-b433-5e47c73f7e89"
+        ],
+        "id": "7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
+        "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
+        "timestamp": "2021-10-29T20:30:58.821Z",
+    },
+    "https://api.development.sinopia.io/resource/4444-5555-6666-7777": {
+        "user": "jpnelson",
+        "group": "stanford",
+        "editGroups": ["other", "pcc"],
+        "templateId": "ld4p:RT:bf2:Monograph:Instance:Un-nested",
+        "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
+        "bfAdminMetadataRefs": [
+            "https://api.development.sinopia.io/resource/7f775ec2-4fe8-48a6-9cb4-5b218f9960f1",
+            "https://api.development.sinopia.io/resource/bc9e9939-45b3-4122-9b6d-d800c130c576",
+        ],
+        "bfItemRefs": [],
+        "bfInstanceRefs": [],
+        "bfWorkRefs": [
+            "https://api.development.sinopia.io/resource/6497a461-42dc-42bf-b433-5e47c73f7e89"
+        ],
+        "id": "7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
+        "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
+        "timestamp": "2021-10-29T20:30:58.821Z",
+    }
+}
+
 mock_push_store = {}
+
+def mock_message():
+    return [
+        [
+            {
+                "Body": """{ "user": { "email": "dscully@stanford.edu"},
+                            "resource": { "uri": "https://api.development.sinopia.io/resource/0000-1111-2222-3333" }}"""
+            }
+        ],
+        [
+            {
+                "Body": """{ "user": { "email": "fmulder@stanford.edu"},
+                            "resource": { "uri": "https://api.development.sinopia.io/resource/4444-5555-6666-7777" }}"""
+            }
+        ],
+    ]
 
 
 @pytest.fixture
 def mock_task_instance(monkeypatch):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
+        task_ids = kwargs.get("task_ids", [''])
         if key == "resources":
             return [
-                "http://example.com/rdf/0000-1111-2222-3333",
-                "http://example.com/rdf/4444-5555-6666-7777",
+                "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+                "https://api.development.sinopia.io/resource/4444-5555-6666-7777",
             ]
+        elif key == "messages":
+            return mock_message()
+        elif key in mock_resources and task_ids[0] == "sqs-message-parse":
+            return mock_resources[key]
         else:
             return mock_push_store[key]
 

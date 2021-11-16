@@ -7,13 +7,14 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.models import Variable
-from airflow.models.taskinstance import TaskInstance
 
 from ils_middleware.tasks.amazon.sqs import (
     SubscribeOperator,
     parse_messages,
     get_resource,
 )
+
+from tasks import test_task_instance, mock_task_instance
 
 
 @pytest.fixture
@@ -47,8 +48,7 @@ def test_subscribe_operator(test_dag, mock_variable):
     assert task.aws_conn_id == "aws_sqs_connection"
 
 
-@pytest.fixture
-def mock_resource():
+def mock_resource(uri):
     return {
         "user": "jpnelson",
         "group": "stanford",
@@ -65,76 +65,30 @@ def mock_resource():
             "https://api.development.sinopia.io/resource/6497a461-42dc-42bf-b433-5e47c73f7e89"
         ],
         "id": "7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
-        "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
+        "uri": uri,
         "timestamp": "2021-10-29T20:30:58.821Z",
     }
 
 
 @pytest.fixture
-def mock_message():
+def mock_resources():
     return [
-        [
-            {
-                "Body": """{ "user": { "email": "dscully@stanford.edu"},
-                            "resource": { "uri": "https://sinopia.io/1245" }}"""
-            }
-        ],
-        [
-            {
-                "Body": """{ "user": { "email": "fmulder@stanford.edu"},
-                            "resource": { "uri": "https://sinopia.io/9876" }}"""
-            }
-        ],
+        "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+        "https://api.development.sinopia.io/resource/4444-5555-6666-7777",
     ]
 
+resources = []
 
 @pytest.fixture
-def mock_resources(mock_resource):
-    return [
-        {
-            "email": "dscully@stanford.edu",
-            "resource_uri": "https://sinopia.io/1245",
-            "resource": mock_resource,
-        },
-        {
-            "email": "fmulder@stanford.edu",
-            "resource_uri": "https://sinopia.io/9876",
-            "resource": mock_resource,
-        },
-    ]
-
-
-@pytest.fixture
-def mock_task_instance(monkeypatch, mock_message, mock_resource, mock_resources):
-    def mock_xcom_pull(*args, **kwargs):
-        key = kwargs.get("key")
-        if key == "resource":
-            return mock_resource
-        elif key == "resources":
-            return mock_resources
-        elif key == "messages":
-            return mock_message
-        else:
-            for resource in mock_resources:
-                if resource["resource_uri"] == key:
-                    return resource
-
-    def mock_xcom_push(*args, **kwargs):
-        return None
-
-    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
-    monkeypatch.setattr(TaskInstance, "xcom_push", mock_xcom_push)
-
-
-@pytest.fixture
-def mock_get_resource(monkeypatch, mock_resource):
-    def mock_get(*args, **kwargs):
+def mock_get_resource(monkeypatch):
+    def mock_get(uri, *args, **kwargs):
+        resources.append(mock_resource(uri))
         response = requests.models.Response()
         response.status_code = 200
         return response
 
     def mock_json(*args, **kwargs):
-        return mock_resource
+        return resources.pop()
 
     monkeypatch.setattr(requests, "get", mock_get)
     monkeypatch.setattr(requests.models.Response, "json", mock_json)
@@ -144,17 +98,15 @@ def test_parse_messages(
     test_dag, mock_task_instance, mock_variable, mock_get_resource, mock_resources
 ):
     """Test parse_messages function."""
-    task = SubscribeOperator(queue="stanford-ils", dag=test_dag)
-    task_instance = TaskInstance(task)
-    result = parse_messages(task_instance=task_instance)
+    result = parse_messages(task_instance=test_task_instance())
     assert result == "completed_parse"
     for resource in mock_resources:
-        assert task_instance.xcom_pull(key=resource["resource_uri"]) == resource
+        assert test_task_instance().xcom_pull(key=resource).get("resource") == mock_resource(resource)
 
 
-def test_get_resource(mock_get_resource, mock_resource):
+def test_get_resource(mock_get_resource):
     resource = get_resource("http://sinopia.io/resource/456abc")
-    assert resource == mock_resource
+    assert resource == mock_resource("http://sinopia.io/resource/456abc")
 
 
 @pytest.fixture
