@@ -12,46 +12,15 @@ from airflow.operators.dummy import DummyOperator
 
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 
+from tasks import test_task_instance, mock_task_instance
+
 mock_200_response = {
     "Payload": io.StringIO("{}"),
     "ResponseMetadata": {"HTTPHeaders": {}},
     "StatusCode": 200,
 }
 
-mock_push_store = {}
-
-
-def test_task():
-    start_date = datetime(2021, 9, 20)
-    test_dag = DAG(
-        "test_dag", default_args={"owner": "airflow", "start_date": start_date}
-    )
-    return DummyOperator(task_id="test", dag=test_dag)
-
-
-task_instance = TaskInstance(test_task())
-
-
-@pytest.fixture
-def mock_task_instance(monkeypatch):
-    def mock_xcom_pull(*args, **kwargs):
-        key = kwargs.get("key")
-        if key == "resources":
-            return [
-                "http://example.com/rdf/0000-1111-2222-3333",
-                "http://example.com/rdf/4444-5555-6666-7777",
-            ]
-        else:
-            return mock_push_store[key]
-
-    def mock_xcom_push(*args, **kwargs):
-        key = kwargs.get("key")
-        value = kwargs.get("value")
-        mock_push_store[key] = value
-        return None
-
-    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
-    monkeypatch.setattr(TaskInstance, "xcom_push", mock_xcom_push)
+task_instance = test_task_instance()
 
 
 @pytest.fixture
@@ -65,11 +34,11 @@ def mock_lambda(monkeypatch):
 def test_Rdf2Marc(mock_task_instance, mock_lambda):
     Rdf2Marc(task_instance=task_instance)
     assert (
-        task_instance.xcom_pull(key="http://example.com/rdf/0000-1111-2222-3333")
+        task_instance.xcom_pull(key="https://api.development.sinopia.io/resource/0000-1111-2222-3333")
         == "airflow/0000-1111-2222-3333/record.mar"
     )
     assert (
-        task_instance.xcom_pull(key="http://example.com/rdf/4444-5555-6666-7777")
+        task_instance.xcom_pull(key="https://api.development.sinopia.io/resource/4444-5555-6666-7777")
         == "airflow/4444-5555-6666-7777/record.mar"
     )
 
@@ -91,10 +60,10 @@ def mock_failed_lambda(monkeypatch):
 def test_Rdf2Marc_LambdaError(mock_task_instance, mock_failed_lambda):
     Rdf2Marc(task_instance=task_instance)
     err1 = task_instance.xcom_pull(
-        key="http://example.com/rdf/0000-1111-2222-3333"
+        key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
     ).get("error_message")
     err2 = task_instance.xcom_pull(
-        key="http://example.com/rdf/4444-5555-6666-7777"
+        key="https://api.development.sinopia.io/resource/4444-5555-6666-7777"
     ).get("error_message")
-    assert "http://example.com/rdf/0000-1111-2222-3333" in err1
-    assert "http://example.com/rdf/4444-5555-6666-7777" in err2
+    assert "https://api.development.sinopia.io/resource/0000-1111-2222-3333" in err1
+    assert "https://api.development.sinopia.io/resource/4444-5555-6666-7777" in err2
