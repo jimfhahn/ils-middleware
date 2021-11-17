@@ -10,6 +10,7 @@ from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
+    notify_and_log,
     send_update_success_emails,
     send_task_failure_notifications,
 )
@@ -23,6 +24,14 @@ from ils_middleware.tasks.symphony.mod_json import to_symphony_json
 from ils_middleware.tasks.symphony.overlay import overlay_marc_in_symphony
 
 
+def task_failure_callback(ctx_dict) -> None:
+    notify_and_log("Error executing task", ctx_dict)
+
+
+def dag_failure_callback(ctx_dict) -> None:
+    notify_and_log("Error executing DAG", ctx_dict)
+
+
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
@@ -33,6 +42,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
     "provider": None,
     "provide_context": True,
+    "on_failure_callback": task_failure_callback,
 }
 
 with DAG(
@@ -43,6 +53,7 @@ with DAG(
     start_date=datetime(2021, 8, 24),
     tags=["symphony", "folio"],
     catchup=False,
+    on_failure_callback=dag_failure_callback,
 ) as dag:
     # Monitors SQS for Stanford topic
     # By default, SubscribeOperator will make the message available via XCom: "Get messages from an SQS queue and then

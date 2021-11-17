@@ -25,10 +25,8 @@ def send_update_success_emails(**kwargs) -> None:
 
 def send_task_failure_notifications(**kwargs) -> None:
     parent_task_ids = list(kwargs["task"].upstream_task_ids)
-
     err_msg_context = {"parent_task_ids": parent_task_ids, "kwargs": kwargs}
-    honeybadger.notify("Error executing upstream task", context=err_msg_context)
-    logger.error(f"Error executing upstream task: err_msg_context={err_msg_context}")
+    notify_and_log("Error executing upstream task", err_msg_context)
 
     task_instance = kwargs["task_instance"]
     user_email = task_instance.xcom_pull(key="email", task_ids=["sqs-message-parse"])
@@ -39,6 +37,11 @@ def send_task_failure_notifications(**kwargs) -> None:
             "Unable to determine user to notify for task failure",
             context=err_msg_context,
         )
+
+
+def notify_and_log(err_msg: str, err_msg_context: dict) -> None:
+    honeybadger.notify(err_msg, context=err_msg_context)
+    logger.error(f"{err_msg}: err_msg_context={err_msg_context}")
 
 
 def _send_task_failure_email(
