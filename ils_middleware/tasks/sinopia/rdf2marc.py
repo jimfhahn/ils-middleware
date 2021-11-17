@@ -1,3 +1,4 @@
+import ast
 import logging
 import json
 from urllib.parse import urlparse
@@ -11,7 +12,9 @@ logger = logging.getLogger(__name__)
 def Rdf2Marc(**kwargs):
     """Runs rdf2marc on a BF Instance URL"""
     task_instance = kwargs.get("task_instance")
-    resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
+    resources = ast.literal_eval(
+        task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
+    )
 
     for instance_uri in resources:
         instance_path = urlparse(instance_uri).path

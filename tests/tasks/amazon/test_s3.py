@@ -53,7 +53,7 @@ def test_send_to_s3(mock_s3_load_string, mock_task_instance):
 
     send_to_s3(task_instance=test_task_instance())
     mock_s3_load_string.call_count == 2
-    marc_json = json.loads(marc_as_json())
+    marc_json = marc_as_json()
     assert (
         json.loads(
             test_task_instance().xcom_pull(

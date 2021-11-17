@@ -13,25 +13,26 @@ logger = logging.getLogger(__name__)
 def overlay_marc_in_symphony(*args, **kwargs):
     """Overlays an existing record in Symphony"""
     task_instance = kwargs.get("task_instance")
-    resources = task_instance.xcom_pull(
-        key="overlay_resources", task_ids=["process_symphony.new-or-overlay"]
+    resources = ast.literal_eval(
+        task_instance.xcom_pull(
+            key="overlay_resources", task_ids=["process_symphony.new-or-overlay"]
+        )
     )
 
     missing_catkeys = []
-
     for resource in resources:
         resource_uri = resource["resource_uri"]
         catkey = resource["data"].get("catkey")
-        marc_json = task_instance.xcom_pull(
-            key=resource_uri, task_ids=["process_symphony.convert_to_symphony_json"]
+        marc_json = ast.literal_eval(
+            task_instance.xcom_pull(
+                key=resource_uri, task_ids=["process_symphony.convert_to_symphony_json"]
+            )
         )
 
         if not catkey:
             msg = f"Catalog ID is required for {resource_uri}"
             missing_catkeys.append(resource_uri)
             logger.error(msg)
-
-        marc_json = ast.literal_eval(marc_json)
 
         payload = {
             "@resource": "/catalog/bib",

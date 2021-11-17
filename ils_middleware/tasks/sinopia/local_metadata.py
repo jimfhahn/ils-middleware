@@ -3,6 +3,7 @@ import json
 import datetime
 import logging
 import uuid
+import ast
 
 import rdflib
 import requests  # type: ignore
@@ -70,16 +71,17 @@ def create_admin_metadata(**kwargs) -> str:
 def new_local_admin_metadata(*args, **kwargs):
     "Add Identifier to Sinopia localAdminMetadata."
     task_instance = kwargs["task_instance"]
-    resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
+    resources = ast.literal_eval(
+        task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
+    )
     jwt = kwargs.get("jwt")
-    sinopia_env = kwargs.get("sinopia_env", "dev")
     user = Variable.get("sinopia_user")
     kwargs["cataloger_id"] = user
-    sinopia_api_uri = Variable.get(f"{sinopia_env}_sinopia_api_uri")
+    sinopia_api_uri = Variable.get("sinopia_api_uri")
 
     for resource_uri in resources:
-        resource = task_instance.xcom_pull(
-            key=resource_uri, task_ids=["sqs-message-parse"]
+        resource = ast.literal_eval(
+            task_instance.xcom_pull(key=resource_uri, task_ids=["sqs-message-parse"])
         )
         group = resource.get("group")
         editGroups = resource.get("editGroups", [])

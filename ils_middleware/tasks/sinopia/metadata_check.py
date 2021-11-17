@@ -1,4 +1,5 @@
 """Retrieves related AdminMetadata resource info for downstream tasks."""
+import ast
 import datetime
 import json
 import logging
@@ -77,8 +78,8 @@ def _retrieve_all_resource_refs(resources: list) -> dict:
             logging.error(msg)
             continue
 
-        metadata_uri = result.json().get("bfAdminMetadataAllRefs")
-        ils_info = _retrieve_all_metadata(metadata_uri)
+        metadata_uris = result.json().get("bfAdminMetadataAllRefs")
+        ils_info = _retrieve_all_metadata(metadata_uris)
         if ils_info:
             retrieved_resources[resource_uri] = ils_info
 
@@ -88,8 +89,8 @@ def _retrieve_all_resource_refs(resources: list) -> dict:
 def existing_metadata_check(*args, **kwargs):
     """Queries Sinopia API for related resources of an instance."""
     task_instance = kwargs["task_instance"]
-    resource_uris = task_instance.xcom_pull(
-        key="resources", task_ids=["sqs-message-parse"]
+    resource_uris = ast.literal_eval(
+        task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
     )
     resource_refs = _retrieve_all_resource_refs(resource_uris)
     new_resources = []

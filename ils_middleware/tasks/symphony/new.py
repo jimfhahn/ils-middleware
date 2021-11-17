@@ -11,8 +11,10 @@ def NewMARCtoSymphony(**kwargs):
     item_type = kwargs.get("item_type")
     home_location = kwargs.get("home_location")
     task_instance = kwargs.get("task_instance")
-    resources = task_instance.xcom_pull(
-        key="new_resources", task_ids=["process_symphony.new-or-overlay"]
+    resources = ast.literal_eval(
+        task_instance.xcom_pull(
+            key="new_resources", task_ids=["process_symphony.new-or-overlay"]
+        )
     )
 
     for resource_uri in resources:

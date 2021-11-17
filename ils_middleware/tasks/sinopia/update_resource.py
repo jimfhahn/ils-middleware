@@ -1,4 +1,5 @@
 """Updates Resource with new local Admin Metadata"""
+import ast
 import json
 import logging
 
@@ -25,14 +26,15 @@ def update_resource_new_metadata(*args, **kwargs):
     """Updates Resource RDF with new local AdminMetadata URI"""
     jwt = kwargs.get("jwt")
     task_instance = kwargs["task_instance"]
-    resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
+    resources = ast.literal_eval(
+        task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
+    )
 
     updated_resources = []
     update_failed = []
     resource_not_found = []
 
     for resource_uri in resources:
-        # resource_uri = resource.get("resource_uri")
         metadata_uri = task_instance.xcom_pull(
             key=resource_uri, task_ids=["sinopia-new-metadata"]
         )

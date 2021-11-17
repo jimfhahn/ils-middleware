@@ -21,7 +21,7 @@ def SubscribeOperator(**kwargs) -> SQSSensor:
         sqs_queue=f"{aws_sqs_url}{queue_name}",
         task_id="sqs-sensor",
         dag=kwargs.get("dag"),
-        max_messages=50,
+        max_messages=10,
     )
 
 
