@@ -25,7 +25,7 @@ def test_task():
 
 
 task_instance = TaskInstance(test_task())
-mock_push_store = {}
+mock_push_store: dict = {}
 
 admin_metadata = [
     {

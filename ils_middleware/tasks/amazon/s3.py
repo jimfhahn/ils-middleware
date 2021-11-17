@@ -8,7 +8,7 @@ from pymarc import MARCReader
 logger = logging.getLogger(__name__)
 
 
-def get_from_s3(**kwargs) -> str:
+def get_from_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
@@ -24,7 +24,7 @@ def get_from_s3(**kwargs) -> str:
         task_instance.xcom_push(key=instance_uri, value=temp_file)
 
 
-def send_to_s3(**kwargs) -> dict:
+def send_to_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])

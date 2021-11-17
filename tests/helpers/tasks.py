@@ -76,7 +76,7 @@ overlay_resources = [
     },
 ]
 
-mock_push_store = {}
+mock_push_store: dict = {}
 
 
 def mock_message():

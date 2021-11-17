@@ -10,7 +10,7 @@ from ils_middleware.tasks.symphony.request import SymphonyRequest
 logger = logging.getLogger(__name__)
 
 
-def overlay_marc_in_symphony(*args, **kwargs) -> str:
+def overlay_marc_in_symphony(*args, **kwargs):
     """Overlays an existing record in Symphony"""
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(

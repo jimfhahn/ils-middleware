@@ -21,7 +21,7 @@ def _get_update_rdf(resource_uri, metadata_uri, raw_json_ld: str) -> str:
     return graph.serialize(format="json-ld")
 
 
-def update_resource_new_metadata(*args, **kwargs) -> str:
+def update_resource_new_metadata(*args, **kwargs):
     """Updates Resource RDF with new local AdminMetadata URI"""
     jwt = kwargs.get("jwt")
     task_instance = kwargs["task_instance"]

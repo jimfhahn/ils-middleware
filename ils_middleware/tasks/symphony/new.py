@@ -5,7 +5,7 @@ import json
 from ils_middleware.tasks.symphony.request import SymphonyRequest
 
 
-def NewMARCtoSymphony(**kwargs) -> str:
+def NewMARCtoSymphony(**kwargs):
     """Creates a new record in Symphony and returns the new CatKey"""
     library_key = kwargs.get("library_key")
     item_type = kwargs.get("item_type")

@@ -67,7 +67,7 @@ def create_admin_metadata(**kwargs) -> str:
     return graph.serialize(format="json-ld")
 
 
-def new_local_admin_metadata(*args, **kwargs) -> str:
+def new_local_admin_metadata(*args, **kwargs):
     "Add Identifier to Sinopia localAdminMetadata."
     task_instance = kwargs["task_instance"]
     resources = task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])

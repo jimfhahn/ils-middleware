@@ -1,10 +1,14 @@
 # placing this in the root allows the tests in the 'tests' directory to import the packages in the root, e.g. 'dags'
 import pathlib
+import sys
+import os
 
 import pytest
 import rdflib
 
 rdf_file = pathlib.Path(__file__).parent / "tests" / "fixtures" / "bf.ttl"
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "tests/helpers"))
 
 
 @pytest.fixture
