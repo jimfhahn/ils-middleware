@@ -13,13 +13,13 @@ def NewMARCtoSymphony(**kwargs):
     task_instance = kwargs.get("task_instance")
     resources = ast.literal_eval(
         task_instance.xcom_pull(
-            key="new_resources", task_ids=["process_symphony.new-or-overlay"]
+            key="new_resources", task_ids="process_symphony.new-or-overlay"
         )
     )
 
     for resource_uri in resources:
         marc_json = task_instance.xcom_pull(
-            key=resource_uri, task_ids=["process_symphony.convert_to_symphony_json"]
+            key=resource_uri, task_ids="process_symphony.convert_to_symphony_json"
         )
 
         marc_json = ast.literal_eval(marc_json)

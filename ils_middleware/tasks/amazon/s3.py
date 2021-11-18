@@ -1,5 +1,4 @@
 import logging
-import ast
 from urllib.parse import urlparse
 import os
 from os import path
@@ -12,9 +11,7 @@ logger = logging.getLogger(__name__)
 def get_from_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
-    resources = ast.literal_eval(
-        task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
-    )
+    resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
     for instance_uri in resources:
         instance_path = urlparse(instance_uri).path
@@ -30,14 +27,13 @@ def get_from_s3(**kwargs):
 def send_to_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
-    resources = ast.literal_eval(
-        task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
-    )
+    resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
+
     for instance_uri in resources:
         instance_path = urlparse(instance_uri).path
         instance_id = path.split(instance_path)[-1]
         temp_file = task_instance.xcom_pull(
-            key=instance_uri, task_ids=["process_symphony.download_marc"]
+            key=instance_uri, task_ids="process_symphony.download_marc"
         )
         marc_record = marc_record_from_temp_file(instance_id, temp_file)
         s3_hook.load_string(

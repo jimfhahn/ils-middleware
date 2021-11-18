@@ -36,7 +36,7 @@ def get_resource(resource_uri: str) -> dict:
 def parse_messages(**kwargs) -> str:
     """Parses SQS Message Body into constituent part."""
     task_instance = kwargs["task_instance"]
-    raw_sqs_messages = task_instance.xcom_pull(key="messages", task_ids=["sqs-sensor"])
+    raw_sqs_messages = task_instance.xcom_pull(key="messages", task_ids="sqs-sensor")
 
     resources = []
     for message in raw_sqs_messages:

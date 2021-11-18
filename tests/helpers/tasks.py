@@ -114,21 +114,21 @@ def mock_task_instance(monkeypatch):
         key = kwargs.get("key")
         task_ids = kwargs.get("task_ids", [""])
         if key == "resources":
-            return """[
-                'https://api.development.sinopia.io/resource/0000-1111-2222-3333',
-                'https://api.development.sinopia.io/resource/4444-5555-6666-7777',
-            ]"""
+            return [
+                "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+                "https://api.development.sinopia.io/resource/4444-5555-6666-7777",
+            ]
         elif key == "messages":
             return mock_message()
-        elif key in mock_resources and task_ids[0] == "sqs-message-parse":
+        elif key in mock_resources and task_ids == "sqs-message-parse":
             return json.dumps(mock_resources[key])
         elif key == "overlay_resources":
-            return json.dumps(overlay_resources)
-        elif task_ids[0] in return_marc_tasks:
+            return overlay_resources
+        elif task_ids in return_marc_tasks:
             return json.dumps(marc_as_json())
         elif key == "new_resources":
             return json.dumps(mock_resources)
-        elif task_ids[0] == "process_symphony.download_marc":
+        elif task_ids == "process_symphony.download_marc":
             return "tests/fixtures/record.mar"
         else:
             return mock_push_store[key]

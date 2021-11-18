@@ -1,5 +1,4 @@
 """Converts PYMARC JSON to Symphony JSON"""
-import ast
 import json
 import logging
 
@@ -37,12 +36,11 @@ def _get_fields(field):
 def to_symphony_json(**kwargs):
     """Converst pymarc MARC json to Symphony JSON varient."""
     task_instance = kwargs.get("task_instance")
-    resources = ast.literal_eval(
-        task_instance.xcom_pull(key="resources", task_ids=["sqs-message-parse"])
-    )
+    resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
+
     for instance_uri in resources:
         marc_raw_json = task_instance.xcom_pull(
-            key=instance_uri, task_ids=["process_symphony.marc_json_to_s3"]
+            key=instance_uri, task_ids="process_symphony.marc_json_to_s3"
         )
         pymarc_json = json.loads(marc_raw_json)
         record = {"standard": "MARC21", "type": "BIB", "fields": []}
