@@ -19,15 +19,22 @@ def overlay_marc_in_symphony(*args, **kwargs):
     missing_catkeys = []
     for resource in resources:
         resource_uri = resource["resource_uri"]
-        catkey = resource["data"].get("catkey")
-        marc_json = task_instance.xcom_pull(
-            key=resource_uri, task_ids="process_symphony.convert_to_symphony_json"
-        )
 
-        if not catkey:
+        if (
+            not "catkey" in resource
+            or len(resource["catkey"]) < 1
+            or resource["catkey"][0].get("SIRSI") is None
+        ):
             msg = f"Catalog ID is required for {resource_uri}"
             missing_catkeys.append(resource_uri)
             logger.error(msg)
+            continue
+        else:
+            catkey = resource["catkey"][0].get("SIRSI")
+
+        marc_json = task_instance.xcom_pull(
+            key=resource_uri, task_ids="process_symphony.convert_to_symphony_json"
+        )
 
         payload = {
             "@resource": "/catalog/bib",
