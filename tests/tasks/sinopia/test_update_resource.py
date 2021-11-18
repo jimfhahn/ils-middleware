@@ -5,8 +5,10 @@ from pytest_mock import MockerFixture
 
 from ils_middleware.tasks.sinopia.update_resource import update_resource_new_metadata
 
+from tasks import test_task_instance, mock_task_instance  # noqa: F401
+
 SINOPIA_API = {
-    "https://s.io/resources/f3d34054": {
+    "https://api.development.sinopia.io/resource/0000-1111-2222-3333": {
         "data": [
             {
                 "@id": "https://s.io/resources/f3d34054",
@@ -15,7 +17,7 @@ SINOPIA_API = {
         ],
         "bfAdminMetadataRefs": [],
     },
-    "https://s.io/resources/acde48001122": {
+    "https://api.development.sinopia.io/resource/4444-5555-6666-7777": {
         "data": [
             {
                 "@id": "https://s.io/resources/acde48001122",
@@ -27,6 +29,8 @@ SINOPIA_API = {
 }
 
 SINOPIA_API_ERRORS = ["https://s.io/resources/acde48001122"]
+
+task_instance = test_task_instance()
 
 
 @pytest.fixture
@@ -56,34 +60,11 @@ def mock_requests(monkeypatch, mocker: MockerFixture):
     monkeypatch.setattr(requests, "put", mock_put)
 
 
-def test_successful_update_resource(mock_requests):
-    result = update_resource_new_metadata(
+def test_update_resource(mock_requests, mock_task_instance):  # noqa: F811
+    update_resource_new_metadata(
+        task_instance=task_instance,
         jwt="3445676",
-        resource_uri="https://s.io/resources/f3d34054",
-        metadata_uri="https://s.io/resources/38eb",
     )
 
-    assert result.startswith("resource_updated")
-
-
-def test_missing_resource_uri(mock_requests):
-    with pytest.raises(
-        Exception, match="https://s.io/resources/11ec retrieval error 404"
-    ):
-        update_resource_new_metadata(
-            jwt="33446",
-            resource_uri="https://s.io/resources/11ec",
-            metadata_uri="https://s.io/resources/b5db",
-        )
-
-
-def test_bad_put_call_for_resource(mock_requests):
-    with pytest.raises(
-        Exception,
-        match="Failed to update https://s.io/resources/acde48001122, status code 500",
-    ):
-        update_resource_new_metadata(
-            jwt="5677sce",
-            resource_uri="https://s.io/resources/acde48001122",
-            metadata_uri="https://s.io/resources/7a669b8c",
-        )
+    assert len(task_instance.xcom_pull(key="updated_resources")) == 2
+    assert len(task_instance.xcom_pull(key="resource_not_found")) == 0

@@ -9,6 +9,10 @@ from pytest_mock import MockerFixture
 
 from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
 
+from tasks import test_task_instance, mock_task_instance  # noqa: F401
+
+task_instance = test_task_instance()
+
 
 @pytest.fixture
 def mock_connection(monkeypatch, mocker: MockerFixture):
@@ -34,15 +38,23 @@ def mock_new_request(monkeypatch, mocker: MockerFixture):
     monkeypatch.setattr(requests, "post", mock_post)
 
 
-def test_NewMARCtoSymphony(mock_connection, mock_new_request):
+def test_NewMARCtoSymphony(
+    mock_connection, mock_new_request, mock_task_instance  # noqa: F811
+):  # noqa: F811
     """Tests NewMARCtoSymphony"""
-    task_result = NewMARCtoSymphony(
+    NewMARCtoSymphony(
+        task_instance=task_instance,
         conn_id="symphony_dev_login",
         session_token="abcde4590",
         library_key="GREEN",
         marc_json="""{"leader": "11222999   adf", "fields": [{"tag": "245"}]}""",
     )
-    assert "45678" == task_result
+    assert (
+        task_instance.xcom_pull(
+            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
+        )
+        == "45678"
+    )
 
 
 @pytest.fixture
@@ -54,14 +66,3 @@ def mock_failed_request(monkeypatch, mocker: MockerFixture):
         return failed_result
 
     monkeypatch.setattr(requests, "post", mock_failed_post)
-
-
-def test_NewMARCtoSymphony_failed(mock_connection, mock_failed_request):
-    """Test failed NewMARCtoSymphony"""
-    with pytest.raises(Exception, match="Symphony Web Service"):
-        NewMARCtoSymphony(
-            conn_id="symphony_dev_login",
-            session_token="abcde3456",
-            library_key="GREEN",
-            marc_json="""{"leader": "11222999   adf", "fields": [{"tag": "245"}]}""",
-        )

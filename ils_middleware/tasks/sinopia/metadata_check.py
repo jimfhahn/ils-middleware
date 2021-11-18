@@ -42,7 +42,7 @@ def _get_retrieve_metadata_resource(uri: str) -> Optional[dict]:
     if metadata_result.status_code > 399:
         msg = f"{uri} retrieval failed {metadata_result.status_code}\n{metadata_result.text}"
         logging.error(msg)
-        raise Exception(msg)
+        return None
 
     resource = metadata_result.json()
 
@@ -52,47 +52,56 @@ def _get_retrieve_metadata_resource(uri: str) -> Optional[dict]:
     return _query_for_ils_info(json.dumps(resource.get("data")), uri)
 
 
-def _check_return_refs(resource_refs_uri: str) -> list:
-    resource_ref_results = requests.get(resource_refs_uri)
-    if resource_ref_results.status_code > 399:
-        msg = f"{resource_refs_uri} retrieval failed {resource_ref_results.status_code}\n{resource_ref_results.text}"
-        logging.error(msg)
-        raise Exception(msg)
-    return resource_ref_results.json().get("bfAdminMetadataAllRefs", [])
-
-
-def _retrieve_all_metadata(bf_admin_metadata_all: list) -> list:
+def _retrieve_all_metadata(bf_admin_metadata_all: list) -> Optional[list]:
     ils_info = []
     for metadata_uri in bf_admin_metadata_all:
         metadata = _get_retrieve_metadata_resource(metadata_uri)
         if metadata:
+            metadata.pop(
+                "export_date", None
+            )  # we do not want to overlay this value, so remove
             ils_info.append(metadata)
-    return ils_info
+
+    if len(ils_info) > 0:
+        return ils_info
+
+    return None
 
 
-def existing_metadata_check(*args, **kwargs) -> Optional[str]:
+def _retrieve_all_resource_refs(resources: list) -> dict:
+    retrieved_resources = {}
+    for resource_uri in resources:
+        result = requests.get(f"{resource_uri}/relationships")
+        if result.status_code > 399:
+            msg = f"Failed to retrieve {resource_uri}: {result.status_code}\n{result.text}"
+            logging.error(msg)
+            continue
+
+        metadata_uris = result.json().get("bfAdminMetadataAllRefs")
+        ils_info = _retrieve_all_metadata(metadata_uris)
+        if ils_info:
+            retrieved_resources[resource_uri] = ils_info
+
+    return retrieved_resources
+
+
+def existing_metadata_check(*args, **kwargs):
     """Queries Sinopia API for related resources of an instance."""
     task_instance = kwargs["task_instance"]
-    resource_uri = kwargs.get("resource_uri")
-    ils_tasks = kwargs.get("ils_tasks", {})
+    resource_uris = task_instance.xcom_pull(
+        key="resources", task_ids="sqs-message-parse"
+    )
 
-    bf_admin_metadata_all = _check_return_refs(f"{resource_uri}/relationships")
+    resource_refs = _retrieve_all_resource_refs(resource_uris)
+    new_resources = []
+    overlay_resources = []
+    for resource_uri in resource_uris:
+        if resource_uri in resource_refs:
+            overlay_resources.append(
+                {"resource_uri": resource_uri, "data": resource_refs[resource_uri]}
+            )
+        else:
+            new_resources.append(resource_uri)
 
-    if len(bf_admin_metadata_all) < 1:
-        return ils_tasks.get("new")
-
-    ils_info = _retrieve_all_metadata(bf_admin_metadata_all)
-
-    if len(ils_info) < 1:
-        return ils_tasks.get("new")
-
-    # Sort retrieved ILS by date
-    ils_info = sorted(ils_info, key=lambda x: x["export_date"], reverse=True)
-
-    # Add only the latest ILS information to XCOM
-    for key, value in ils_info[0].items():
-        if key.startswith("export_date"):
-            continue
-        task_instance.xcom_push(key=key, value=value)
-
-    return ils_tasks.get("overlay")
+    task_instance.xcom_push(key="new_resources", value=new_resources)
+    task_instance.xcom_push(key="overlay_resources", value=overlay_resources)

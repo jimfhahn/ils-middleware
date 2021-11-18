@@ -13,6 +13,8 @@ from ils_middleware.tasks.sinopia.local_metadata import (
     new_local_admin_metadata,
 )
 
+from tasks import test_task_instance, mock_task_instance  # noqa: F401
+
 
 @pytest.fixture
 def mock_requests_post(monkeypatch, mocker: MockerFixture):
@@ -45,40 +47,28 @@ def mock_uuid(monkeypatch):
     monkeypatch.setattr(uuid, "uuid4", mock_uuid4)
 
 
-@pytest.fixture
-def mock_resource():
-    return {
-        "user": "jpnelson",
-        "group": "stanford",
-        "editGroups": ["other", "pcc"],
-        "templateId": "ld4p:RT:bf2:Monograph:Instance:Un-nested",
-        "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
-        "bfAdminMetadataRefs": [
-            "https://api.development.sinopia.io/resource/7f775ec2-4fe8-48a6-9cb4-5b218f9960f1",
-            "https://api.development.sinopia.io/resource/bc9e9939-45b3-4122-9b6d-d800c130c576",
-        ],
-        "bfItemRefs": [],
-        "bfInstanceRefs": [],
-        "bfWorkRefs": [
-            "https://api.development.sinopia.io/resource/6497a461-42dc-42bf-b433-5e47c73f7e89"
-        ],
-        "id": "7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
-        "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
-        "timestamp": "2021-10-29T20:30:58.821Z",
-    }
-
-
 def test_new_local_admin_metadata(
-    mock_requests_post, mock_airflow_variables, mock_uuid, mock_resource
+    mock_requests_post,
+    mock_airflow_variables,
+    mock_uuid,
+    mock_task_instance,  # noqa: F811
 ):
-    local_admin_metadata_uri = new_local_admin_metadata(
+    new_local_admin_metadata(
+        task_instance=test_task_instance(),
         jwt="abcd1234efg",
-        resource=str(mock_resource),
-        instance_uri="https://api.development.sinopia.io/resource/tyu8889asdf",
     )
 
     assert (
-        local_admin_metadata_uri
+        test_task_instance().xcom_pull(
+            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
+        )
+        == "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76"
+    )
+
+    assert (
+        test_task_instance().xcom_pull(
+            key="https://api.development.sinopia.io/resource/4444-5555-6666-7777"
+        )
         == "https://api.development.sinopia.io/resource/1a3cebda-34b9-4e15-bc79-f6a5f915ce76"
     )
 
