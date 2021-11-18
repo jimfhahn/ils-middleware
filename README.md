@@ -10,7 +10,7 @@ for Stanford and Cornell Sinopia-to-ILS/LSP workflows.
 Based on the documentation, [Running Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html). 
 
 > **NOTE** Make sure there is enough RAM available locally for the 
-> docker daemon, we recomend at least 5GB. 
+> docker daemon, we recommend at least 5GB. 
 
 1. Clone repository `git clone https://github.com/LD4P/ils-middleware`
 1. If it's commented out, uncomment the line `- ./dags:/opt/airflow/dags` in docker-compose.yaml (under `volumes`, under `x-airflow-common`).
@@ -38,7 +38,8 @@ while commenting out the previous line `image: ${AIRFLOW_IMAGE_NAME:-ld4p/ils-mi
 We are using [poetry][POET] to better manage dependency updates. To install
 [poetry][POET], run the following command in your shell:
 
-`curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -`
+`curl -sSL https://install.python-poetry.org | python3 -`
+
 
 ## Automated Tests
 
