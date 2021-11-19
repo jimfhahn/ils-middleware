@@ -40,7 +40,6 @@ def parse_messages(**kwargs) -> str:
 
     resources = []
     for message in raw_sqs_messages:
-        message = message[0]
         message_body = json.loads(message.get("Body"))
         resource_uri = message_body["resource"]["uri"]
         resources.append(resource_uri)

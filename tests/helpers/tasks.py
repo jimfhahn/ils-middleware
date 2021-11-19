@@ -88,18 +88,14 @@ mock_push_store: dict = {}
 
 def mock_message():
     return [
-        [
-            {
-                "Body": """{ "user": { "email": "dscully@stanford.edu"},
-                            "resource": { "uri": "https://api.development.sinopia.io/resource/0000-1111-2222-3333" }}"""
-            }
-        ],
-        [
-            {
-                "Body": """{ "user": { "email": "fmulder@stanford.edu"},
-                            "resource": { "uri": "https://api.development.sinopia.io/resource/4444-5555-6666-7777" }}"""
-            }
-        ],
+        {
+            "Body": """{ "user": { "email": "dscully@stanford.edu"},
+                        "resource": { "uri": "https://api.development.sinopia.io/resource/0000-1111-2222-3333" }}"""
+        },
+        {
+            "Body": """{ "user": { "email": "fmulder@stanford.edu"},
+                        "resource": { "uri": "https://api.development.sinopia.io/resource/4444-5555-6666-7777" }}"""
+        },
     ]
 
 
