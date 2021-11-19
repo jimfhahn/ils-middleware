@@ -1,5 +1,4 @@
 """Retrieves related AdminMetadata resource info for downstream tasks."""
-import datetime
 import json
 import logging
 

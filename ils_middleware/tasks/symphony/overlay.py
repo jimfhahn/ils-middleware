@@ -21,7 +21,7 @@ def overlay_marc_in_symphony(*args, **kwargs):
         resource_uri = resource["resource_uri"]
 
         if (
-            not "catkey" in resource
+            "catkey" not in resource
             or len(resource["catkey"]) < 1
             or resource["catkey"][0].get("SIRSI") is None
         ):
