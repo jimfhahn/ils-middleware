@@ -1,5 +1,4 @@
 """Retrieves related AdminMetadata resource info for downstream tasks."""
-import datetime
 import json
 import logging
 
@@ -21,9 +20,8 @@ def _query_for_ils_info(graph_jsonld: str, uri: str) -> dict:
     ils_info_query = f"""PREFIX sinopia: <http://sinopia.io/vocabulary/>
     PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 
-    SELECT ?export_date ?identifier ?ils
+    SELECT ?ils ?identifier
     WHERE {{
-        <{uri}> sinopia:exportDate ?export_date .
         <{uri}> bf:identifier ?ident_bnode .
         ?ident_bnode rdf:value ?identifier .
         ?ident_bnode bf:source ?source .
@@ -31,8 +29,7 @@ def _query_for_ils_info(graph_jsonld: str, uri: str) -> dict:
     }}
     """
     for row in graph.query(ils_info_query):
-        output["export_date"] = datetime.datetime.fromisoformat(str(row[0]))
-        output[str(row[2])] = str(row[1])  # type: ignore
+        output[str(row[0])] = str(row[1])  # type: ignore
     return output
 
 
@@ -56,11 +53,9 @@ def _retrieve_all_metadata(bf_admin_metadata_all: list) -> Optional[list]:
     ils_info = []
     for metadata_uri in bf_admin_metadata_all:
         metadata = _get_retrieve_metadata_resource(metadata_uri)
-        if metadata:
-            metadata.pop(
-                "export_date", None
-            )  # we do not want to overlay this value, so remove
-            ils_info.append(metadata)
+        if metadata in ils_info:
+            continue
+        ils_info.append(metadata)
 
     if len(ils_info) > 0:
         return ils_info
@@ -98,7 +93,7 @@ def existing_metadata_check(*args, **kwargs):
     for resource_uri in resource_uris:
         if resource_uri in resource_refs:
             overlay_resources.append(
-                {"resource_uri": resource_uri, "data": resource_refs[resource_uri]}
+                {"resource_uri": resource_uri, "catkey": resource_refs[resource_uri]}
             )
         else:
             new_resources.append(resource_uri)

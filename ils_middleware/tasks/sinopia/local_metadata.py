@@ -3,7 +3,6 @@ import json
 import datetime
 import logging
 import uuid
-import ast
 
 import rdflib
 import requests  # type: ignore
@@ -79,10 +78,13 @@ def new_local_admin_metadata(*args, **kwargs):
     sinopia_api_uri = Variable.get("sinopia_api_uri")
 
     for resource_uri in resources:
-        resource = ast.literal_eval(
-            task_instance.xcom_pull(key=resource_uri, task_ids="sqs-message-parse")
+        message = task_instance.xcom_pull(
+            key=resource_uri, task_ids="sqs-message-parse"
         )
+        resource = message.get("resource")
         group = resource.get("group")
+        logger.debug(resource)
+
         editGroups = resource.get("editGroups", [])
 
         admin_metadata_uri = f"{sinopia_api_uri}/{uuid.uuid4()}"

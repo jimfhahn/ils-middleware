@@ -7,7 +7,13 @@ from airflow.operators.dummy import DummyOperator
 from airflow.models.taskinstance import TaskInstance
 
 CATKEY = "320011"
-MARC_JSON = {"leader": "11222999   adf", "fields": [{"tag": "245"}], "catkey": CATKEY}
+MARC_JSON = {
+    "leader": "11222999   adf",
+    "fields": [{"tag": "245"}],
+    "SIRSI": [
+        CATKEY,
+    ],
+}
 MARC_JSON_NO_CAT_KEY = {"leader": "11222999   adf", "fields": [{"tag": "245"}]}
 
 
@@ -69,11 +75,11 @@ mock_resources = {
 overlay_resources = [
     {
         "resource_uri": "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
-        "data": MARC_JSON,
+        "catkey": [{"SIRSI": CATKEY}],
     },
     {
         "resource_uri": "https://api.development.sinopia.io/resource/4444-5555-6666-7777",
-        "data": MARC_JSON_NO_CAT_KEY,
+        "catkey": [],
     },
 ]
 
@@ -121,13 +127,13 @@ def mock_task_instance(monkeypatch):
         elif key == "messages":
             return mock_message()
         elif key in mock_resources and task_ids == "sqs-message-parse":
-            return json.dumps(mock_resources[key])
+            return {"resource": mock_resources[key]}
         elif key == "overlay_resources":
             return overlay_resources
         elif task_ids in return_marc_tasks:
             return json.dumps(marc_as_json())
         elif key == "new_resources":
-            return json.dumps(mock_resources)
+            return mock_resources
         elif task_ids == "process_symphony.download_marc":
             return "tests/fixtures/record.mar"
         else:

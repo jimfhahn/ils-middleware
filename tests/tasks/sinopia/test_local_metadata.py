@@ -78,7 +78,7 @@ def test_create_admin_metadata():
     admin_metadata_str = create_admin_metadata(
         instance_uri="https://api.sinopia.io/resource/12345",
         cataloger_id="ils_middleware",
-        ils_identifiers={"symphony": "234566"},
+        ils_identifiers={"SIRSI": "234566"},
     )
     admin_metadata.parse(data=admin_metadata_str, format="json-ld")
     assert len(admin_metadata) == 11
