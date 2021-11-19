@@ -11,7 +11,13 @@ from tasks import test_task_instance, mock_task_instance  # noqa: F401
 task_instance = test_task_instance()
 
 CATKEY = "320011"
-MARC_JSON = {"leader": "11222999   adf", "fields": [{"tag": "245"}], "catkey": CATKEY}
+MARC_JSON = {
+    "leader": "11222999   adf",
+    "fields": [{"tag": "245"}],
+    "SIRSI": [
+        CATKEY,
+    ],
+}
 MARC_JSON_NO_CAT_KEY = {"leader": "11222999   adf", "fields": [{"tag": "245"}]}
 
 

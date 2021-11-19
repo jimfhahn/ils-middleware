@@ -47,7 +47,7 @@ def test_NewMARCtoSymphony(
         conn_id="symphony_dev_login",
         session_token="abcde4590",
         library_key="GREEN",
-        marc_json="""{"leader": "11222999   adf", "fields": [{"tag": "245"}]}""",
+        marc_json={"leader": "11222999   adf", "fields": [{"tag": "245"}]},
     )
     assert (
         task_instance.xcom_pull(

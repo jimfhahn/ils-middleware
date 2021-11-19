@@ -13,7 +13,10 @@ from airflow import DAG
 from airflow.models.taskinstance import TaskInstance
 from airflow.operators.dummy import DummyOperator
 
-from ils_middleware.tasks.sinopia.metadata_check import existing_metadata_check
+from ils_middleware.tasks.sinopia.metadata_check import (
+    existing_metadata_check,
+    _get_retrieve_metadata_resource,
+)
 
 
 def test_task():
@@ -148,3 +151,15 @@ def test_no_local_metadata_records(mock_requests, mock_datetime, mock_task_insta
     )
     new_resources = task_instance.xcom_pull(key="new_resources")
     assert len(new_resources) == 1
+
+
+def test_resource_not_found(mock_requests):
+    result = _get_retrieve_metadata_resource("http://sinopia.io/bad")
+
+    assert result is None
+
+
+def test_not_local_admin_templatet(mock_requests):
+    result = _get_retrieve_metadata_resource("https://api.sinopia.io/resource/753878c")
+
+    assert result is None
