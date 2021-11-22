@@ -72,8 +72,8 @@ with DAG(
             task_id="rdf2marc",
             python_callable=Rdf2Marc,
             op_kwargs={
-                "rdf2marc_lambda": "sinopia-rdf2marc-development",
-                "s3_bucket": "sinopia-marc-development",
+                "rdf2marc_lambda": Variable.get("rdf2marc_lambda"),
+                "s3_bucket": Variable.get("marc_s3_bucket"),
             },
         )
 
