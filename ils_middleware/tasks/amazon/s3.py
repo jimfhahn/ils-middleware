@@ -2,6 +2,8 @@ import logging
 from urllib.parse import urlparse
 import os
 from os import path
+
+from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from pymarc import MARCReader
 
@@ -19,7 +21,7 @@ def get_from_s3(**kwargs):
 
         temp_file = s3_hook.download_file(
             key=f"marc/airflow/{instance_id}/record.mar",
-            bucket_name="sinopia-marc-development",
+            bucket_name=Variable.get("marc_s3_bucket"),
         )
         task_instance.xcom_push(key=instance_uri, value=temp_file)
 
@@ -39,7 +41,7 @@ def send_to_s3(**kwargs):
         s3_hook.load_string(
             marc_record.as_json(),
             f"marc/airflow/{instance_id}/record.json",
-            "sinopia-marc-development",
+            Variable.get("marc_s3_bucket"),
             replace=True,
         )
         task_instance.xcom_push(key=instance_uri, value=marc_record.as_json())
