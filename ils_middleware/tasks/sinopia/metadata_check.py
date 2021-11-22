@@ -53,7 +53,7 @@ def _retrieve_all_metadata(bf_admin_metadata_all: list) -> Optional[list]:
     ils_info = []
     for metadata_uri in bf_admin_metadata_all:
         metadata = _get_retrieve_metadata_resource(metadata_uri)
-        if metadata in ils_info:
+        if metadata is None or len(metadata) < 1 or metadata in ils_info:
             continue
         ils_info.append(metadata)
 
