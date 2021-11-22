@@ -31,7 +31,7 @@ def mock_s3_load_string():
         yield mocked
 
 
-def test_get_from_s3(mock_s3_hook, mock_task_instance):
+def test_get_from_s3(mock_env_vars, mock_s3_hook, mock_task_instance):
     """Test downloading a file from S3 into a temp file"""
     get_from_s3(task_instance=test_task_instance())
     assert (
@@ -48,7 +48,7 @@ def test_get_from_s3(mock_s3_hook, mock_task_instance):
     )
 
 
-def test_send_to_s3(mock_s3_load_string, mock_task_instance):
+def test_send_to_s3(mock_env_vars, mock_s3_load_string, mock_task_instance):
     """Test sending a file to s3"""
 
     send_to_s3(task_instance=test_task_instance())
