@@ -16,6 +16,7 @@ from airflow.operators.dummy import DummyOperator
 from ils_middleware.tasks.sinopia.metadata_check import (
     existing_metadata_check,
     _get_retrieve_metadata_resource,
+    _retrieve_all_metadata,
 )
 
 
@@ -163,3 +164,15 @@ def test_not_local_admin_templatet(mock_requests):
     result = _get_retrieve_metadata_resource("https://api.sinopia.io/resource/753878c")
 
     assert result is None
+
+
+def test_dups_in_retrieve_all_metadata(mock_requests):
+
+    result = _retrieve_all_metadata(
+        [
+            "https://api.sinopia.io/resource/1234abcde",
+            "https://api.sinopia.io/resource/1234abcde",
+        ]
+    )
+
+    assert result == [{"SIRSI": "13704749"}]
