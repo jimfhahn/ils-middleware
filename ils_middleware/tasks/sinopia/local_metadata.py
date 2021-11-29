@@ -2,6 +2,7 @@
 import json
 import datetime
 import logging
+import typing
 import uuid
 
 import rdflib
@@ -30,13 +31,20 @@ def _add_local_system_id(
     return id_blank_node
 
 
+def _pull_identifiers(tasks, resource_uri, instance) -> typing.Optional[str]:
+    for task_id in tasks:
+        value = instance.xcom_pull(key=resource_uri, task_ids=task_id)
+        if value:
+            return value
+    return None
+
+
 def _retrieve_ils_identifiers(ils_tasks, resource_uri, instance) -> dict:
     ils_info = {}
     for ils, tasks in ils_tasks.items():
-        for task_id in tasks:
-            value = instance.xcom_pull(key=resource_uri, task_ids=task_id)
-            if value:
-                ils_info[ils] = value
+        identifier = _pull_identifiers(tasks, resource_uri, instance)
+        if identifier:
+            ils_info[ils] = identifier
     return ils_info
 
 
