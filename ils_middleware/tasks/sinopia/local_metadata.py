@@ -30,6 +30,16 @@ def _add_local_system_id(
     return id_blank_node
 
 
+def _retrieve_ils_identifiers(ils_tasks, resource_uri, instance) -> dict:
+    ils_info = {}
+    for ils, tasks in ils_tasks.items():
+        for task_id in tasks:
+            value = instance.xcom_pull(key=resource_uri, task_ids=task_id)
+            if value:
+                ils_info[ils] = value
+    return ils_info
+
+
 def create_admin_metadata(**kwargs) -> str:
     """Creates a Sinopia Local Admin Metadata graph and returns as JSON-LD."""
     admin_metadata_uri = kwargs.get("admin_metadata_uri", "")
@@ -73,6 +83,8 @@ def new_local_admin_metadata(*args, **kwargs):
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
     jwt = kwargs.get("jwt")
+    ils_tasks = kwargs.get("ils_tasks")
+
     user = Variable.get("sinopia_user")
     kwargs["cataloger_id"] = user
     sinopia_api_uri = Variable.get("sinopia_api_uri")
@@ -88,8 +100,15 @@ def new_local_admin_metadata(*args, **kwargs):
         editGroups = resource.get("editGroups", [])
 
         admin_metadata_uri = f"{sinopia_api_uri}/{uuid.uuid4()}"
+
+        ils_identifiers = _retrieve_ils_identifiers(
+            ils_tasks, resource_uri, task_instance
+        )
+
         local_metadata_rdf = create_admin_metadata(
-            **kwargs, instance_uri=resource_uri, admin_metadata_uri=admin_metadata_uri
+            instance_uri=resource_uri,
+            admin_metadata_uri=admin_metadata_uri,
+            ils_identifiers=ils_identifiers,
         )
 
         local_metadata_rdf = json.loads(local_metadata_rdf)
@@ -102,7 +121,9 @@ def new_local_admin_metadata(*args, **kwargs):
             "group": group,
             "editGroups": editGroups,
             "templateId": "pcc:sinopia:localAdminMetadata",
-            "types": [],
+            "types": [
+                str(SINOPIA.LocalAdminMetadata),
+            ],
             "bfAdminMetadataRefs": [],
             "bfItemRefs": [],
             "bfInstanceRefs": [

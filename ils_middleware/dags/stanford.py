@@ -185,22 +185,16 @@ with DAG(
             python_callable=new_local_admin_metadata,
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
-                "ils_identifiers": {
-                    "SIRSI": """{{ task_instance.xcom_pull(task_ids='process_symphony.post_new_symphony', key='return_value') or task_instance.xcom_pull(task_ids='process_symphony.post_overlay_symphony', key='return_value') }}"""  # noqa: E501
+                "ils_tasks": {
+                    "SIRSI": [
+                        "process_symphony.post_new_symphony",
+                        "process_symphony.post_overlay_symphony",
+                    ]
                 },
             },
         )
 
-        # Updates resource uri with the localAdminMetadata URI
-        update_resource_rdf = PythonOperator(
-            task_id="update-resource-rdf",
-            python_callable=update_resource_new_metadata,
-            op_kwargs={
-                "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
-            },
-        )
-
-        login_sinopia >> local_admin_metadata >> update_resource_rdf
+        login_sinopia >> local_admin_metadata
 
     notify_sinopia_updated = PythonOperator(
         task_id="sinopia_update_success_notification",

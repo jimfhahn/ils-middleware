@@ -33,7 +33,7 @@ def update_resource_new_metadata(*args, **kwargs):
 
     for resource_uri in resources:
         metadata_uri = task_instance.xcom_pull(
-            key=resource_uri, task_ids="sinopia-new-metadata"
+            key=resource_uri, task_ids="update_sinopia.sinopia-new-metadata"
         )
 
         result = requests.get(resource_uri)
@@ -52,7 +52,7 @@ def update_resource_new_metadata(*args, **kwargs):
         headers = {"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"}
 
         sinopia_doc["data"] = json.loads(updated_json_ld)
-        sinopia_doc["bfAdminMetadataRefs"].append(metadata_uri)
+        sinopia_doc["sinopiaHasLocalAdminMetadataInferredRefs"].append(metadata_uri)
 
         update_result = requests.put(resource_uri, json=sinopia_doc, headers=headers)
 
