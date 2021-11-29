@@ -55,6 +55,7 @@ def test_new_local_admin_metadata(
 ):
     new_local_admin_metadata(
         task_instance=test_task_instance(),
+        ils_tasks={"SIRSI": ["post_new_symphony"]},
         jwt="abcd1234efg",
     )
 

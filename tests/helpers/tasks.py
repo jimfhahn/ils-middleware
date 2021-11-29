@@ -133,7 +133,7 @@ def mock_task_instance(monkeypatch):
         elif task_ids == "process_symphony.download_marc":
             return "tests/fixtures/record.mar"
         else:
-            return mock_push_store[key]
+            return mock_push_store.get(key)
 
     def mock_xcom_push(*args, **kwargs):
         key = kwargs.get("key")

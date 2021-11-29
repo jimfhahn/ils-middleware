@@ -72,7 +72,7 @@ def _retrieve_all_resource_refs(resources: list) -> dict:
             logging.error(msg)
             continue
 
-        metadata_uris = result.json().get("bfAdminMetadataAllRefs")
+        metadata_uris = result.json().get("sinopiaHasLocalAdminMetadataInferredRefs")
         ils_info = _retrieve_all_metadata(metadata_uris)
         if ils_info:
             retrieved_resources[resource_uri] = ils_info
