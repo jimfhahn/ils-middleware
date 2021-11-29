@@ -17,7 +17,6 @@ from ils_middleware.tasks.sinopia.email import (
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.metadata_check import existing_metadata_check
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
-from ils_middleware.tasks.sinopia.update_resource import update_resource_new_metadata
 from ils_middleware.tasks.symphony.login import SymphonyLogin
 from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
 from ils_middleware.tasks.symphony.mod_json import to_symphony_json
