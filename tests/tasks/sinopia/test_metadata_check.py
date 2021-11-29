@@ -53,10 +53,14 @@ admin_metadata = [
 sinopia_api = {
     # Happy Path
     "http://example.com/rdf/0000-1111-2222-3333/relationships": {
-        "bfAdminMetadataAllRefs": ["https://api.sinopia.io/resource/1234abcde"]
+        "sinopiaHasLocalAdminMetadataInferredRefs": [
+            "https://api.sinopia.io/resource/1234abcde"
+        ]
     },
     "http://example.com/rdf/4444-5555-6666-7777/relationships": {
-        "bfAdminMetadataAllRefs": ["https://api.sinopia.io/resource/1234abcde"]
+        "sinopiaHasLocalAdminMetadataInferredRefs": [
+            "https://api.sinopia.io/resource/1234abcde"
+        ]
     },
     "https://api.sinopia.io/resource/1234abcde": {
         "templateId": "pcc:sinopia:localAdminMetadata",
@@ -64,16 +68,18 @@ sinopia_api = {
     },
     # Not a localAdmin record
     "https://api.sinopia.io/resource/ku333aa555/relationships": {
-        "bfAdminMetadataAllRefs": ["https://api.sinopia.io/resource/753878c"]
+        "sinopiaHasLocalAdminMetadataInferredRefs": [
+            "https://api.sinopia.io/resource/753878c"
+        ]
     },
     "https://api.sinopia.io/resource/753878c": {"templateId": "pcc:bf2:AdminMetadata"},
     # No bfAdminMetadata
     "https://api.sinopia.io/resource/oprt5531/relationships": {
-        "bfAdminMetadataAllRefs": []
+        "sinopiaHasLocalAdminMetadataInferredRefs": []
     },
     # Missing AdminMetadata URI
     "https://s.io/11ec/relationships": {
-        "bfAdminMetadataAllRefs": ["https://s.io/3818"]
+        "sinopiaHasLocalAdminMetadataInferredRefs": ["https://s.io/3818"]
     },
 }
 
