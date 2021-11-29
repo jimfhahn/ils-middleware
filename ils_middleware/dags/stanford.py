@@ -22,6 +22,7 @@ from ils_middleware.tasks.symphony.login import SymphonyLogin
 from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
 from ils_middleware.tasks.symphony.mod_json import to_symphony_json
 from ils_middleware.tasks.symphony.overlay import overlay_marc_in_symphony
+from ils_middleware.tasks.folio.login import FolioLogin
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -154,13 +155,22 @@ with DAG(
         )
 
     with TaskGroup(group_id="process_folio") as folio_task_group:
+        folio_login = PythonOperator(
+            task_id="folio-login",
+            python_callable=FolioLogin,
+            op_kwargs={
+                "username": Variable.get("stanford_folio_login"),
+                "password": Variable.get("stanford_folio_password"),
+            },
+        )
+
         download_folio_marc = DummyOperator(task_id="download_folio_marc", dag=dag)
 
         export_folio_json = DummyOperator(task_id="folio_json_to_s3", dag=dag)
 
         send_to_folio = DummyOperator(task_id="folio_send", dag=dag)
 
-        download_folio_marc >> export_folio_json >> send_to_folio
+        folio_login >> download_folio_marc >> export_folio_json >> send_to_folio
 
     # Dummy Operator
     processed_sinopia = DummyOperator(
