@@ -22,14 +22,26 @@ def mock_request(monkeypatch, mocker: MockerFixture):
 
 # <Response [201]>
 def test_valid_login(mock_request):
-    assert FolioLogin(username="DEVSYS", password="APASSWord") == "some_jwt_token"
+    assert (
+        FolioLogin(
+            url="https://okapi-folio.dev.sul.stanford.edu/authn/login",
+            username="DEVSYS",
+            password="APASSWord",
+        )
+        == "some_jwt_token"
+    )
+
+
+def test_missing_url():
+    with pytest.raises(KeyError, match="url"):
+        FolioLogin()
 
 
 def test_missing_username():
     with pytest.raises(KeyError, match="username"):
-        FolioLogin()
+        FolioLogin(url="https://test-login.com")
 
 
 def test_missing_password():
     with pytest.raises(KeyError, match="password"):
-        FolioLogin(username="DEVSYS")
+        FolioLogin(url="https://test-login.com", username="DEVSYS")

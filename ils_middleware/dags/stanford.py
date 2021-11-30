@@ -159,6 +159,7 @@ with DAG(
             task_id="folio-login",
             python_callable=FolioLogin,
             op_kwargs={
+                "url": Variable.get("stanford_folio_auth_url"),
                 "username": Variable.get("stanford_folio_login"),
                 "password": Variable.get("stanford_folio_password"),
             },

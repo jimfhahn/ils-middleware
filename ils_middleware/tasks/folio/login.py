@@ -7,10 +7,10 @@ from airflow.providers.http.operators.http import SimpleHttpOperator
 
 def FolioLogin(**kwargs) -> SimpleHttpOperator:
     """Logs into FOLIO and returns Okapi token."""
+    url = kwargs["url"]
     username = kwargs["username"]
     password = kwargs["password"]
 
-    url = "https://okapi-folio.dev.sul.stanford.edu/authn/login"
     data = {"username": username, "password": password}
     headers = {"Content-type": "application/json", "x-okapi-tenant": "sul"}
 
