@@ -50,7 +50,15 @@ with DAG(
     )
     connect_okapi_cmd = """exit 0"""
 
-    folio_login = FolioLogin(tenant="cornell", username="", password="")
+    folio_login = PythonOperator(
+        task_id="folio-login",
+        python_callable=FolioLogin,
+        op_kwargs={
+            "url": Variable.get("cornell_folio_auth_url"),
+            "username": Variable.get("cornell_folio_login"),
+            "password": Variable.get("cornell_folio_password"),
+        },
+    )
 
     send_to_folio = FolioRequest(
         task_id="cornell_send_to_folio",

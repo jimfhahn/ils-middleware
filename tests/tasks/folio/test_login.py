@@ -1,28 +1,47 @@
 """Test FOLIO Operators and functions."""
 
 import pytest
-from datetime import datetime
-from airflow import DAG
+import requests
+
+from pytest_mock import MockerFixture
+
 from ils_middleware.tasks.folio.login import FolioLogin
 
 
 @pytest.fixture
-def test_dag():
-    start_date = datetime(2021, 9, 20)
-    return DAG("test_dag", default_args={"owner": "airflow", "start_date": start_date})
+def mock_request(monkeypatch, mocker: MockerFixture):
+    def mock_post(*args, **kwargs):
+        post_response = mocker.stub(name="post_result")
+        post_response.status_code = 201
+        post_response.headers = {"x-okapi-token": "some_jwt_token"}
+
+        return post_response
+
+    monkeypatch.setattr(requests, "post", mock_post)
 
 
-def test_subscribe_operator_missing_kwargs(test_dag):
-    """Test missing kwargs for SubscribeOperator."""
-
-    task = FolioLogin(dag=test_dag)
-    assert task.http_conn_id is None
-
-
-def test_subscribe_operator(test_dag):
-    """Test with typical kwargs for SubscribeOperator."""
-    task = FolioLogin(
-        conn_id="folio_dev_login", username="DEVSYS", password="APASSWord", dag=test_dag
+# <Response [201]>
+def test_valid_login(mock_request):
+    assert (
+        FolioLogin(
+            url="https://okapi-folio.dev.sul.stanford.edu/authn/login",
+            username="DEVSYS",
+            password="APASSWord",
+        )
+        == "some_jwt_token"
     )
-    assert task.http_conn_id.startswith("folio_dev_login")
-    assert "DEVSYS" in task.data
+
+
+def test_missing_url():
+    with pytest.raises(KeyError, match="url"):
+        FolioLogin()
+
+
+def test_missing_username():
+    with pytest.raises(KeyError, match="username"):
+        FolioLogin(url="https://test-login.com")
+
+
+def test_missing_password():
+    with pytest.raises(KeyError, match="password"):
+        FolioLogin(url="https://test-login.com", username="DEVSYS")
