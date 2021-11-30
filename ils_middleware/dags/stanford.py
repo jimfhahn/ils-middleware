@@ -108,6 +108,7 @@ with DAG(
                 "app_id": symphony_app_id,
                 "client_id": symphony_client_id,
                 "conn_id": symphony_conn_id,
+                "url": Variable.get("stanford_symphony_auth_url"),
                 "login": Variable.get("stanford_symphony_login"),
                 "password": Variable.get("stanford_symphony_password"),
             },
