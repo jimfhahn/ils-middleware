@@ -47,8 +47,8 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-ld4p/ils-middleware:latest}
-  # build: .
+  # image: ${AIRFLOW_IMAGE_NAME:-ld4p/ils-middleware:latest}
+  build: .
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -63,8 +63,14 @@ x-airflow-common:
     AIRFLOW_VAR_MARC_S3_BUCKET: 'sinopia-marc-development'
     AIRFLOW_VAR_RDF2MARC_LAMBDA: 'sinopia-rdf2marc-development'
     AIRFLOW_VAR_SINOPIA_ENV: ${AIRFLOW_VAR_SINOPIA_ENV:-dev}
-    AIRFLOW_VAR_SQS_URL: 'https://sqs.us-west-2.amazonaws.com/418214828013/stanford-ils'
+    AIRFLOW_VAR_SQS_URL: 'http://localstack:4566/000000000000/'
     AIRFLOW_VAR_SYMPHONY_APP_ID: 'SINOPIA_DEV'
+    AIRFLOW_VAR_STANFORD_SYMPHONY_LOGIN: 'USERNAME'
+    AIRFLOW_VAR_STANFORD_SYMPHONY_PASSWORD: 'PASSWORD'
+    AIRFLOW_VAR_STANFORD_SYMPHONY_AUTH_URL: 'https://okapi-folio.dev.sul.stanford.edu/authn/login'
+    AIRFLOW_VAR_STANFORD_FOLIO_LOGIN: 'USERNAME'
+    AIRFLOW_VAR_STANFORD_FOLIO_PASSWORD: 'PASSWORD'
+    AIRFLOW_VAR_STANFORD_FOLIO_AUTH_URL: 'https://okapi-folio.dev.sul.stanford.edu/authn/login'
     HONEYBADGER_API_KEY: ${HONEYBADGER_API_KEY:-}
     LOGLEVEL: ${LOGLEVEL:-DEBUG}
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
@@ -175,6 +181,16 @@ services:
       timeout: 10s
       retries: 5
     restart: always
+
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - AWS_DEFAULT_REGION=us-west-2
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DEBUG=1
 
 volumes:
   postgres-db-volume:

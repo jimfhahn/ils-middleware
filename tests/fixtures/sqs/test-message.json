@@ -1,0 +1,10 @@
+{
+  "resource": {
+    "uri":"https://api.development.sinopia.io/resource/61de0374-5fab-4a5d-8d92-2d43f006d4d3"
+  },
+  "user": {
+    "email":"amcollie@stanford.edu"
+  },
+  "group": "stanford",
+  "target": "ils"
+}

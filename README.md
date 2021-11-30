@@ -19,6 +19,39 @@ Based on the documentation, [Running Airflow in Docker](https://airflow.apache.o
    add `docker compose up -d` to run as a daemon.
 1. Access Airflow locally at http://localhost:8080
 
+### Setup the SQS queue in localstack for local development
+
+```
+AWS_ACCESS_KEY_ID=999999 AWS_SECRET_ACCESS_KEY=1231 aws sqs \
+    --endpoint-url=http://localhost:4566 create-queue \
+    --region us-west-2 \
+    --queue-name stanford-ils
+```
+
+### Setup the local AWS connection for SQS
+
+1. From the `Admin > Connectinos` menu
+2. Click the "+"
+3. Add an Amazon Web Services connection with the following settings:
+     
+    * Connection Id: aws_sqs_connection
+    * Login: 999999
+    * Password: 1231
+    * Extra: `{"host": "http://localstack:4566", "region_name": "us-west-2"}`
+
+### Send a message to the SQS queue
+
+In order to test a dag locally, a message must be sent to the above queue:
+```
+AWS_ACCESS_KEY_ID=999999 AWS_SECRET_ACCESS_KEY=1231 aws sqs \
+    send-message \
+    --endpoint-url=http://localhost:4566 \
+    --queue-url https://localhost:4566/000000000000/stanford-ils \
+    --message-body file://tests/fixtures/sqs/test-message.json
+```
+
+Note: the test message content in `tests/fixtures/sqs/test-message.json` contains an email address that you can update to your own.
+
 ## Editing existing DAGs
 The `dags/stanford.py` contains Stanford's Symphony and FOLIO workflows from
 Sinopia editor user initiated process. The `dags/cornell.py` DAG is for Cornell's
