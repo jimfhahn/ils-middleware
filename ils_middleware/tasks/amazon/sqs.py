@@ -22,6 +22,7 @@ def SubscribeOperator(**kwargs) -> SQSSensor:
         task_id="sqs-sensor",
         dag=kwargs.get("dag"),
         max_messages=10,
+        timeout=240,
     )
 
 
