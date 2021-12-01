@@ -12,7 +12,6 @@ from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
     notify_and_log,
     send_update_success_emails,
-    send_task_failure_notifications,
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.metadata_check import existing_metadata_check
@@ -214,30 +213,14 @@ with DAG(
         python_callable=send_update_success_emails,
     )
 
-    # the advantage of using a task for failure notification, vs on_failure_callback for the dag, is
-    # that the task gets all the retry behavior and such of a task, whereas the callback will just be
-    # fired once without any retry behavior by default (not ideal for sending an alert over a network)
-    notify_on_task_failure = PythonOperator(
-        task_id="task_failure_notification",
-        dag=dag,
-        trigger_rule="one_failed",
-        python_callable=send_task_failure_notifications,
-    )
+    processing_complete = DummyOperator(task_id="processing_complete", dag=dag)
+    messages_received = DummyOperator(task_id="messages_received", dag=dag)
+    messages_timeout = DummyOperator(task_id="sqs_timeout", dag=dag)
 
-(
-    listen_sns
-    >> process_message
-    >> [symphony_task_group, folio_task_group]
-    >> processed_sinopia
-)
+
+listen_sns >> [messages_received, messages_timeout]
+messages_received >> process_message
+process_message >> [symphony_task_group, folio_task_group] >> processed_sinopia
 processed_sinopia >> sinopia_update_group >> notify_sinopia_updated
-
-[
-    listen_sns,
-    process_message,
-    symphony_task_group,
-    folio_task_group,
-    processed_sinopia,
-    sinopia_update_group,
-    notify_sinopia_updated,
-] >> notify_on_task_failure
+notify_sinopia_updated >> processing_complete
+messages_timeout >> processing_complete
