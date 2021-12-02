@@ -1,7 +1,6 @@
 """Sinopia Operators and Functions for email notifications."""
 from airflow.providers.amazon.aws.hooks.ses import SESHook
 
-import json
 import logging
 
 from airflow.models.taskinstance import TaskInstance
@@ -18,8 +17,14 @@ logger = logging.getLogger(__name__)
 # https://airflow.apache.org/docs/apache-airflow/stable/howto/email-config.html?highlight=ses#send-email-using-aws-ses
 def send_update_success_emails(**kwargs) -> None:
     task_instance = kwargs["task_instance"]
+    resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
+
     ses_hook = SESHook(aws_conn_id="aws_ses_connection")
-    for email_attributes in _email_on_success_info_list(task_instance):
+    for resource_uri in resources:
+        message = task_instance.xcom_pull(
+            key=resource_uri, task_ids="sqs-message-parse"
+        )
+        email_attributes = _email_on_success_attributes(message)
         ses_hook.send_email(**email_attributes)
 
 
@@ -80,13 +85,11 @@ def _email_on_success_info_list(task_instance: TaskInstance) -> list:
     ]
 
 
-def _email_on_success_attributes(raw_sqs_message: dict) -> dict:
-    logger.debug(f"raw_sqs_message: {raw_sqs_message}")
-    parsed_msg_body = json.loads(raw_sqs_message["Body"])
-    email_addr = parsed_msg_body["user"]["email"]
-    resource_uri = parsed_msg_body["resource"]["uri"]
-    group = parsed_msg_body["group"]
-    target = parsed_msg_body["target"]
+def _email_on_success_attributes(message: dict) -> dict:
+    email_addr = message["email"]
+    resource_uri = message["resource_uri"]
+    group = message["group"]
+    target = message["target"]
     return {
         "mail_from": "sinopia-devs@lists.stanford.edu",
         "to": email_addr,

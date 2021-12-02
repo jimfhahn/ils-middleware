@@ -213,9 +213,13 @@ with DAG(
         python_callable=send_update_success_emails,
     )
 
-    processing_complete = DummyOperator(task_id="processing_complete", dag=dag, trigger_rule="one_success")
+    processing_complete = DummyOperator(
+        task_id="processing_complete", dag=dag, trigger_rule="one_success"
+    )
     messages_received = DummyOperator(task_id="messages_received", dag=dag)
-    messages_timeout = DummyOperator(task_id="sqs_timeout", dag=dag, trigger_rule="all_failed")
+    messages_timeout = DummyOperator(
+        task_id="sqs_timeout", dag=dag, trigger_rule="all_failed"
+    )
 
 
 listen_sns >> [messages_received, messages_timeout]

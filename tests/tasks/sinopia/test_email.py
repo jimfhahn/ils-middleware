@@ -16,6 +16,7 @@ from ils_middleware.tasks.sinopia.email import (
     logger,  # for spying on logging
 )
 
+from tasks import test_task_instance, mock_task_instance  # noqa: F401
 
 mock_messages_list = [
     {
@@ -41,12 +42,12 @@ def test_task():
     return DummyOperator(task_id="test", dag=test_dag)
 
 
-@pytest.fixture
-def mock_success_task_instance(monkeypatch):
-    def mock_xcom_pull(*args, **kwargs) -> list:
-        return [mock_messages_list]
+# @pytest.fixture
+# def mock_success_task_instance(monkeypatch):
+#     def mock_xcom_pull(*args, **kwargs) -> list:
+#         return [mock_messages_list]
 
-    monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
+#     monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
 
 
 @pytest.fixture
@@ -73,9 +74,9 @@ def mock_failure_no_user_available_task_instance(monkeypatch):
 
 
 def test_send_update_success_emails(
-    mock_success_task_instance, mocker: MockerFixture
+    mock_task_instance, mocker: MockerFixture  # noqa: F811
 ) -> None:
-    task_instance = TaskInstance(test_task())
+    task_instance = test_task_instance()  # TaskInstance(test_task())
 
     mock_ses_hook_obj = mocker.Mock(SESHook)
     patched_ses_hook_class = mocker.patch(
@@ -87,17 +88,17 @@ def test_send_update_success_emails(
     mock_ses_hook_obj.send_email.assert_any_call(
         **{
             "mail_from": "sinopia-devs@lists.stanford.edu",
-            "to": "abc@yale.edu",
-            "subject": "successfully published http://exmpl/resource/foo",
-            "html_content": "You have successfully published http://exmpl/resource/foo from Sinopia to stanford ils",
+            "to": "dscully@stanford.edu",
+            "subject": "successfully published https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+            "html_content": "You have successfully published https://api.development.sinopia.io/resource/0000-1111-2222-3333 from Sinopia to stanford ils",  # noqa: E501
         }
     )
     mock_ses_hook_obj.send_email.assert_any_call(
         **{
             "mail_from": "sinopia-devs@lists.stanford.edu",
-            "to": "abc@yale.edu",
-            "subject": "successfully published http://exmpl/resource/bar",
-            "html_content": "You have successfully published http://exmpl/resource/bar from Sinopia to yale ils",
+            "to": "fmulder@stanford.edu",
+            "subject": "successfully published https://api.development.sinopia.io/resource/4444-5555-6666-7777",
+            "html_content": "You have successfully published https://api.development.sinopia.io/resource/4444-5555-6666-7777 from Sinopia to yale ils",  # noqa: E501
         }
     )
     assert mock_ses_hook_obj.send_email.call_count == 2

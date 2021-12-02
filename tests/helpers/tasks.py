@@ -82,7 +82,7 @@ mock_resource_attributes = {
         "email": "fmulder@stanford.edu",
         "group": "yale",
         "target": "ils",
-    }
+    },
 }
 
 overlay_resources = [
@@ -145,7 +145,8 @@ def mock_task_instance(monkeypatch):
                 "group": mock_resource_attributes[key]["group"],
                 "target": mock_resource_attributes[key]["target"],
                 "resource_uri": key,
-                "resource": mock_resources[key]}
+                "resource": mock_resources[key],
+            }
         elif key == "overlay_resources":
             return overlay_resources
         elif task_ids in return_marc_tasks:
