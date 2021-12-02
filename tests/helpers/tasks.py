@@ -113,6 +113,11 @@ def mock_message():
                          "target": "ils",
                          "resource": { "uri": "https://api.development.sinopia.io/resource/4444-5555-6666-7777" }}"""
         },
+        {
+            "Body": """{ "group": "yale",
+                         "target": "ils",
+                         "resource": { "uri": "https://api.development.sinopia.io/resource/8888-9999-0000-1111" }}"""
+        },
     ]
 
 
