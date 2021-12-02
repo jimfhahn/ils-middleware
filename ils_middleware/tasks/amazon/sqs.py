@@ -48,6 +48,8 @@ def parse_messages(**kwargs) -> str:
             key=resource_uri,
             value={
                 "email": message_body["user"]["email"],
+                "group": message_body["group"],
+                "target": message_body["target"],
                 "resource_uri": resource_uri,
                 "resource": get_resource(resource_uri),
             },
