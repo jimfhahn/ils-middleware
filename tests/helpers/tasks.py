@@ -70,6 +70,10 @@ mock_resources = {
         "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
         "timestamp": "2021-10-29T20:30:58.821Z",
     },
+    "https://api.development.sinopia.io/resource/8888-9999-0000-1111": {
+        "user": "jpnelson",
+        "group": "stanford",
+    },
 }
 
 mock_resource_attributes = {
@@ -79,6 +83,11 @@ mock_resource_attributes = {
         "target": "ils",
     },
     "https://api.development.sinopia.io/resource/4444-5555-6666-7777": {
+        "email": "fmulder@stanford.edu",
+        "group": "yale",
+        "target": "ils",
+    },
+    "https://api.development.sinopia.io/resource/8888-9999-0000-1111": {
         "email": "fmulder@stanford.edu",
         "group": "yale",
         "target": "ils",
@@ -160,6 +169,8 @@ def mock_task_instance(monkeypatch):
             return mock_resources
         elif task_ids == "process_symphony.download_marc":
             return "tests/fixtures/record.mar"
+        elif key == "conversion_failures" and task_ids == "process_symphony.rdf2marc":
+            return ["https://api.development.sinopia.io/resource/8888-9999-0000-1111"]
         else:
             return mock_push_store.get(key)
 

@@ -112,6 +112,7 @@ def test_parse_messages(
 
     assert len(test_task_instance().xcom_pull(key="bad_resources")) == 1
 
+
 def test_get_resource(mock_get_resource):
     resource = get_resource("http://sinopia.io/resource/456abc")
     assert resource == mock_resource("http://sinopia.io/resource/456abc")

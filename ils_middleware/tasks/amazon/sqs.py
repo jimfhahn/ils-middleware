@@ -59,7 +59,6 @@ def parse_messages(**kwargs) -> str:
         except KeyError:
             resources_with_errors.append(resource_uri)
 
-
     task_instance.xcom_push(key="resources", value=resources)
     task_instance.xcom_push(key="bad_resources", value=resources_with_errors)
     return "completed_parse"

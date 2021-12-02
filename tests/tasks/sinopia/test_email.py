@@ -76,7 +76,7 @@ def mock_failure_no_user_available_task_instance(monkeypatch):
 def test_send_update_success_emails(
     mock_task_instance, mocker: MockerFixture  # noqa: F811
 ) -> None:
-    task_instance = test_task_instance()  # TaskInstance(test_task())
+    task_instance = test_task_instance()
 
     mock_ses_hook_obj = mocker.Mock(SESHook)
     patched_ses_hook_class = mocker.patch(
@@ -105,10 +105,10 @@ def test_send_update_success_emails(
 
 
 def test_send_task_failure_notifications(
-    mock_failure_task_instance, mocker: MockerFixture
+    mock_task_instance, mocker: MockerFixture  # noqa: F811
 ) -> None:
     execution_date = datetime(2021, 9, 21)
-    task_instance = TaskInstance(test_task())
+    task_instance = test_task_instance()
 
     hb_notify_spy = mocker.spy(honeybadger, "notify")
     logger_spy = mocker.spy(logger, "error")
@@ -128,66 +128,21 @@ def test_send_task_failure_notifications(
         "task_instance": task_instance,
     }
     expected_err_context = {"parent_task_ids": [], "kwargs": expected_kwargs}
-    hb_notify_spy.assert_called_once_with(
-        "Error executing upstream task",
+    hb_notify_spy.assert_called_with(
+        "Error executing upstream task for https://api.development.sinopia.io/resource/8888-9999-0000-1111",
         context=expected_err_context,
     )
-    logger_spy.assert_called_once_with(
-        f"Error executing upstream task: err_msg_context={expected_err_context}"
+    logger_spy.assert_called_with(
+        f"Error executing upstream task for https://api.development.sinopia.io/resource/8888-9999-0000-1111: err_msg_context={expected_err_context}"  # noqa: E501
     )
 
-    patched_ses_hook_class.assert_called_once_with(aws_conn_id="aws_ses_connection")
-    expected_exec_date_str = "2021-09-21 00:00:00"
-    expected_uri = (
-        "https://api.sinopia.io/resource/9d3b525e-2d8f-4192-8456-0fb804d34fd1"
-    )
+    patched_ses_hook_class.assert_called_with(aws_conn_id="aws_ses_connection")
+    expected_uri = "https://api.development.sinopia.io/resource/8888-9999-0000-1111"
     mock_ses_hook_obj.send_email.assert_called_once_with(
         **{
             "mail_from": "sinopia-devs@lists.stanford.edu",
-            "to": ["user@institution.edu"],
+            "to": "fmulder@stanford.edu",
             "subject": "Error executing Sinopia to ILS task on your behalf",
-            "html_content": f"execution_date: {expected_exec_date_str} / resource_uri (if available): ['{expected_uri}'] / group (if available): [None]",  # noqa: E501 line too long
+            "html_content": f"Error processing resource_uri (if available): {expected_uri} / group (if available): yale",  # noqa: E501 line too long
         }
     )
-    assert mock_ses_hook_obj.send_email.call_count == 1
-
-
-def test_send_task_failure_notifications_no_user_available(
-    mock_failure_no_user_available_task_instance, mocker: MockerFixture
-) -> None:
-    execution_date = datetime(2021, 9, 21)
-    task_instance = TaskInstance(test_task())
-
-    hb_notify_spy = mocker.spy(honeybadger, "notify")
-    logger_spy = mocker.spy(logger, "error")
-
-    mock_ses_hook_obj = mocker.Mock(SESHook)
-    patched_ses_hook_class = mocker.patch(
-        "ils_middleware.tasks.sinopia.email.SESHook", return_value=mock_ses_hook_obj
-    )
-
-    send_task_failure_notifications(
-        execution_date=execution_date, task=test_task(), task_instance=task_instance
-    )
-
-    expected_kwargs = {
-        "execution_date": execution_date,
-        "task": test_task(),
-        "task_instance": task_instance,
-    }
-    expected_err_context = {"parent_task_ids": [], "kwargs": expected_kwargs}
-    hb_notify_spy.assert_any_call(
-        "Error executing upstream task",
-        context=expected_err_context,
-    )
-    logger_spy.assert_called_once_with(
-        f"Error executing upstream task: err_msg_context={expected_err_context}"
-    )
-    hb_notify_spy.assert_any_call(
-        "Unable to determine user to notify for task failure",
-        context=expected_err_context,
-    )
-    assert hb_notify_spy.call_count == 2
-
-    assert patched_ses_hook_class.call_count == 0
-    assert mock_ses_hook_obj.send_email.call_count == 0
