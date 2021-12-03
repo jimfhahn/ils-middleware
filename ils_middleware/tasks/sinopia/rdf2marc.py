@@ -49,13 +49,11 @@ def Rdf2Marc(**kwargs):
         if "x-amz-function-error" in result["ResponseMetadata"].get("HTTPHeaders"):
             payload = json.loads(result["Payload"].read())
             msg = f"RDF2MARC conversion failed for {instance_uri}, error: {payload.get('errorMessage')}"
-            # task_instance.xcom_push(key=instance_uri, value={"error_message": msg})
             conversion_failures[instance_uri] = msg
         elif result["StatusCode"] == 200:
             task_instance.xcom_push(key=instance_uri, value=marc_path)
         else:
             msg = f"RDF2MARC conversion failed for {instance_uri}: {result['FunctionError']}"
-            # task_instance.xcom_push(key=instance_uri, value={"error_message": msg})
             conversion_failures[instance_uri] = msg
 
     task_instance.xcom_push(key="conversion_failures", value=conversion_failures)

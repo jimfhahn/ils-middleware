@@ -207,7 +207,7 @@ with DAG(
         login_sinopia >> local_admin_metadata
 
     notify_sinopia_updated = PythonOperator(
-        task_id="sinopia_update_success_notification",
+        task_id="sinopia_update_notification",
         dag=dag,
         trigger_rule="none_failed",
         python_callable=send_notification_emails,

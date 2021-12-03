@@ -10,6 +10,7 @@ from airflow.models.taskinstance import TaskInstance
 from airflow.operators.dummy import DummyOperator
 
 from ils_middleware.tasks.sinopia.email import (
+    send_notification_emails,
     send_update_success_emails,
     send_task_failure_notifications,
     honeybadger,  # for spying on notifications
@@ -42,12 +43,18 @@ def test_task():
     return DummyOperator(task_id="test", dag=test_dag)
 
 
-# @pytest.fixture
-# def mock_success_task_instance(monkeypatch):
-#     def mock_xcom_pull(*args, **kwargs) -> list:
-#         return [mock_messages_list]
-
-#     monkeypatch.setattr(TaskInstance, "xcom_pull", mock_xcom_pull)
+def test_send_notification_emails(mocker: MockerFixture):
+    patched_send_update_success_emails = mocker.patch(
+        "ils_middleware.tasks.sinopia.email.send_update_success_emails",
+        return_value=True,
+    )
+    patched_send_task_failure_notifications = mocker.patch(
+        "ils_middleware.tasks.sinopia.email.send_task_failure_notifications",
+        return_value=True,
+    )
+    send_notification_emails(task_instance=test_task_instance())
+    patched_send_update_success_emails.assert_called_once
+    patched_send_task_failure_notifications.assert_called_once
 
 
 @pytest.fixture
