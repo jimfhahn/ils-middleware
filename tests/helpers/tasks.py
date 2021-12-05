@@ -200,6 +200,8 @@ def mock_task_instance(monkeypatch):
             return "tests/fixtures/record.mar"
         elif key == "conversion_failures" and task_ids == "process_symphony.rdf2marc":
             return ["https://api.development.sinopia.io/resource/8888-9999-0000-1111"]
+        elif isinstance(task_ids, str) and task_ids.endswith("title_task"):
+            return "Great force"
         else:
             return mock_push_store.get(key)
 

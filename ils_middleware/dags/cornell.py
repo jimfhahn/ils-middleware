@@ -63,7 +63,7 @@ with DAG(
             "url": Variable.get("cornell_folio_auth_url"),
             "username": Variable.get("cornell_folio_login"),
             "password": Variable.get("cornell_folio_password"),
-            "tenant": "cul"
+            "tenant": "cul",
         },
     )
 

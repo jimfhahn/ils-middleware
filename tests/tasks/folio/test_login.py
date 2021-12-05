@@ -47,6 +47,7 @@ def test_missing_password():
     with pytest.raises(KeyError, match="password"):
         FolioLogin(url="https://test-login.com", username="DEVSYS")
 
+
 def test_missing_tenant():
     with pytest.raises(KeyError, match="tenant"):
         FolioLogin(url="https://test-login.com", username="DEVSYS", password="PASS")
