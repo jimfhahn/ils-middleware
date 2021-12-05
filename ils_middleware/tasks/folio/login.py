@@ -10,9 +10,10 @@ def FolioLogin(**kwargs) -> SimpleHttpOperator:
     url = kwargs["url"]
     username = kwargs["username"]
     password = kwargs["password"]
+    tenant = kwargs["tenant"]
 
     data = {"username": username, "password": password}
-    headers = {"Content-type": "application/json", "x-okapi-tenant": "sul"}
+    headers = {"Content-type": "application/json", "x-okapi-tenant": tenant}
 
     result = requests.post(url, data=json.dumps(data), headers=headers)
 

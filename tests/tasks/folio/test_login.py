@@ -27,6 +27,7 @@ def test_valid_login(mock_request):
             url="https://okapi-folio.dev.sul.stanford.edu/authn/login",
             username="DEVSYS",
             password="APASSWord",
+            tenant="sul",
         )
         == "some_jwt_token"
     )
@@ -45,3 +46,7 @@ def test_missing_username():
 def test_missing_password():
     with pytest.raises(KeyError, match="password"):
         FolioLogin(url="https://test-login.com", username="DEVSYS")
+
+def test_missing_tenant():
+    with pytest.raises(KeyError, match="tenant"):
+        FolioLogin(url="https://test-login.com", username="DEVSYS", password="PASS")

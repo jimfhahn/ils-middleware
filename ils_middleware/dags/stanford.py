@@ -164,6 +164,7 @@ with DAG(
                 "url": Variable.get("stanford_folio_auth_url"),
                 "username": Variable.get("stanford_folio_login"),
                 "password": Variable.get("stanford_folio_password"),
+                "tenant": "sul",
             },
         )
 
