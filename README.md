@@ -71,6 +71,9 @@ while commenting out the previous line `image: ${AIRFLOW_IMAGE_NAME:-ld4p/ils-mi
 We are using [poetry][POET] to better manage dependency updates. Installation
 instructions can be found at https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions
 
+Once you have poetry installed, you can install the other project dependencies
+by running `poetry install`
+
 ## Automated Tests
 
 The [pytest][PYTEST] framework is used to run the tests.  Tests can be invoked manually by calling `poetry run pytest` (which will save an xml formatted [coverage report][PYTESTCOV], as well as printing the coverage report to the terminal).
