@@ -14,11 +14,9 @@ from ils_middleware.tasks.sinopia.email import (
     send_update_success_emails,
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
-from ils_middleware.tasks.sinopia.metadata_check import existing_metadata_check
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 from ils_middleware.tasks.alma.new import NewMARCtoAlma
 from ils_middleware.tasks.alma.mod_xml import to_alma_xml
-from ils_middleware.tasks.alma.match import match_marc_in_alma
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -48,7 +46,7 @@ with DAG(
     description="Penn Alma DAG",
     schedule_interval=timedelta(minutes=5),
     start_date=datetime(2021, 8, 24),
-    tags="alma",
+    tags=["alma"],
     catchup=False,
     on_failure_callback=dag_failure_callback,
 ) as dag:
@@ -92,27 +90,15 @@ with DAG(
         # Penn's Alma Sandbox API
         alma_api_key = Variable.get("alma_sandbox_api_key")
         alma_conn_id = "penn_alma_connection"
-
-        #Alma API uses the same path but with additional paramaters for declaring new record or match an exisiting record
-        new_or_overlay = PythonOperator(
-            task_id="new-or-overlay",
-            python_callable=existing_metadata_check,
-        )
+        # Alma API uses the same path to either create new or match and is handled with
+        # Alma Import Profile, setup in Alma admin side. The pre-configured Import Profile
+        # can be specified with an import ID to handle the import.
+        alma_import_profile_id = Variable.get("import_profile_id")
 
         alma_new_record = PythonOperator(
             task_id="post_new_alma",
             python_callable=NewMARCtoAlma,
-            op_kwargs={
-                "conn_id": alma_conn_id            
-            },
-        )
-
-        alma_match_record = PythonOperator(
-            task_id="post_match_alma",
-            python_callable=match_marc_in_alma,
-            op_kwargs={
-                "conn_id": alma_conn_id
-            },
+            op_kwargs={"conn_id": alma_conn_id},
         )
 
         (
@@ -120,11 +106,8 @@ with DAG(
             >> download_marc
             >> export_marc_xml
             >> convert_to_alma_xml
-            >> new_or_overlay
-            >> [alma_new_record, alma_match_record]
+            >> alma_new_record
         )
-
-
     # Dummy Operator
     processed_sinopia = DummyOperator(
         task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"
@@ -148,12 +131,7 @@ with DAG(
             python_callable=new_local_admin_metadata,
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
-                "ils_tasks": {
-                    "ALMA": [
-                        "process_alma.new",
-                        "process_alma.match",
-                    ]
-                },
+                "ils_tasks": {"ALMA": ["process_alma.new"]},
             },
         )
 
