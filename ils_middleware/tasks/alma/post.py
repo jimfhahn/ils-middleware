@@ -60,8 +60,10 @@ def almaRequest(**kwargs) -> str:
         + normalization
         + validate
         + override_warning
+        + check_match
+        + import_profile
+        + alma_api_key
     )
-    +check_match + import_profile + alma_api_key
 
     alma_result = Alma_requests(http_verb, alma_uri, data, headers)
 
