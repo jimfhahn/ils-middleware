@@ -16,9 +16,7 @@ def NewMARCtoAlma(**kwargs):
             key=resource_uri, task_ids="process_alma.mod_to_alma_xml"
         )
 
-        payload = {
-            "bib": marc_record
-        }
+        payload = {"bib": marc_record}
 
         task_instance.xcom_push(
             key=resource_uri,

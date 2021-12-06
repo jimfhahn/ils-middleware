@@ -53,12 +53,21 @@ def almaRequest(**kwargs) -> str:
     alma_conn = BaseHook.get_connection(conn_id)
     # {{baseUrl}}/almaws/v1/bibs?from_nz_mms_id=&from_cz_mms_id=&normalization=&validate=false&override_warning=true
     # &check_match=false&import_profile=&apikey=<API Key>
-    alma_uri = alma_conn.host + from_nz_mms_id + from_cz_mms_id + normalization + validate + override_warning
-    + check_match + import_profile + alma_api_key
+    alma_uri = (
+        alma_conn.host
+        + from_nz_mms_id
+        + from_cz_mms_id
+        + normalization
+        + validate
+        + override_warning
+    )
+    +check_match + import_profile + alma_api_key
 
     alma_result = Alma_requests(http_verb, alma_uri, data, headers)
 
     logger.debug(
         f"Alma Results alma_result {alma_result.status_code}\n{alma_result.text}"
     )
-    return alma_result.text  # todo: parse the XML response for MMSID element to send back into Sinopia description(s)
+    return (
+        alma_result.text
+    )  # todo: parse the XML response for MMSID element to send back into Sinopia description(s)
