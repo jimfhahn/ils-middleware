@@ -21,9 +21,11 @@ from ils_middleware.tasks.symphony.login import SymphonyLogin
 from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
 from ils_middleware.tasks.symphony.mod_json import to_symphony_json
 from ils_middleware.tasks.symphony.overlay import overlay_marc_in_symphony
+from ils_middleware.tasks.folio.build import build_records
 from ils_middleware.tasks.folio.login import FolioLogin
 from ils_middleware.tasks.folio.graph import construct_graph
 from ils_middleware.tasks.folio.map import FOLIO_FIELDS, map_to_folio
+from ils_middleware.tasks.folio.new import post_folio_records
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -181,7 +183,28 @@ with DAG(
                     },
                 )
 
-        folio_login >> bf_graphs >> folio_map_task_group
+        folio_records = PythonOperator(
+            task_id="build-folio",
+            python_callable=build_records,
+            op_kwargs={
+                "task_groups_ids": ["process_folio", "folio_mapping"],
+                "folio_url": Variable.get("stanford_folio_url"),
+                "folio_login": Variable.get("stanford_folio_login"),
+            },
+        )
+
+        new_folio_records = PythonOperator(
+            task_id="new-folio-records",
+            python_callable=post_folio_records,
+            op_kwargs={
+                "folio_url": Variable.get("stanford_folio_url"),
+                "endpoint": "/instance-storage/instances",
+                "tenant": "sul",
+            },
+        )
+
+        bf_graphs >> folio_map_task_group
+        folio_map_task_group >> [folio_records, folio_login] >> new_folio_records
 
     # Dummy Operator
     processed_sinopia = DummyOperator(

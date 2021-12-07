@@ -1,8 +1,10 @@
 """FOLIO Operators and Functions for Institutional DAGs."""
-import json
+import logging
 import requests
 
 from airflow.providers.http.operators.http import SimpleHttpOperator
+
+logger = logging.getLogger(__name__)
 
 
 def FolioLogin(**kwargs) -> SimpleHttpOperator:
@@ -15,7 +17,7 @@ def FolioLogin(**kwargs) -> SimpleHttpOperator:
     data = {"username": username, "password": password}
     headers = {"Content-type": "application/json", "x-okapi-tenant": tenant}
 
-    result = requests.post(url, data=json.dumps(data), headers=headers)
+    result = requests.post(url, json=data, headers=headers)
 
     if result.status_code == 201:  # Valid token created and returned
         return result.headers.get("x-okapi-token")
