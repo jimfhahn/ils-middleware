@@ -70,6 +70,28 @@ mock_resources = {
         "uri": "https://api.development.sinopia.io/resource/7b55e6f7-f91e-4c7a-bbcd-c074485ad18d",
         "timestamp": "2021-10-29T20:30:58.821Z",
     },
+    "https://api.development.sinopia.io/resource/8888-9999-0000-1111": {
+        "user": "jpnelson",
+        "group": "stanford",
+    },
+}
+
+mock_resource_attributes = {
+    "https://api.development.sinopia.io/resource/0000-1111-2222-3333": {
+        "email": "dscully@stanford.edu",
+        "group": "stanford",
+        "target": "ils",
+    },
+    "https://api.development.sinopia.io/resource/4444-5555-6666-7777": {
+        "email": "fmulder@stanford.edu",
+        "group": "yale",
+        "target": "ils",
+    },
+    "https://api.development.sinopia.io/resource/8888-9999-0000-1111": {
+        "email": "fmulder@stanford.edu",
+        "group": "yale",
+        "target": "ils",
+    },
 }
 
 overlay_resources = [
@@ -89,12 +111,21 @@ mock_push_store: dict = {}
 def mock_message():
     return [
         {
-            "Body": """{ "user": { "email": "dscully@stanford.edu"},
-                        "resource": { "uri": "https://api.development.sinopia.io/resource/0000-1111-2222-3333" }}"""
+            "Body": """{ "user": { "email": "dscully@stanford.edu" },
+                         "group": "stanford",
+                         "target": "ils",
+                         "resource": { "uri": "https://api.development.sinopia.io/resource/0000-1111-2222-3333" }}"""
         },
         {
-            "Body": """{ "user": { "email": "fmulder@stanford.edu"},
-                        "resource": { "uri": "https://api.development.sinopia.io/resource/4444-5555-6666-7777" }}"""
+            "Body": """{ "user": { "email": "fmulder@stanford.edu" },
+                         "group": "yale",
+                         "target": "ils",
+                         "resource": { "uri": "https://api.development.sinopia.io/resource/4444-5555-6666-7777" }}"""
+        },
+        {
+            "Body": """{ "group": "yale",
+                         "target": "ils",
+                         "resource": { "uri": "https://api.development.sinopia.io/resource/8888-9999-0000-1111" }}"""
         },
     ]
 
@@ -123,7 +154,13 @@ def mock_task_instance(monkeypatch):
         elif key == "messages":
             return mock_message()
         elif key in mock_resources and task_ids == "sqs-message-parse":
-            return {"resource": mock_resources[key]}
+            return {
+                "email": mock_resource_attributes[key]["email"],
+                "group": mock_resource_attributes[key]["group"],
+                "target": mock_resource_attributes[key]["target"],
+                "resource_uri": key,
+                "resource": mock_resources[key],
+            }
         elif key == "overlay_resources":
             return overlay_resources
         elif task_ids in return_marc_tasks:
@@ -132,6 +169,8 @@ def mock_task_instance(monkeypatch):
             return mock_resources
         elif task_ids == "process_symphony.download_marc":
             return "tests/fixtures/record.mar"
+        elif key == "conversion_failures" and task_ids == "process_symphony.rdf2marc":
+            return ["https://api.development.sinopia.io/resource/8888-9999-0000-1111"]
         else:
             return mock_push_store.get(key)
 

@@ -11,7 +11,7 @@ from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
     notify_and_log,
-    send_update_success_emails,
+    send_notification_emails,
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.metadata_check import existing_metadata_check
@@ -207,15 +207,19 @@ with DAG(
         login_sinopia >> local_admin_metadata
 
     notify_sinopia_updated = PythonOperator(
-        task_id="sinopia_update_success_notification",
+        task_id="sinopia_update_notification",
         dag=dag,
         trigger_rule="none_failed",
-        python_callable=send_update_success_emails,
+        python_callable=send_notification_emails,
     )
 
-    processing_complete = DummyOperator(task_id="processing_complete", dag=dag)
+    processing_complete = DummyOperator(
+        task_id="processing_complete", dag=dag, trigger_rule="one_success"
+    )
     messages_received = DummyOperator(task_id="messages_received", dag=dag)
-    messages_timeout = DummyOperator(task_id="sqs_timeout", dag=dag)
+    messages_timeout = DummyOperator(
+        task_id="sqs_timeout", dag=dag, trigger_rule="all_failed"
+    )
 
 
 listen_sns >> [messages_received, messages_timeout]
