@@ -1,16 +1,3 @@
-date_of_publication = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-SELECT ?date
-WHERE {{
-    <{bf_instance}> a bf:Instance .
-    <{bf_instance}> bf:provisionActivity ?activity .
-    ?activity a bf:Publication .
-    ?activity bf:date ?date .
-}}
-"""
-
 identifier = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -24,25 +11,17 @@ WHERE {{
 }}
 """
 
-instance_format_category = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
+instance_format_id = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?format_category
+SELECT ?format_category ?format_term
 WHERE {{
     <{bf_instance}> a bf:Instance .
-    <{bf_instance}> bf:media ?format_category .
-}}
-"""
-
-instance_format_term = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-SELECT ?format_term
-WHERE {{
-    <{bf_instance}> a bf:Instance .
-    <{bf_instance}> bf:carrier ?format_term .
+    <{bf_instance}> bf:media ?format_category_uri .
+    <{bf_instance}> bf:carrier ?format_term_uri .
+    ?format_category_uri rdfs:label ?format_category .
+    ?format_term_uri rdfs:label ?format_term .
 }}
 """
 
@@ -74,7 +53,8 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SElECT ?mode_of_issuance
 WHERE {{
     <{bf_instance}> a bf:Instance .
-    <{bf_instance}> bf:issuance ?mode_of_issuance .
+    <{bf_instance}> bf:issuance ?mode_of_issuance_uri .
+    ?mode_of_issuance_uri rdfs:label ?mode_of_issuance
 }}
 """
 
@@ -91,49 +71,25 @@ WHERE {{
 }}
 """
 
-physical_description_dimensions = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
+physical_description = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?dimensions
-WHERE {{
-    <{bf_instance}> a bf:Instance .
-    <{bf_instance}> bf:dimensions ?dimensions .
-}}
-"""
-
-physical_description_extent = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-SELECT ?extent
+SELECT ?extent ?dimensions
 WHERE {{
     <{bf_instance}> a bf:Instance .
     <{bf_instance}> bf:extent ?extent_bnode .
     ?extent_bnode a bf:Extent .
     ?extent_bnode rdfs:label ?extent .
+    <{bf_instance}> bf:dimensions ?dimensions .
 }}
 """
 
-place = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
+publication = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?place
-WHERE {{
-   <{bf_instance}> a bf:Instance .
-   <{bf_instance}> bf:provisionActivity ?activity .
-   ?activity a bf:Publication .
-   ?activity bf:place ?place_holder .
-   ?place_holder rdfs:label ?place .
-}}
-"""
-
-publisher = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-SELECT ?publisher
+SELECT ?publisher ?date ?place
 WHERE {{
    <{bf_instance}> a bf:Instance .
    <{bf_instance}> bf:provisionActivity ?activity .
@@ -141,6 +97,13 @@ WHERE {{
    ?activity bf:agent ?agent .
    ?agent a bf:Agent .
    ?agent rdfs:label ?publisher .
+   OPTIONAL {{
+      ?activity bf:date ?date .
+   }}
+   OPTIONAL {{
+      ?activity bf:place ?place_holder .
+      ?place_holder rdfs:label ?place .
+   }}
 }}
 """
 

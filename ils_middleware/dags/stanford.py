@@ -189,7 +189,9 @@ with DAG(
             op_kwargs={
                 "task_groups_ids": ["process_folio", "folio_mapping"],
                 "folio_url": Variable.get("stanford_folio_url"),
-                "folio_login": Variable.get("stanford_folio_login"),
+                "username": Variable.get("stanford_folio_login"),
+                "password": Variable.get("stanford_folio_password"),
+                "tenant": "sul",
             },
         )
 
@@ -198,8 +200,12 @@ with DAG(
             python_callable=post_folio_records,
             op_kwargs={
                 "folio_url": Variable.get("stanford_folio_url"),
-                "endpoint": "/instance-storage/instances",
+                "endpoint": "/instance-storage/batch/synchronous",
                 "tenant": "sul",
+                "task_groups_ids": [
+                    "process_folio",
+                ],
+                "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='process_folio.folio-login')}}",
             },
         )
 

@@ -39,7 +39,7 @@ WHERE {{
 
 language = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 
-SELECT ?language
+SELECT ?language_uri ?language
 WHERE {{
     <{bf_work}> a bf:Work .
     <{bf_work}> bf:language ?language_uri .
