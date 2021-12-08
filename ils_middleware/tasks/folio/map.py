@@ -64,14 +64,24 @@ BF_TO_FOLIO_MAP = {
 FOLIO_FIELDS = BF_TO_FOLIO_MAP.keys()
 
 
+def _task_id(task_groups: str) -> str:
+    task_id = "bf-graph"
+    if len(task_groups) > 0:
+        task_id = f"{task_groups}.{task_id}"
+    return task_id
+
+
 def _build_and_query_graph(**kwargs) -> list:
     bf_class = kwargs["bf_class"]
     instance_uri = kwargs["instance_uri"]
     task_instance = kwargs["task_instance"]
     template = kwargs["template"]
     uri_type = kwargs["uri_type"]
+    task_groups = ".".join(kwargs["task_groups_ids"])
 
     query_params = {}
+    task_id = _task_id(task_groups)
+
     if uri_type.startswith("bf_work"):
         query_params[uri_type] = task_instance.xcom_pull(
             key=instance_uri, task_ids="bf-graph"
@@ -83,9 +93,7 @@ def _build_and_query_graph(**kwargs) -> list:
 
     query = template.format(**query_params)
     graph = rdflib.Graph()
-    json_ld = task_instance.xcom_pull(key=instance_uri, task_ids="bf-graph").get(
-        "graph"
-    )
+    json_ld = task_instance.xcom_pull(key=instance_uri, task_ids=task_id).get("graph")
     graph.parse(data=json_ld, format="json-ld")
     logger.debug(f"Graph size is {len(graph)}\n{query}")
     return [row for row in graph.query(query)]
@@ -105,7 +113,7 @@ def map_to_folio(**kwargs):
             template=template,
             instance_uri=instance_uri,
             bf_class=bf_class,
-            task_instance=task_instance,
+            **kwargs,
         )
         task_instance.xcom_push(key=instance_uri, value=values)
     return "mapping_complete"
