@@ -10,13 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 def send_notification_emails(**kwargs) -> None:
-    task_instance = kwargs["task_instance"]
-
     # Send success emails first
-    send_update_success_emails(task_instance=task_instance)
+    send_update_success_emails(kwargs=kwargs)
 
     # send failure notifications
-    send_task_failure_notifications(task_instance=task_instance)
+    send_task_failure_notifications(kwargs=kwargs)
 
 
 def send_update_success_emails(**kwargs) -> None:
