@@ -8,6 +8,7 @@ from airflow.utils.task_group import TaskGroup
 
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
+
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
     notify_and_log,
@@ -21,6 +22,8 @@ from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
 from ils_middleware.tasks.symphony.mod_json import to_symphony_json
 from ils_middleware.tasks.symphony.overlay import overlay_marc_in_symphony
 from ils_middleware.tasks.folio.login import FolioLogin
+from ils_middleware.tasks.folio.graph import construct_graph
+from ils_middleware.tasks.folio.map import FOLIO_FIELDS, map_to_folio
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -164,13 +167,17 @@ with DAG(
             },
         )
 
-        download_folio_marc = DummyOperator(task_id="download_folio_marc", dag=dag)
+        bf_graphs = PythonOperator(task_id="bf-graph", python_callable=construct_graph)
 
-        export_folio_json = DummyOperator(task_id="folio_json_to_s3", dag=dag)
+        with TaskGroup(group_id="folio_mapping") as folio_map_task_group:
+            for folio_field in FOLIO_FIELDS:
+                bf_to_folio = PythonOperator(
+                    task_id=f"{folio_field}_task",
+                    python_callable=map_to_folio,
+                    op_kwargs={"folio_field": folio_field},
+                )
 
-        send_to_folio = DummyOperator(task_id="folio_send", dag=dag)
-
-        folio_login >> download_folio_marc >> export_folio_json >> send_to_folio
+        folio_login >> bf_graphs >> folio_map_task_group
 
     # Dummy Operator
     processed_sinopia = DummyOperator(

@@ -36,6 +36,26 @@ mock_resources = {
         "user": "jpnelson",
         "group": "stanford",
         "editGroups": ["other", "pcc"],
+        "data": [
+            {
+                "@id": "_:b29",
+                "@type": ["http://id.loc.gov/ontologies/bibframe/Title"],
+                "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+                    {"@value": "Great force", "@language": "eng"}
+                ],
+            },
+            {
+                "@id": "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+                "http://sinopia.io/vocabulary/hasResourceTemplate": [
+                    {"@value": "pcc:bf2:Monograph:Instance"}
+                ],
+                "@type": ["http://id.loc.gov/ontologies/bibframe/Instance"],
+                "http://id.loc.gov/ontologies/bibframe/title": [{"@id": "_:b29"}],
+                "http://id.loc.gov/ontologies/bibframe/date": [
+                    {"@language": "eng", "@value": "2012"}
+                ],
+            },
+        ],
         "templateId": "ld4p:RT:bf2:Monograph:Instance:Un-nested",
         "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
         "bfAdminMetadataRefs": [
@@ -55,6 +75,15 @@ mock_resources = {
         "user": "jpnelson",
         "group": "stanford",
         "editGroups": ["other", "pcc"],
+        "data": [
+            {
+                "@id": "https://api.development.sinopia.io/resource/4444-5555-6666-7777",
+                "@type": ["http://id.loc.gov/ontologies/bibframe/Instance"],
+                "http://id.loc.gov/ontologies/bibframe/date": [
+                    {"@language": "eng", "@value": "2012"}
+                ],
+            },
+        ],
         "templateId": "ld4p:RT:bf2:Monograph:Instance:Un-nested",
         "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
         "bfAdminMetadataRefs": [
