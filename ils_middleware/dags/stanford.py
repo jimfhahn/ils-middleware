@@ -174,7 +174,10 @@ with DAG(
                 bf_to_folio = PythonOperator(
                     task_id=f"{folio_field}_task",
                     python_callable=map_to_folio,
-                    op_kwargs={"folio_field": folio_field},
+                    op_kwargs={
+                        "folio_field": folio_field,
+                        "task_groups_ids": ["process_folio"],
+                    },
                 )
 
         folio_login >> bf_graphs >> folio_map_task_group
