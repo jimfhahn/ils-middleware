@@ -84,7 +84,7 @@ def _build_and_query_graph(**kwargs) -> list:
 
     if uri_type.startswith("bf_work"):
         query_params[uri_type] = task_instance.xcom_pull(
-            key=instance_uri, task_ids="bf-graph"
+            key=instance_uri, task_ids=task_id
         ).get("work_uri")
     else:
         query_params[uri_type] = instance_uri
