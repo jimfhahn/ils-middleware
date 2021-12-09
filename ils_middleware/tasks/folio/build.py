@@ -195,7 +195,7 @@ def _subjects(**kwargs) -> tuple:
     return "subjects", subjects
 
 
-def _title_transform(**kwargs) -> tuple:
+def _title(**kwargs) -> tuple:
     values = kwargs.get("values")
     if isinstance(values, str):
         values = [
@@ -233,7 +233,7 @@ transforms = {
     "contributor.primary.Person": _primary_contributor,
     "publication": _publication,
     "subjects": _subjects,
-    "title": _title_transform,
+    "title": _title,
 }
 
 
@@ -297,7 +297,7 @@ def _inventory_record(**kwargs) -> dict:
 def build_records(**kwargs):
     """ """
     task_instance = kwargs["task_instance"]
-    folio_client = folioclient.FolioClient.FolioClient(
+    folio_client = FolioClient(
         kwargs["folio_url"], kwargs["tenant"], kwargs["username"], kwargs["password"]
     )
 

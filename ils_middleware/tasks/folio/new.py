@@ -31,11 +31,10 @@ def _post_to_okapi(**kwargs):
         json=payload,
     )
 
-    
     # Check to see if record already exists, if so try PUT.
     # When available should use upsert=true param to the original URI to
     # avoid this second check and operation
-    if new_record_result.status_code == 422 and new_record.json().get("errors")[
+    if new_record_result.status_code == 422 and new_record_result.json().get("errors")[
         "message"
     ].startswith("id value already exists"):
         overlay_record_result = requests.put(
@@ -43,10 +42,9 @@ def _post_to_okapi(**kwargs):
             headers=headers,
             json=payload,
         )
-        # overlay_record_result.raise_for_status()
+        overlay_record_result.raise_for_status()
     else:
-        logger.error(f"New Record result {new_record_result.status_code}\nText:{new_record_result.text}")
-        # new_record_result.raise_for_status()
+        new_record_result.raise_for_status()
 
 
 def post_folio_records(**kwargs):
@@ -54,7 +52,6 @@ def post_folio_records(**kwargs):
     task_instance = kwargs["task_instance"]
     jwt = kwargs["token"]
     task_groups = ".".join(kwargs["task_groups_ids"])
-
 
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
