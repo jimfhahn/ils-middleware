@@ -76,17 +76,35 @@ with DAG(
             bf_to_folio = PythonOperator(
                 task_id=f"{folio_field}_task",
                 python_callable=map_to_folio,
-                op_kwargs={"folio_field": folio_field},
+                op_kwargs={
+                    "folio_field": folio_field,
+                    "task_groups_ids": [""],
+                },
             )
 
     folio_records = PythonOperator(
         task_id="build-folio",
         python_callable=build_records,
-        op_kwargs={"task_groups": ["folio_mapping"]},
+        op_kwargs={
+            "task_groups": ["folio_mapping"],
+            "folio_url": Variable.get("cornell_folio_url"),
+            "username": Variable.get("cornell_folio_login"),
+            "password": Variable.get("cornell_folio_password"),
+            "tenant": "cul",
+            "task_groups_ids": ["folio_mapping"],
+        },
     )
 
     new_folio_records = PythonOperator(
-        task_id="new-folio-records", python_callable=post_folio_records
+        task_id="new-folio-records",
+        python_callable=post_folio_records,
+        op_kwargs={
+            "folio_url": Variable.get("cornell_folio_url"),
+            "endpoint": "/instance-storage/batch/synchronous",
+            "tenant": "cul",
+            "task_groups_ids": [""],
+            "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='folio-login')}}",
+        },
     )
 
     with TaskGroup(group_id="update_sinopia") as sinopia_update_group:
@@ -108,9 +126,8 @@ with DAG(
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
                 "ils_tasks": {
-                    "SIRSI": [
-                        "process_symphony.post_new_symphony",
-                        "process_symphony.post_overlay_symphony",
+                    "FOLIO": [
+                        "new-folio-records",
                     ]
                 },
             },

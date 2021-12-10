@@ -41,7 +41,9 @@ def mock_bad_request(monkeypatch, mocker: MockerFixture):
     def mock_bad_post(*args, **kwargs):
         post_response = mocker.stub(name="post_result")
         post_response.status_code = 422
-        post_response.json = lambda: {"errors": {"message": "id value already exists"}}
+        post_response.json = lambda: {
+            "errors": [{"message": "id value already exists"}]
+        }
         return post_response
 
     def mock_put(*args, **kwargs):
