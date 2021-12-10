@@ -5,6 +5,15 @@ import requests
 logger = logging.getLogger(__name__)
 
 
+def _overlay_folio_records(okapi_instance_url, headers, payload):
+    overlay_record_result = requests.put(
+        okapi_instance_url,
+        headers=headers,
+        json=payload,
+    )
+    overlay_record_result.raise_for_status()
+
+
 def _post_to_okapi(**kwargs):
     task_instance = kwargs["task_instance"]
     endpoint = kwargs.get("endpoint", "/instance-storage/batch/synchronous")
@@ -39,12 +48,11 @@ def _post_to_okapi(**kwargs):
     elif new_record_result.status_code == 422 and new_record_result.json().get(
         "errors"
     )["message"].startswith("id value already exists"):
-        overlay_record_result = requests.put(
+        _overlay_folio_records(
             okapi_instance_url,
             headers=headers,
-            json=payload,
+            payload=payload,
         )
-        overlay_record_result.raise_for_status()
     else:
         new_record_result.raise_for_status()
 

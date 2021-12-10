@@ -17,7 +17,13 @@ def mock_request(monkeypatch, mocker: MockerFixture):
 
         return post_response
 
+    def mock_raise_for_status(*args, **kwargs):
+        error_response = mocker.stub(name="post_error")
+        error_response.status_code = 500
+        error_response.text = "Internal server error"
+
     monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(requests.Response, "raise_for_status", mock_raise_for_status)
 
 
 # <Response [201]>

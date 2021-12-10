@@ -224,6 +224,13 @@ def mock_requests_okapi(monkeypatch, mocker: MockerFixture):
 
         return post_response
 
+    def mock_put(*args, **kwargs):
+        put_response = mocker.stub(name="put_result")
+        put_response.status_code = 201
+        put_response.text = ""
+        put_response.raise_for_status = lambda: None
+        return put_response
+
     def mock_raise_for_status(*args, **kwargs):
         error_response = mocker.stub(name="post_error")
         error_response.status_code = 500
@@ -231,6 +238,7 @@ def mock_requests_okapi(monkeypatch, mocker: MockerFixture):
 
     monkeypatch.setattr(requests, "get", mock_get)
     monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(requests, "put", mock_put)
     monkeypatch.setattr(requests.Response, "raise_for_status", mock_raise_for_status)
 
 
