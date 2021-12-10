@@ -1,3 +1,6 @@
+"""Module builds FOLIO Inventory Instance records based on values extracted from upstream tasks
+SPARQL queries run on BF Instance and Work RDF graphs from Sinopia."""
+
 import datetime
 import logging
 
@@ -195,23 +198,16 @@ def _subjects(**kwargs) -> tuple:
 
 
 def _title(**kwargs) -> tuple:
-    values = kwargs.get("values")
-    if isinstance(values, str):
-        values = [
-            [
-                values,
-            ]
-        ]
-    values = values[0]  # type: ignore
-    number_fields = len(values)
+    values = kwargs["values"]
 
-    title = values[0]
-    if number_fields > 1 and values[1]:  # subtitle
-        title = f"{title} : {values[1]}"
-    if number_fields > 2 and values[2]:  # partNumber"
-        title = f"{title}. {values[2]}"
-    if number_fields > 3 and values[3]:  # partName
-        title = f"{title}, {values[3]}"
+    for row in values:
+        title = row[0]
+        if row[1]:  # subtitle
+            title = f"{title} : {row[1]}"
+        if row[2]:  # partNumber"
+            title = f"{title}. {row[2]}"
+        if row[3]:  # partName
+            title = f"{title}, {row[3]}"
     return "title", title
 
 

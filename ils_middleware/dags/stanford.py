@@ -196,11 +196,11 @@ with DAG(
         )
 
         new_folio_records = PythonOperator(
-            task_id="new-folio-records",
+            task_id="new-or-upsert-folio-records",
             python_callable=post_folio_records,
             op_kwargs={
                 "folio_url": Variable.get("stanford_folio_url"),
-                "endpoint": "/instance-storage/batch/synchronous",
+                "endpoint": "/instance-storage/batch/synchronous?upsert=true",
                 "tenant": "sul",
                 "task_groups_ids": [
                     "process_folio",
@@ -240,7 +240,7 @@ with DAG(
                         "process_symphony.post_new_symphony",
                         "process_symphony.post_overlay_symphony",
                     ],
-                    "FOLIO": ["process_folio.new-folio-records"],
+                    "FOLIO": ["process_folio.new-or-upsert-folio-records"],
                 },
             },
         )

@@ -1,3 +1,7 @@
+"""SPARQL queries to extract data from a RDF Graph made up json-ld from Sinopia
+BF Instance with its associated BF Work.
+"""
+
 contributor = """PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
 PREFIX bflc: <http://id.loc.gov/ontologies/bflc/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

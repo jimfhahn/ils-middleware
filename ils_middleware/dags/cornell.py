@@ -96,11 +96,11 @@ with DAG(
     )
 
     new_folio_records = PythonOperator(
-        task_id="new-folio-records",
+        task_id="new-or-upsert-folio-records",
         python_callable=post_folio_records,
         op_kwargs={
             "folio_url": Variable.get("cornell_folio_url"),
-            "endpoint": "/instance-storage/batch/synchronous",
+            "endpoint": "/instance-storage/batch/synchronous?upsert=true",
             "tenant": "cul",
             "task_groups_ids": [""],
             "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='folio-login')}}",
@@ -127,7 +127,7 @@ with DAG(
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
                 "ils_tasks": {
                     "FOLIO": [
-                        "new-folio-records",
+                        "new-or-upsert-folio-records",
                     ]
                 },
             },

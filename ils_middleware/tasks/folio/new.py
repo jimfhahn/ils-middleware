@@ -1,17 +1,13 @@
+"""Modules add new or existing inventory instance JSON records to FOLIO the
+inventory-storage batch endpoint with upsert query parameter set to true.
+
+See https://s3.amazonaws.com/foliodocs/api/mod-inventory-storage/p/instance-sync.html
+"""
 import logging
 
 import requests
 
 logger = logging.getLogger(__name__)
-
-
-def _overlay_folio_records(okapi_instance_url, headers, payload):
-    overlay_record_result = requests.put(
-        okapi_instance_url,
-        headers=headers,
-        json=payload,
-    )
-    overlay_record_result.raise_for_status()
 
 
 def _push_to_xcom(records: list, task_instance):
@@ -21,7 +17,7 @@ def _push_to_xcom(records: list, task_instance):
 
 def _post_to_okapi(**kwargs):
     task_instance = kwargs["task_instance"]
-    endpoint = kwargs.get("endpoint", "/instance-storage/batch/synchronous")
+    endpoint = kwargs.get("endpoint", "/instance-storage/batch/synchronous?upsert=true")
     jwt = kwargs["jwt"]
     records = kwargs["records"]
     tenant = kwargs["tenant"]
@@ -45,19 +41,6 @@ def _post_to_okapi(**kwargs):
     )
 
     if new_record_result.status_code < 300:
-        _push_to_xcom(records, task_instance)
-
-    # Check to see if record already exists, if so try PUT.
-    # When available should use upsert=true param to the original URI to
-    # avoid this second check and operation
-    elif new_record_result.status_code == 422 and new_record_result.json().get(
-        "errors"
-    )[0]["message"].startswith("id value already exists"):
-        _overlay_folio_records(
-            okapi_instance_url,
-            headers=headers,
-            payload=payload,
-        )
         _push_to_xcom(records, task_instance)
     else:
         logger.error(f"New records failed errors: {new_record_result.json()}")
@@ -83,4 +66,3 @@ def post_folio_records(**kwargs):
         )
 
     _post_to_okapi(records=inventory_records, jwt=jwt, **kwargs)
-    # Post back to
