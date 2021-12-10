@@ -175,12 +175,11 @@ def _publication(**kwargs) -> tuple:
     publications = []
     for row in values:
         publication = {"role": "Publication"}
-        num_fields = len(row)
-        if num_fields > 0 and row[0]:  # Publisher Name
+        if row[0]:  # Publisher Name
             publication["publisher"] = row[0]
-        if num_fields > 1 and row[1]:
+        if row[1]:
             publication["dateOfPublication"] = row[1]
-        if num_fields > 2 and row[2]:
+        if row[2]:
             publication["place"] = row[2]
         publications.append(publication)
     return "publication", publications
