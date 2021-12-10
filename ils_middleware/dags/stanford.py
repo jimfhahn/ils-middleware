@@ -239,7 +239,8 @@ with DAG(
                     "SIRSI": [
                         "process_symphony.post_new_symphony",
                         "process_symphony.post_overlay_symphony",
-                    ]
+                    ],
+                    "FOLIO": ["process_folio.new-folio-records"],
                 },
             },
         )

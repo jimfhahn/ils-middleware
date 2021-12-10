@@ -137,6 +137,7 @@ overlay_resources = [
     },
 ]
 
+
 mock_push_store: dict = {}
 
 
@@ -193,6 +194,17 @@ folio_properties = {
     "instanceNoteTypes": [
         {"id": "6a2533a7-4de2-4e64-8466-074c2fa9308c", "name": "General note"},
     ],
+}
+
+folio_ids = {
+    "https://api.development.sinopia.io/resource/0000-1111-2222-3333": {
+        "id": "98a0337a-ec22-53aa-8ffc-933a86d10159",
+        "hrid": "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+    },
+    "https://api.development.sinopia.io/resource/4444-5555-6666-7777": {
+        "id": "147b1171-740e-513e-84d5-b63a9642792c",
+        "hrid": "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+    },
 }
 
 
@@ -257,6 +269,8 @@ def mock_task_instance(monkeypatch):
                 return [["Great force", None, None, None]]
             if task_ids.endswith("Person_task"):
                 return [["Brioni, Simone", "Author"]]
+            if task_ids.endswith("build-folio"):
+                return folio_ids[key]
         else:
             return mock_push_store.get(key)
 

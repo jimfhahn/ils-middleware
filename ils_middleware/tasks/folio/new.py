@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 def _post_to_okapi(**kwargs):
+    task_instance = kwargs["task_instance"]
     endpoint = kwargs.get("endpoint", "/instance-storage/batch/synchronous")
     jwt = kwargs["jwt"]
     records = kwargs["records"]
@@ -23,20 +24,21 @@ def _post_to_okapi(**kwargs):
 
     payload = {"instances": records}
 
-    logging.error(f"Info {headers} {okapi_instance_url} {payload}")
-
     new_record_result = requests.post(
         okapi_instance_url,
         headers=headers,
         json=payload,
     )
 
+    if new_record_result.status_code < 300:
+        for record in records:
+            task_instance.xcom_push(key=record["hrid"], value=record["id"])
     # Check to see if record already exists, if so try PUT.
     # When available should use upsert=true param to the original URI to
     # avoid this second check and operation
-    if new_record_result.status_code == 422 and new_record_result.json().get("errors")[
-        "message"
-    ].startswith("id value already exists"):
+    elif new_record_result.status_code == 422 and new_record_result.json().get(
+        "errors"
+    )["message"].startswith("id value already exists"):
         overlay_record_result = requests.put(
             okapi_instance_url,
             headers=headers,
@@ -53,16 +55,17 @@ def post_folio_records(**kwargs):
     jwt = kwargs["token"]
     task_groups = ".".join(kwargs["task_groups_ids"])
 
+    task_id = "build-folio"
+    if len(task_groups) > 0:
+        task_id = f"{task_groups}.{task_id}"
+
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
     inventory_records = []
     for instance_uri in resources:
-        task_id = f"{task_groups}.build-folioIt"
-        logger.error(f"Task id {task_id} for {instance_uri}")
         inventory_records.append(
             task_instance.xcom_pull(key=instance_uri, task_ids=task_id)
         )
 
-    logging.error(f"BEFORE Submitting to Okapi {jwt}")
     _post_to_okapi(records=inventory_records, jwt=jwt, **kwargs)
     # Post back to
