@@ -70,6 +70,4 @@ def almaRequest(**kwargs) -> str:
     logger.debug(
         f"Alma Results alma_result {alma_result.status_code}\n{alma_result.text}"
     )
-    return (
-        alma_result.text
-    )  # todo: parse the XML response for MMSID element to send back into Sinopia description(s)
+    return alma_result.text  # Return the Alma API response as a string.

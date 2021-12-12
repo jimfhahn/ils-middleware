@@ -12,11 +12,11 @@ def NewMARCtoAlma(**kwargs):
     )
 
     for resource_uri in resources:
-        marc_record = task_instance.xcom_pull(
+        alma_xml = task_instance.xcom_pull(
             key=resource_uri, task_ids="process_alma.mod_to_alma_xml"
         )
 
-        payload = {"bib": marc_record}
+        payload = {"bib": alma_xml}
 
         task_instance.xcom_push(
             key=resource_uri,
@@ -24,6 +24,6 @@ def NewMARCtoAlma(**kwargs):
                 **kwargs,
                 data=xml.dumps(payload),
                 endpoint="catalog/bib",
-                filter=lambda response: response.xml().get("@key"),
+                filter=lambda response: response.xml().get("mms_id"),
             ),
         )

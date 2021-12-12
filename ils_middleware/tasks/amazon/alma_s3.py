@@ -2,16 +2,16 @@ import logging
 from urllib.parse import urlparse
 import os
 from os import path
-
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from pymarc import MARCReader
+from lxml import etree
 from pymarc import XMLWriter
+from pymarc import MARCReader
 
 logger = logging.getLogger(__name__)
 
 
-def get_from_s3(**kwargs):
+def get_from_alma_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
@@ -27,8 +27,7 @@ def get_from_s3(**kwargs):
         task_instance.xcom_push(key=instance_uri, value=temp_file)
 
 
-def send_to_s3(**kwargs):
-    s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
+def send_to_alma_s3(**kwargs):
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
@@ -38,16 +37,26 @@ def send_to_s3(**kwargs):
         temp_file = task_instance.xcom_pull(
             key=instance_uri, task_ids="process_alma.download_marc"
         )
-        marc_record = marc_record_from_temp_file(instance_id, temp_file)
-        s3_hook.load_file(
-            XMLWriter(open("record.xml", "wb")),
-            marc_record.writer.write("record.xml"),
-            marc_record.__annotations__writer.close(),
-            f"marc/airflow/{instance_id}/record.xml",
-            Variable.get("marc_s3_bucket"),
-            replace=True,
+        marc_file = marc_record_from_temp_file(instance_id, temp_file)
+        with open(temp_file, "rb") as marc_file:
+            reader = MARCReader(marc_file)
+            for record in reader:
+                writer = XMLWriter(open("xml_file.xml", "wb"))
+                writer.write(record)
+                writer.close()
+                tree = etree.parse("xml_file.xml")
+                root = tree.getroot()
+                newroot = etree.Element(
+                    "bib"
+                )  # insert the <bib> root element required by alma
+                newroot.insert(0, root)
+                alma_xml = etree.tostring(newroot)
+                f = open("alma.xml", "wb")
+                f.write(alma_xml)
+                f.close()
+        task_instance.xcom_push(
+            key=instance_uri, value=f"marc/airflow/{instance_id}/alma.xml"
         )
-        task_instance.xcom_push(key=instance_uri, value=marc_record())
 
 
 def marc_record_from_temp_file(instance_id, temp_file):

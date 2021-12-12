@@ -6,7 +6,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
-from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
+from ils_middleware.tasks.amazon.alma_s3 import get_from_alma_s3, send_to_alma_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
@@ -16,7 +16,6 @@ from ils_middleware.tasks.sinopia.email import (
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 from ils_middleware.tasks.alma.new import NewMARCtoAlma
-from ils_middleware.tasks.alma.mod_xml import to_alma_xml
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -74,17 +73,12 @@ with DAG(
 
         download_marc = PythonOperator(
             task_id="download_marc",
-            python_callable=get_from_s3,
+            python_callable=get_from_alma_s3,
         )
 
         export_marc_xml = PythonOperator(
             task_id="marc_xml_to_s3",
-            python_callable=send_to_s3,
-        )
-
-        convert_to_alma_xml = PythonOperator(
-            task_id="convert_to_alma_xml",
-            python_callable=to_alma_xml,
+            python_callable=send_to_alma_s3,
         )
 
         # Penn's Alma Sandbox API
@@ -101,13 +95,7 @@ with DAG(
             op_kwargs={"conn_id": alma_conn_id},
         )
 
-        (
-            run_rdf2marc
-            >> download_marc
-            >> export_marc_xml
-            >> convert_to_alma_xml
-            >> alma_new_record
-        )
+        (run_rdf2marc >> download_marc >> export_marc_xml >> alma_new_record)
     # Dummy Operator
     processed_sinopia = DummyOperator(
         task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"

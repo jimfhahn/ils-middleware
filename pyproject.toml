@@ -16,6 +16,7 @@ hvac = "^0.11.2"
 rdflib = "^6.0.2"
 honeybadger = "^0.7.1"
 types-requests = "^2.26.1"
+lxml = "^4.6.4"
 
 [tool.poetry.dev-dependencies]
 black = "21.8b0"
