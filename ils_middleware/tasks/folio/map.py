@@ -14,17 +14,9 @@ BF_TO_FOLIO_MAP = {
         "uri": "work",
         "class": "bf:Person",
     },
-    "dateOfPublication": {
-        "template": bf_instance_map.date_of_publication,
-        "uri": "instance",
-    },
     "editions": {"template": bf_work_map.editions, "uri": "work"},
-    "format.category": {
-        "template": bf_instance_map.instance_format_category,
-        "uri": "instance",
-    },
-    "format.term": {
-        "template": bf_instance_map.instance_format_term,
+    "instance_format": {
+        "template": bf_instance_map.instance_format_id,
         "uri": "instance",
     },
     "identifiers.isbn": {
@@ -43,16 +35,11 @@ BF_TO_FOLIO_MAP = {
         "uri": "instance",
     },
     "notes": {"template": bf_instance_map.note, "uri": "instance"},
-    "physical_description.dimensions": {
-        "template": bf_instance_map.physical_description_dimensions,
+    "physical_description": {
+        "template": bf_instance_map.physical_description,
         "uri": "instance",
     },
-    "physical_description.extent": {
-        "template": bf_instance_map.physical_description_extent,
-        "uri": "instance",
-    },
-    "publisher.name": {"template": bf_instance_map.publisher, "uri": "instance"},
-    "publisher.place": {"template": bf_instance_map.place, "uri": "instance"},
+    "publication": {"template": bf_instance_map.publication, "uri": "instance"},
     "subjects": {"template": bf_work_map.subject, "uri": "work"},
     "title": {
         "template": bf_instance_map.title,
@@ -95,7 +82,7 @@ def _build_and_query_graph(**kwargs) -> list:
     graph = rdflib.Graph()
     json_ld = task_instance.xcom_pull(key=instance_uri, task_ids=task_id).get("graph")
     graph.parse(data=json_ld, format="json-ld")
-    logger.debug(f"Graph size is {len(graph)}\n{query}")
+    logging.info(f"SPARQL:\n{query}")
     return [row for row in graph.query(query)]
 
 

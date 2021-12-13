@@ -8,9 +8,11 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
-from ils_middleware.tasks.folio.login import FolioLogin
+from ils_middleware.tasks.folio.build import build_records
 from ils_middleware.tasks.folio.graph import construct_graph
+from ils_middleware.tasks.folio.login import FolioLogin
 from ils_middleware.tasks.folio.map import FOLIO_FIELDS, map_to_folio
+from ils_middleware.tasks.folio.new import post_folio_records
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.email import (
@@ -63,6 +65,7 @@ with DAG(
             "url": Variable.get("cornell_folio_auth_url"),
             "username": Variable.get("cornell_folio_login"),
             "password": Variable.get("cornell_folio_password"),
+            "tenant": "cul",
         },
     )
 
@@ -73,8 +76,36 @@ with DAG(
             bf_to_folio = PythonOperator(
                 task_id=f"{folio_field}_task",
                 python_callable=map_to_folio,
-                op_kwargs={"folio_field": folio_field},
+                op_kwargs={
+                    "folio_field": folio_field,
+                    "task_groups_ids": [""],
+                },
             )
+
+    folio_records = PythonOperator(
+        task_id="build-folio",
+        python_callable=build_records,
+        op_kwargs={
+            "task_groups": ["folio_mapping"],
+            "folio_url": Variable.get("cornell_folio_url"),
+            "username": Variable.get("cornell_folio_login"),
+            "password": Variable.get("cornell_folio_password"),
+            "tenant": "cul",
+            "task_groups_ids": ["folio_mapping"],
+        },
+    )
+
+    new_folio_records = PythonOperator(
+        task_id="new-or-upsert-folio-records",
+        python_callable=post_folio_records,
+        op_kwargs={
+            "folio_url": Variable.get("cornell_folio_url"),
+            "endpoint": "/instance-storage/batch/synchronous?upsert=true",
+            "tenant": "cul",
+            "task_groups_ids": [""],
+            "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='folio-login')}}",
+        },
+    )
 
     with TaskGroup(group_id="update_sinopia") as sinopia_update_group:
 
@@ -95,9 +126,8 @@ with DAG(
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
                 "ils_tasks": {
-                    "SIRSI": [
-                        "process_symphony.post_new_symphony",
-                        "process_symphony.post_overlay_symphony",
+                    "FOLIO": [
+                        "new-or-upsert-folio-records",
                     ]
                 },
             },
@@ -123,8 +153,9 @@ with DAG(
 
 listen_sns >> [messages_received, messages_timeout]
 messages_received >> process_message
-process_message >> [folio_login, bf_graphs] >> folio_map_task_group
-folio_map_task_group >> processed_sinopia >> sinopia_update_group
+process_message >> bf_graphs >> folio_map_task_group
+folio_map_task_group >> [folio_records, folio_login] >> new_folio_records
+new_folio_records >> processed_sinopia >> sinopia_update_group
 sinopia_update_group >> notify_sinopia_updated
 notify_sinopia_updated >> processing_complete
 messages_timeout >> processing_complete

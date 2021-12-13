@@ -1,6 +1,9 @@
 import pytest
 import json
+import requests
 from datetime import datetime
+
+from pytest_mock import MockerFixture
 
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
@@ -134,6 +137,7 @@ overlay_resources = [
     },
 ]
 
+
 mock_push_store: dict = {}
 
 
@@ -169,6 +173,74 @@ return_marc_tasks = [
     "process_symphony.marc_json_to_s3",
 ]
 
+folio_properties = {
+    "contributorTypes": [
+        {"id": "6e09d47d-95e2-4d8a-831b-f777b8ef6d81", "name": "Author"}
+    ],
+    "contributorNameTypes": [
+        {"id": "2b94c631-fca9-4892-a730-03ee529ffe2a", "name": "Personal name"}
+    ],
+    "identifierTypes": [
+        {"id": "8261054f-be78-422d-bd51-4ed9f33c3422", "name": "ISBN"},
+        {"id": "439bfbae-75bc-4f74-9fc7-b2a2d47ce3ef", "name": "OCLC"},
+    ],
+    "instanceFormats": [
+        {"id": "8d511d33-5e85-4c5d-9bce-6e3c9cd0c324", "name": "unmediated -- volume"},
+    ],
+    "instanceTypes": [{"id": "6312d172-f0cf-40f6-b27d-9fa8feaf332f", "name": "text"}],
+    "issuanceModes": [
+        {"id": "9d18a02f-5897-4c31-9106-c9abb5c7ae8b", "name": "single unit"}
+    ],
+    "instanceNoteTypes": [
+        {"id": "6a2533a7-4de2-4e64-8466-074c2fa9308c", "name": "General note"},
+    ],
+}
+
+folio_ids = {
+    "https://api.development.sinopia.io/resource/0000-1111-2222-3333": {
+        "id": "98a0337a-ec22-53aa-8ffc-933a86d10159",
+        "hrid": "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+    },
+    "https://api.development.sinopia.io/resource/4444-5555-6666-7777": {
+        "id": "147b1171-740e-513e-84d5-b63a9642792c",
+        "hrid": "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
+    },
+}
+
+
+@pytest.fixture
+def mock_requests_okapi(monkeypatch, mocker: MockerFixture):
+    def mock_get(*args, **kwargs):
+        get_response = mocker.stub(name="get_result")
+        get_response.status_code = 200
+        get_response.text = json.dumps(folio_properties)
+        return get_response
+
+    def mock_post(*args, **kwargs):
+        post_response = mocker.stub(name="post_result")
+        post_response.status_code = 201
+        post_response.headers = {"x-okapi-token": "some_jwt_token"}
+        post_response.raise_for_status = lambda: None
+
+        return post_response
+
+    def mock_put(*args, **kwargs):
+        put_response = mocker.stub(name="put_result")
+        put_response.status_code = 201
+        put_response.text = ""
+        put_response.raise_for_status = lambda: None
+        return put_response
+
+    def mock_raise_for_status(*args, **kwargs):
+        error_response = mocker.stub(name="post_error")
+        error_response.status_code = 500
+        error_response.text = "Internal server error"
+
+    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(requests, "put", mock_put)
+    monkeypatch.setattr(requests.Response, "raise_for_status", mock_raise_for_status)
+
 
 @pytest.fixture
 def mock_task_instance(monkeypatch):
@@ -200,6 +272,13 @@ def mock_task_instance(monkeypatch):
             return "tests/fixtures/record.mar"
         elif key == "conversion_failures" and task_ids == "process_symphony.rdf2marc":
             return ["https://api.development.sinopia.io/resource/8888-9999-0000-1111"]
+        elif isinstance(task_ids, str):
+            if task_ids.endswith("title_task"):
+                return [["Great force", None, None, None]]
+            if task_ids.endswith("Person_task"):
+                return [["Brioni, Simone", "Author"]]
+            if task_ids.endswith("build-folio"):
+                return folio_ids[key]
         else:
             return mock_push_store.get(key)
 
