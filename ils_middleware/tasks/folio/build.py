@@ -103,8 +103,8 @@ def _instance_type_id(**kwargs) -> tuple:
     folio_client = kwargs["folio_client"]
     values = kwargs["values"]
 
-    # Only use first value
-    name = values[0][0]
+    # Only use first value and lowercase
+    name = values[0][0].lower()
 
     ident = None
 
