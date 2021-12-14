@@ -189,7 +189,7 @@ def test_instance_type_id(mock_requests_okapi):  # noqa: F811
         okapi_uri, "sul", "test_user", "asdfdsfa"
     )
     instance_type_id = _instance_type_id(
-        values=[["text"]], folio_client=folio_client_mock
+        values=[["Text"]], folio_client=folio_client_mock
     )
     assert instance_type_id[0].startswith("instanceTypeId")
     assert (instance_type_id[1]).startswith("6312d172-f0cf-40f6-b27d-9fa8feaf332f")
