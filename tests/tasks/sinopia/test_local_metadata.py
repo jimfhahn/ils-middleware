@@ -20,7 +20,7 @@ from tasks import test_task_instance, mock_task_instance  # noqa: F401
 def mock_requests_post(monkeypatch, mocker: MockerFixture):
     mock_request = mocker.stub(name="mock_post")
     mock_request.text = "https://sinopia.io/resource/4546abcd890"
-    mock_request.status_code = 200
+    mock_request.status_code = 201
 
     def mock_post(*args, **kwargs):
         return mock_request

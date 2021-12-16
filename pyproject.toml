@@ -17,6 +17,8 @@ rdflib = "^6.0.2"
 honeybadger = "^0.7.1"
 types-requests = "^2.26.1"
 lxml = "^4.6.4"
+folio-uuid = "^0.2.0"
+folioclient = {git = "https://github.com/FOLIO-FSE/FolioClient.git"}
 
 [tool.poetry.dev-dependencies]
 black = "21.8b0"

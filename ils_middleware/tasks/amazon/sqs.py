@@ -40,18 +40,25 @@ def parse_messages(**kwargs) -> str:
     raw_sqs_messages = task_instance.xcom_pull(key="messages", task_ids="sqs-sensor")
 
     resources = []
+    resources_with_errors = []
     for message in raw_sqs_messages:
         message_body = json.loads(message.get("Body"))
         resource_uri = message_body["resource"]["uri"]
-        resources.append(resource_uri)
-        task_instance.xcom_push(
-            key=resource_uri,
-            value={
-                "email": message_body["user"]["email"],
-                "resource_uri": resource_uri,
-                "resource": get_resource(resource_uri),
-            },
-        )
+        try:
+            resources.append(resource_uri)
+            task_instance.xcom_push(
+                key=resource_uri,
+                value={
+                    "email": message_body["user"]["email"],
+                    "group": message_body["group"],
+                    "target": message_body["target"],
+                    "resource_uri": resource_uri,
+                    "resource": get_resource(resource_uri),
+                },
+            )
+        except KeyError:
+            resources_with_errors.append(resource_uri)
 
     task_instance.xcom_push(key="resources", value=resources)
+    task_instance.xcom_push(key="bad_resources", value=resources_with_errors)
     return "completed_parse"

@@ -35,9 +35,9 @@ def test_instance_type_id(test_graph: rdflib.Graph):
 def test_language(test_graph: rdflib.Graph):
     sparql = bf_work_map.language.format(bf_work=work_uri)
 
-    languages = [row[0] for row in test_graph.query(sparql)]
+    languages = [row for row in test_graph.query(sparql)]
 
-    assert str(languages[0]).startswith("Italian")
+    assert str(languages[0][0]).startswith("http://id.loc.gov/vocabulary/languages/ita")
 
 
 def test_primary_contributor(test_graph: rdflib.Graph):
