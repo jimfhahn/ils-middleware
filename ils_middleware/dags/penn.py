@@ -15,7 +15,7 @@ from ils_middleware.tasks.sinopia.email import (
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
-from ils_middleware.tasks.alma.new import NewMARCtoAlma
+from ils_middleware.tasks.alma.post import NewMARCtoAlma
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -81,18 +81,9 @@ with DAG(
             python_callable=send_to_alma_s3,
         )
 
-        # Penn's Alma Sandbox API
-        alma_api_key = Variable.get("alma_sandbox_api_key")
-        alma_conn_id = "penn_alma_connection"
-        # Alma API uses the same path to either create new or match and is handled with
-        # Alma Import Profile, setup in Alma admin side. The pre-configured Import Profile
-        # can be specified with an import ID to handle the import.
-        alma_import_profile_id = Variable.get("import_profile_id")
-
         alma_new_record = PythonOperator(
             task_id="post_new_alma",
             python_callable=NewMARCtoAlma,
-            op_kwargs={"conn_id": alma_conn_id},
         )
 
         (run_rdf2marc >> download_marc >> export_marc_xml >> alma_new_record)

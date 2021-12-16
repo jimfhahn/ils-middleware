@@ -28,12 +28,14 @@ def get_from_alma_s3(**kwargs):
 
 
 def send_to_alma_s3(**kwargs):
+    s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
     for instance_uri in resources:
         instance_path = urlparse(instance_uri).path
         instance_id = path.split(instance_path)[-1]
+
         temp_file = task_instance.xcom_pull(
             key=instance_uri, task_ids="process_alma.download_marc"
         )
@@ -50,12 +52,17 @@ def send_to_alma_s3(**kwargs):
                     "bib"
                 )  # insert the <bib> root element required by alma
                 newroot.insert(0, root)
-                alma_xml = etree.tostring(newroot)
+                alma_xml = etree.tostring(
+                    newroot, xml_declaration=True, encoding="utf-8"
+                )
                 f = open("alma.xml", "wb")
                 f.write(alma_xml)
                 f.close()
-        task_instance.xcom_push(
-            key=instance_uri, value=f"marc/airflow/{instance_id}/alma.xml"
+        s3_hook.load_bytes(
+            alma_xml,
+            bucket_name=Variable.get("marc_s3_bucket"),
+            replace=True,
+            key=f"marc/airflow/{instance_id}/alma.xml",
         )
 
 

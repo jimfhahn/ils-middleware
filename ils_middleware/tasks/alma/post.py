@@ -1,73 +1,59 @@
 """POST API function for Alma API"""
 import logging
-import requests  # type: ignore
-
-from airflow.hooks.base_hook import BaseHook
+from airflow.models import Variable
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from urllib.parse import urlparse
+from os import path
+import requests
 
 logger = logging.getLogger(__name__)
 
-
-def Alma_requests(http_verb, uri, data, headers):
-    if http_verb.startswith("post"):
-        result = requests.post(uri, data=data, headers=headers)
-    else:
-        msg = f"{http_verb} not available for {uri}"
-        logger.error(msg)
-        raise ValueError(msg)
-    if result.status_code > 399:
-        msg = f"Alma Web Service Call to {uri} Failed with {result.status_code}\n{result.text}"
-        logger.error(msg)
-        raise Exception(msg)
-    return result
+# Penn's Alma Sandbox API
+# Alma API uses the same path to either create new or match and is handled with
+# Alma Import Profile, setup in Alma admin side. The pre-configured Import Profile
+# can be specified with an import ID to handle the import.
 
 
-def almaRequest(**kwargs) -> str:
-    alma_api_key = kwargs.get("alma_api_key")
-    # Generated from Alma Admin for connecting to your Alma server. Note Alma Sandbox and Alma Prod generate different keys.
-    from_nz_mms_id = kwargs.get("from_nz_mms_id")
-    # The MMS_ID of the Network-Zone record. Leave empty when creating a regular local record.
-    from_cz_mms_id = kwargs.get("from_cz_mms_id")
-    # The MMS_ID of the Community-Zone record. Leave empty when creating a regular local record.
-    normalization = kwargs.get("normalization")
-    # The id of the normalization profile to run.
-    validate = kwargs.get("validate")
-    # Indicating whether to check for errors. Default: false.
-    override_warning = kwargs.get("override_warning")
-    # Indicating whether to ignore warnings.
-    # Default: true (record will be saved and the warnings will be added to the API output).
-    check_match = kwargs.get("check_match")
-    # Indicating whether to check for a match. Default: false (record will be saved despite possible match).
-    import_profile = kwargs.get("import_profile")
+def NewMARCtoAlma(**kwargs):
+    s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
+    task_instance = kwargs.get("task_instance")
+    resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
+
+    for instance_uri in resources:
+        instance_path = urlparse(instance_uri).path
+        instance_id = path.split(instance_path)[-1]
+
+    s3_hook.download_file(
+        key=f"marc/airflow/{instance_id}/alma.xml",
+        bucket_name=Variable.get("marc_s3_bucket"),
+    )
+
+    with open("alma.xml", "rb") as f:
+        data = f.read()
+        logger.debug(f"file data: {data}")
+
+    alma_api_key = Variable.get("alma_sandbox_api_key")
+    alma_import_profile_id = Variable.get("import_profile_id")
     # The id of the Import Profile to use when processing the input record.
     # Note that according to the profile configuration, the API can update an existing record in some cases.
-    conn_id = kwargs.get("conn_id", "")
-    data = kwargs.get("data")
-    http_verb = kwargs.get("http_verb", "post")
-    headers = {
-        "Content-Type": "application/xml",
-        "x-api-key": alma_api_key,
-    }
-
-    logger.info(f"Headers {headers}")
-    # Generate Alma URL based on the Airflow Connection and endpoint
-    alma_conn = BaseHook.get_connection(conn_id)
-    # {{baseUrl}}/almaws/v1/bibs?from_nz_mms_id=&from_cz_mms_id=&normalization=&validate=false&override_warning=true
-    # &check_match=false&import_profile=&apikey=<API Key>
+    # push the data to the next task
     alma_uri = (
-        alma_conn.host
-        + from_nz_mms_id
-        + from_cz_mms_id
-        + normalization
-        + validate
-        + override_warning
-        + check_match
-        + import_profile
+        "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?"
+        + "from_nz_mms_id=&from_cz_mms_id=&normalization=&validate=false"
+        + "&override_warning=true&check_match=false&import_profile="
+        + alma_import_profile_id
+        + "&apikey="
         + alma_api_key
     )
-
-    alma_result = Alma_requests(http_verb, alma_uri, data, headers)
-
-    logger.debug(
-        f"Alma Results alma_result {alma_result.status_code}\n{alma_result.text}"
+    # post to alma
+    alma_result = requests.post(
+        alma_uri,
+        headers={
+            "Content-Type": "application/xml; charset=utf-8",
+            "Accept": "application/xml",
+            "x-api-key": alma_api_key,
+        },
+        data=data,
     )
-    return alma_result.text  # Return the Alma API response as a string.
+    logger.debug(f"alma result: {alma_result.status_code}\n{alma_result.text}")
+    # return alma_result.getElementsByTagName("mms_id")  # return the mms_id
