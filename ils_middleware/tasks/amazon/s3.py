@@ -14,8 +14,13 @@ def get_from_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
-
+    conversion_failures = task_instance.xcom_pull(
+        key="conversion_failures", task_ids="process_symphony.rdf2marc"
+    )
     for instance_uri in resources:
+        if conversion_failures and instance_uri in conversion_failures:
+            logger.debug(f"{instance_uri} in {conversion_failures.keys()}")
+            continue
         instance_path = urlparse(instance_uri).path
         instance_id = path.split(instance_path)[-1]
 
@@ -30,8 +35,13 @@ def send_to_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
-
+    conversion_failures = task_instance.xcom_pull(
+        key="conversion_failures", task_ids="process_symphony.rdf2marc"
+    )
     for instance_uri in resources:
+        if conversion_failures and instance_uri in conversion_failures:
+            logger.debug(f"{instance_uri} in {conversion_failures.keys()}")
+            continue
         instance_path = urlparse(instance_uri).path
         instance_id = path.split(instance_path)[-1]
         temp_file = task_instance.xcom_pull(
