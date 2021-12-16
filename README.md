@@ -7,10 +7,10 @@ library services platform (LSP). Currently there are Directed Acyclic Graphs (DA
 for Stanford and Cornell Sinopia-to-ILS/LSP workflows.
 
 ## Running Locally with Docker
-Based on the documentation, [Running Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html). 
+Based on the documentation, [Running Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html).
 
-> **NOTE** Make sure there is enough RAM available locally for the 
-> docker daemon, we recommend at least 5GB. 
+> **NOTE** Make sure there is enough RAM available locally for the
+> docker daemon, we recommend at least 5GB.
 
 1. Clone repository `git clone https://github.com/LD4P/ils-middleware`
 1. If it's commented out, uncomment the line `- ./dags:/opt/airflow/dags` in docker-compose.yaml (under `volumes`, under `x-airflow-common`).
@@ -33,7 +33,7 @@ AWS_ACCESS_KEY_ID=999999 AWS_SECRET_ACCESS_KEY=1231 aws sqs \
 1. From the `Admin > Connectinos` menu
 2. Click the "+"
 3. Add an Amazon Web Services connection with the following settings:
-     
+
     * Connection Id: aws_sqs_connection
     * Login: 999999
     * Password: 1231
@@ -68,18 +68,18 @@ To add any new DAGs to `ld4p/ils-middleware:latest` image, you can either
 while commenting out the previous line `image: ${AIRFLOW_IMAGE_NAME:-ld4p/ils-middleware:latest}`.
 
 ## Dependency Management and Packaging
-We are using [poetry][POET] to better manage dependency updates. To install
-[poetry][POET], run the following command in your shell:
+We are using [poetry][POET] to better manage dependency updates. Installation
+instructions can be found at https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions
 
-`curl -sSL https://install.python-poetry.org | python3 -`
-
+Once you have poetry installed, you can install the other project dependencies
+by running `poetry install`
 
 ## Automated Tests
 
 The [pytest][PYTEST] framework is used to run the tests.  Tests can be invoked manually by calling `poetry run pytest` (which will save an xml formatted [coverage report][PYTESTCOV], as well as printing the coverage report to the terminal).
 
 ## Building Python Package
-If you plan on building a local Docker image, be sure to build the Python 
+If you plan on building a local Docker image, be sure to build the Python
 installation wheel first by running `poetry build`.
 
 ## Typechecking

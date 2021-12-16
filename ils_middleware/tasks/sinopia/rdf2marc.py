@@ -13,6 +13,8 @@ def Rdf2Marc(**kwargs):
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
+    conversion_failures = {}
+
     for instance_uri in resources:
         instance_path = urlparse(instance_uri).path
         instance_id = path.split(instance_path)[-1]
@@ -47,9 +49,11 @@ def Rdf2Marc(**kwargs):
         if "x-amz-function-error" in result["ResponseMetadata"].get("HTTPHeaders"):
             payload = json.loads(result["Payload"].read())
             msg = f"RDF2MARC conversion failed for {instance_uri}, error: {payload.get('errorMessage')}"
-            task_instance.xcom_push(key=instance_uri, value={"error_message": msg})
+            conversion_failures[instance_uri] = msg
         elif result["StatusCode"] == 200:
             task_instance.xcom_push(key=instance_uri, value=marc_path)
         else:
             msg = f"RDF2MARC conversion failed for {instance_uri}: {result['FunctionError']}"
-            task_instance.xcom_push(key=instance_uri, value={"error_message": msg})
+            conversion_failures[instance_uri] = msg
+
+    task_instance.xcom_push(key="conversion_failures", value=conversion_failures)

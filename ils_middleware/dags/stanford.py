@@ -8,10 +8,11 @@ from airflow.utils.task_group import TaskGroup
 
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
+
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
     notify_and_log,
-    send_update_success_emails,
+    send_notification_emails,
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.metadata_check import existing_metadata_check
@@ -20,7 +21,11 @@ from ils_middleware.tasks.symphony.login import SymphonyLogin
 from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
 from ils_middleware.tasks.symphony.mod_json import to_symphony_json
 from ils_middleware.tasks.symphony.overlay import overlay_marc_in_symphony
+from ils_middleware.tasks.folio.build import build_records
 from ils_middleware.tasks.folio.login import FolioLogin
+from ils_middleware.tasks.folio.graph import construct_graph
+from ils_middleware.tasks.folio.map import FOLIO_FIELDS, map_to_folio
+from ils_middleware.tasks.folio.new import post_folio_records
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -161,16 +166,51 @@ with DAG(
                 "url": Variable.get("stanford_folio_auth_url"),
                 "username": Variable.get("stanford_folio_login"),
                 "password": Variable.get("stanford_folio_password"),
+                "tenant": "sul",
             },
         )
 
-        download_folio_marc = DummyOperator(task_id="download_folio_marc", dag=dag)
+        bf_graphs = PythonOperator(task_id="bf-graph", python_callable=construct_graph)
 
-        export_folio_json = DummyOperator(task_id="folio_json_to_s3", dag=dag)
+        with TaskGroup(group_id="folio_mapping") as folio_map_task_group:
+            for folio_field in FOLIO_FIELDS:
+                bf_to_folio = PythonOperator(
+                    task_id=f"{folio_field}_task",
+                    python_callable=map_to_folio,
+                    op_kwargs={
+                        "folio_field": folio_field,
+                        "task_groups_ids": ["process_folio"],
+                    },
+                )
 
-        send_to_folio = DummyOperator(task_id="folio_send", dag=dag)
+        folio_records = PythonOperator(
+            task_id="build-folio",
+            python_callable=build_records,
+            op_kwargs={
+                "task_groups_ids": ["process_folio", "folio_mapping"],
+                "folio_url": Variable.get("stanford_folio_url"),
+                "username": Variable.get("stanford_folio_login"),
+                "password": Variable.get("stanford_folio_password"),
+                "tenant": "sul",
+            },
+        )
 
-        folio_login >> download_folio_marc >> export_folio_json >> send_to_folio
+        new_folio_records = PythonOperator(
+            task_id="new-or-upsert-folio-records",
+            python_callable=post_folio_records,
+            op_kwargs={
+                "folio_url": Variable.get("stanford_folio_url"),
+                "endpoint": "/instance-storage/batch/synchronous?upsert=true",
+                "tenant": "sul",
+                "task_groups_ids": [
+                    "process_folio",
+                ],
+                "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='process_folio.folio-login')}}",
+            },
+        )
+
+        bf_graphs >> folio_map_task_group
+        folio_map_task_group >> [folio_records, folio_login] >> new_folio_records
 
     # Dummy Operator
     processed_sinopia = DummyOperator(
@@ -199,7 +239,8 @@ with DAG(
                     "SIRSI": [
                         "process_symphony.post_new_symphony",
                         "process_symphony.post_overlay_symphony",
-                    ]
+                    ],
+                    "FOLIO": ["process_folio.new-or-upsert-folio-records"],
                 },
             },
         )
@@ -207,15 +248,19 @@ with DAG(
         login_sinopia >> local_admin_metadata
 
     notify_sinopia_updated = PythonOperator(
-        task_id="sinopia_update_success_notification",
+        task_id="sinopia_update_notification",
         dag=dag,
         trigger_rule="none_failed",
-        python_callable=send_update_success_emails,
+        python_callable=send_notification_emails,
     )
 
-    processing_complete = DummyOperator(task_id="processing_complete", dag=dag)
+    processing_complete = DummyOperator(
+        task_id="processing_complete", dag=dag, trigger_rule="one_success"
+    )
     messages_received = DummyOperator(task_id="messages_received", dag=dag)
-    messages_timeout = DummyOperator(task_id="sqs_timeout", dag=dag)
+    messages_timeout = DummyOperator(
+        task_id="sqs_timeout", dag=dag, trigger_rule="all_failed"
+    )
 
 
 listen_sns >> [messages_received, messages_timeout]

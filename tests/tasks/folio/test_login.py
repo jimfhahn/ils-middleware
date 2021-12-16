@@ -17,7 +17,13 @@ def mock_request(monkeypatch, mocker: MockerFixture):
 
         return post_response
 
+    def mock_raise_for_status(*args, **kwargs):
+        error_response = mocker.stub(name="post_error")
+        error_response.status_code = 500
+        error_response.text = "Internal server error"
+
     monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(requests.Response, "raise_for_status", mock_raise_for_status)
 
 
 # <Response [201]>
@@ -27,6 +33,7 @@ def test_valid_login(mock_request):
             url="https://okapi-folio.dev.sul.stanford.edu/authn/login",
             username="DEVSYS",
             password="APASSWord",
+            tenant="sul",
         )
         == "some_jwt_token"
     )
@@ -45,3 +52,8 @@ def test_missing_username():
 def test_missing_password():
     with pytest.raises(KeyError, match="password"):
         FolioLogin(url="https://test-login.com", username="DEVSYS")
+
+
+def test_missing_tenant():
+    with pytest.raises(KeyError, match="tenant"):
+        FolioLogin(url="https://test-login.com", username="DEVSYS", password="PASS")
