@@ -3,10 +3,6 @@ import pytest
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from unittest import mock
 
-from ils_middleware.tasks.amazon.s3 import get_from_s3
-
-from tasks import test_task_instance
-
 
 mock_s3_hook_with_file_and_key = pytest.mark.usefixtures(
     "mock_env_vars", "mock_s3_hook_with_file_and_key"
