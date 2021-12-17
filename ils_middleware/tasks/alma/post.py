@@ -5,6 +5,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from urllib.parse import urlparse
 from os import path
 import requests
+import lxml.etree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -56,4 +57,14 @@ def NewMARCtoAlma(**kwargs):
         data=data,
     )
     logger.debug(f"alma result: {alma_result.status_code}\n{alma_result.text}")
-    # return alma_result.getElementsByTagName("mms_id")  # return the mms_id
+
+    # push the mms_id from the Alma API result to the next task, Sinopia Metadata Update
+    result = alma_result.content
+    # fdata = ET.tostring(result, xml_declaration=True, encoding="utf-8")
+    fd = open("alma_api_response.xml", "wb")
+    fd.write(result)
+    fd.close()
+    xml_response = ET.parse("alma_api_response.xml")
+    mms_id = xml_response.find("mms_id").text
+    logger.debug(f"mms_id: {mms_id}")
+    task_instance.xcom_push(key="mms_id", value=mms_id)

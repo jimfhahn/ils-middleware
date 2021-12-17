@@ -4,6 +4,11 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from unittest import mock
 
 
+@pytest.fixture
+def mock_hook(mocker: mock.Mock) -> mock.Mock:
+    return mocker.patch("airflow.hooks.base_hook.BaseHook")
+
+
 mock_s3_hook_with_file_and_key = pytest.mark.usefixtures(
     "mock_env_vars", "mock_s3_hook_with_file_and_key"
 )  # noqa: E501
