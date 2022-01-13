@@ -1,38 +1,89 @@
 """Tests alma Post"""
 import pytest
-import requests  # type: ignore
+import lxml.etree as ET
+import requests
+
+# import requests
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+
+# from airflow.models import Variable
+# from airflow import models
+from unittest import mock
 from airflow.hooks.base_hook import BaseHook
 from pytest_mock import MockerFixture
-from tasks import test_task_instance, mock_task_instance  # noqa: F401
+from tasks import (
+    test_task_instance,
+    test_alma_api_key,
+    test_import_profile_id,
+    mock_task_instance,
+    test_xml_response,
+    test_mms_id,
+)
+from ils_middleware.tasks.alma.post import NewMARCtoAlma
+
+task_instance = mock_task_instance
+xml_response = test_xml_response
+doc = xml_response
 
 
-task_instance = test_task_instance()
+def test_NewMARCtoAlma(mock_s3_hook, mock_task_instance, mock_env_vars):
+    NewMARCtoAlma(
+        task_instance=test_task_instance(),
+        alma_api_key=test_alma_api_key(),
+        alma_import_profile_id=test_import_profile_id(),
+        xml_response=ET.parse(
+            "tests/fixtures/200_alma_api_response.xml", ET.XMLParser()
+        ),
+    )
+
+
+@pytest.fixture()
+def mock_etree():
+    with mock.patch("organizer.tools.xml_files_operations.etree") as mocked_etree:
+        yield mocked_etree
+
+
+@pytest.fixture()
+def mock_parser(mock_etree):
+    parser = mock.Mock()
+    with mock.patch.object(mock_etree, "XMLParser", parser):
+        yield parser
+
+
+"fixture for .find and .text"
 
 
 @pytest.fixture
-def mock_failed_request(monkeypatch, mocker: MockerFixture):
-    def mock_failed_post(*args, **kwargs):
-        failed_result = mocker.stub(name="post_result")
-        failed_result.status_code = 401
-        failed_result.text = "Unauthorized"
-        return failed_result
+def mock_find(mock_etree):
+    def mock_find(self, *args, **kwargs):
+        return ET.Element(
+            "root",
+            attrib={
+                "mms_id": "mms_id",
+                "status": "status",
+                "error_message": "error_message",
+                "error_code": "error_code",
+            },
+        )
 
-    monkeypatch.setattr(requests, "post", mock_failed_post)
+    with mock.patch.object(mock_etree, "Element", mock_find):
+        yield mock_find
 
 
 @pytest.fixture
-def mock_sinopia_env(monkeypatch) -> None:
-    monkeypatch.setenv("AIRFLOW_VAR_SINOPIA_ENV", "test")
+def mock_text(mock_etree):
+    def mock_text(self, *args, **kwargs):
+        return "text"
+
+    with mock.patch.object(mock_etree, "Text", mock_text):
+        yield mock_text
 
 
 @pytest.fixture
 def mock_request(monkeypatch, mocker: MockerFixture):
     def mock_post(*args, **kwargs):
-        new_result = mocker.stub(name="post_result")
-        new_result.status_code = 200
-        new_result.text = "Successful request"
-        new_result.json = lambda: {}
-        return new_result
+        mms_id = test_xml_response.find("mms_id").text = "9978021305103681"
+        return mms_id
 
     monkeypatch.setattr(requests, "post", mock_post)
 
@@ -49,13 +100,48 @@ def mock_connection(monkeypatch, mocker: MockerFixture):
 
 
 @pytest.fixture
-def mock_new_request(monkeypatch, mocker: MockerFixture):
-    def mock_post(*args, **kwargs):
-        new_result = mocker.stub(name="post_result")
-        new_result.token = "234566"
-        new_result.status_code = 200
-        new_result.text = "Successful creation"
-        new_result.json = lambda: {"@key": "45678"}
-        return new_result
+def mock_env_vars(monkeypatch) -> None:
+    monkeypatch.setenv("AIRFLOW_VAR_MARC_S3_BUCKET", "sinopia-marc-test")
+    monkeypatch.setenv(
+        "AIRFLOW_VAR_ALMA_SANDBOX_API_KEY", "12ab34c56789101112131415161718192021"
+    )
+    monkeypatch.setenv("AIRFLOW_VAR_IMPORT_PROFILE_ID", "33008879050003681")
 
-    monkeypatch.setattr(requests, "post", mock_post)
+
+@pytest.fixture
+def mock_hook(mocker: mock.Mock) -> mock.Mock:
+    return mocker.patch("airflow.hooks.base_hook.BaseHook")
+
+
+mock_s3_hook_with_file_and_key = pytest.mark.usefixtures(
+    "mock_env_vars", "mock_s3_hook_with_file_and_key"
+)  # noqa: E501
+"""Test the Alma AWS S3 tasks properly name and load files."""
+
+
+@pytest.fixture
+def mock_s3_hook(monkeypatch):
+    def mock_download_file(*args, **kwargs):
+        return "tests/fixtures/record.mar"
+
+    def mock_load_bytes(*args, **kwargs):
+        return
+
+    monkeypatch.setattr(S3Hook, "download_file", mock_download_file)
+    monkeypatch.setattr(S3Hook, "load_bytes", mock_load_bytes)
+
+
+@pytest.fixture
+def mock_s3_load_string():
+    with mock.patch(
+        "airflow.providers.amazon.aws.hooks.s3.S3Hook.load_string"
+    ) as mocked:
+        yield mocked
+
+
+@pytest.fixture
+def mock_s3_load_bytes():
+    with mock.patch(
+        "airflow.providers.amazon.aws.hooks.s3.S3Hook.load_bytes"
+    ) as mocked:
+        yield mocked
