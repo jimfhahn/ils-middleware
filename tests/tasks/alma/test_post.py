@@ -17,7 +17,6 @@ from tasks import (
     test_import_profile_id,
     mock_task_instance,
     test_xml_response,
-    test_mms_id,
 )
 from ils_middleware.tasks.alma.post import NewMARCtoAlma
 
