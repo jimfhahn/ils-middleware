@@ -60,10 +60,7 @@ def NewMARCtoAlma(**kwargs):
 
     # push the mms_id from the Alma API result to the next task, Sinopia Metadata Update
     result = alma_result.content
-    fd = open("alma_api_response.xml", "wb")
-    fd.write(result)
-    fd.close()
-    xml_response = ET.parse("alma_api_response.xml")
+    xml_response = ET.fromstring(result)
     mms_id = xml_response.xpath("//mms_id/text()")
     logger.debug(f"mms_id: {mms_id}")
     task_instance.xcom_push(key="mms_id", value=mms_id)
