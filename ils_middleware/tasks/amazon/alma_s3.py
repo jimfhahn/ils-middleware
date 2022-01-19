@@ -5,8 +5,8 @@ from os import path
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from lxml import etree
-from pymarc import XMLWriter
 from pymarc import MARCReader
+from pymarc import record_to_xml
 
 logger = logging.getLogger(__name__)
 
@@ -43,27 +43,25 @@ def send_to_alma_s3(**kwargs):
         with open(temp_file, "rb") as marc_file:
             reader = MARCReader(marc_file)
             for record in reader:
-                writer = XMLWriter(open("xml_file.xml", "wb"))
-                writer.write(record)
-                writer.close()
-                tree = etree.parse("xml_file.xml")
-                root = tree.getroot()
+                alma_xml = record_to_xml(record)
+                tree = etree.fromstring(alma_xml)
                 newroot = etree.Element(
                     "bib"
                 )  # insert the <bib> root element required by alma
-                newroot.insert(0, root)
+                newroot.append(tree)
                 alma_xml = etree.tostring(
                     newroot, xml_declaration=True, encoding="utf-8"
                 )
-                f = open("alma.xml", "wb")
-                f.write(alma_xml)
-                f.close()
         s3_hook.load_bytes(
             alma_xml,
-            bucket_name=Variable.get("marc_s3_bucket"),
+            f"marc/alma/{instance_id}/alma.xml",
+            Variable.get("marc_s3_bucket"),
             replace=True,
-            key=f"marc/airflow/{instance_id}/alma.xml",
         )
+        task_instance.xcom_push(
+            key=f"marc/airflow/{instance_id}/alma.xml", value=alma_xml.decode()
+        )
+        logger.info(f"Saved MARC record for {instance_id} to alma.")
 
 
 def marc_record_from_temp_file(instance_id, temp_file):

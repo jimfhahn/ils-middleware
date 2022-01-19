@@ -30,9 +30,6 @@ def test_NewMARCtoAlma(mock_s3_hook, mock_task_instance, mock_env_vars):
         task_instance=test_task_instance(),
         alma_api_key=test_alma_api_key(),
         alma_import_profile_id=test_import_profile_id(),
-        xml_response=ET.parse(
-            "tests/fixtures/200_alma_api_response.xml", ET.XMLParser()
-        ),
     )
 
 
@@ -121,13 +118,9 @@ mock_s3_hook_with_file_and_key = pytest.mark.usefixtures(
 @pytest.fixture
 def mock_s3_hook(monkeypatch):
     def mock_download_file(*args, **kwargs):
-        return "tests/fixtures/record.mar"
-
-    def mock_load_bytes(*args, **kwargs):
-        return
+        return "tests/fixtures/marc/airflow/4444-5555-6666-7777/alma.xml"
 
     monkeypatch.setattr(S3Hook, "download_file", mock_download_file)
-    monkeypatch.setattr(S3Hook, "load_bytes", mock_load_bytes)
 
 
 @pytest.fixture

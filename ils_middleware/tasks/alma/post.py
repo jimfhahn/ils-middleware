@@ -9,10 +9,11 @@ import lxml.etree as ET
 
 logger = logging.getLogger(__name__)
 
-# Penn's Alma Sandbox API
-# Alma API uses the same path to either create new or match and is handled with
-# Alma Import Profile, setup in Alma admin side. The pre-configured Import Profile
-# can be specified with an import ID to handle the import.
+# Alma Sandbox API
+# The Alma API can update an existing record when configured with an import profile rule to do so.
+# API uses the same path to either a) create new record or b) match existing record.
+# The Alma Import Profile, setup in Alma admin side, has the rules for matching or creating new.
+# The pre-configured Alma Import Profile is assigned an import ID, used here in the Post param.
 
 
 def NewMARCtoAlma(**kwargs):
@@ -24,20 +25,18 @@ def NewMARCtoAlma(**kwargs):
         instance_path = urlparse(instance_uri).path
         instance_id = path.split(instance_path)[-1]
 
-    s3_hook.download_file(
-        key=f"marc/airflow/{instance_id}/alma.xml",
+    temp_file = s3_hook.download_file(
+        key=f"marc/alma/{instance_id}/alma.xml",
         bucket_name=Variable.get("marc_s3_bucket"),
     )
 
-    with open("alma.xml", "rb") as f:
-        data = f.read()
-        logger.debug(f"file data: {data}")
+    task_instance.xcom_pull(key=instance_uri, task_ids=temp_file)
+    data = open(temp_file, "rb").read()
+    logger.debug(f"file data: {data}")
 
     alma_api_key = Variable.get("alma_sandbox_api_key")
     alma_import_profile_id = Variable.get("import_profile_id")
-    # The id of the Import Profile to use when processing the input record.
-    # Note that according to the profile configuration, the API can update an existing record in some cases.
-    # push the data to the next task
+
     alma_uri = (
         "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?"
         + "from_nz_mms_id=&from_cz_mms_id=&normalization=&validate=false"
