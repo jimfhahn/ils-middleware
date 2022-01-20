@@ -34,6 +34,27 @@ def test_task_instance():
     return TaskInstance(test_task())
 
 
+def test_alma_api_key():
+    return ["12ab34c56789101112131415161718192021"]
+
+
+def test_import_profile_id():
+    return ["33008879050003681"]
+
+
+def test_xml_response():
+    return [
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?">'
+        "<bib>"
+        "<mms_id>9978021305103681</mms_id>"
+        "</bib>",
+    ]
+
+
+def test_mms_id():
+    return ["9978021305103681"]
+
+
 mock_resources = {
     "https://api.development.sinopia.io/resource/0000-1111-2222-3333": {
         "user": "jpnelson",
@@ -243,7 +264,7 @@ def mock_requests_okapi(monkeypatch, mocker: MockerFixture):
 
 
 @pytest.fixture
-def mock_task_instance(monkeypatch):
+def mock_task_instance(monkeypatch, tmp_path):
     def mock_xcom_pull(*args, **kwargs):
         key = kwargs.get("key")
         task_ids = kwargs.get("task_ids", [""])
@@ -279,6 +300,8 @@ def mock_task_instance(monkeypatch):
                 return [["Brioni, Simone", "Author"]]
             if task_ids.endswith("build-folio"):
                 return folio_ids[key]
+            if task_ids.endswith("process_alma.download_marc"):
+                return "tests/fixtures/record.mar"
         else:
             return mock_push_store.get(key)
 
