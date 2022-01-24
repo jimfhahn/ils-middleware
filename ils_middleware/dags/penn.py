@@ -110,7 +110,7 @@ with DAG(
             python_callable=new_local_admin_metadata,
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
-                "ils_tasks": {"ALMA": ["process_alma.new"]},
+                "ils_tasks": {"ALMA": ["process_alma.post_new_alma"]},
             },
         )
 
