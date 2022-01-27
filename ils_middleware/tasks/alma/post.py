@@ -63,4 +63,4 @@ def NewMARCtoAlma(**kwargs):
     mms_id_list = xml_response.xpath("//mms_id/text()")
     mms_id = " ".join(mms_id_list)
     logger.debug(f"mms_id: {mms_id}")
-    task_instance.xcom_push(key=instance_uri, value=(mms_id))
+    task_instance.xcom_push(key=instance_uri, value=mms_id)
