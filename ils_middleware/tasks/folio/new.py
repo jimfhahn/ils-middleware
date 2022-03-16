@@ -43,7 +43,7 @@ def _post_to_okapi(**kwargs):
     if new_record_result.status_code < 300:
         _push_to_xcom(records, task_instance)
     else:
-        logger.error(f"New records failed errors: {new_record_result.json()}")
+        logger.error(f"New records failed errors: {new_record_result.text}")
         new_record_result.raise_for_status()
 
 

@@ -45,6 +45,7 @@ def mock_bad_request(monkeypatch, mocker: MockerFixture):
         post_response = mocker.stub(name="post_result")
         post_response.status_code = 422
         post_response.json = lambda: error_message
+        post_response.text = str(error_message)
         post_response.raise_for_status = mock_raise_for_status
         return post_response
 
