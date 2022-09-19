@@ -21,7 +21,7 @@ folio-uuid = "^0.2.0"
 folioclient = {git = "https://github.com/FOLIO-FSE/FolioClient.git"}
 
 [tool.poetry.dev-dependencies]
-black = "21.8b0"
+black = "^22.1.0"
 flake8 = "^3.9.2"
 mypy = "^0.910"
 pytest = "^6.2"
