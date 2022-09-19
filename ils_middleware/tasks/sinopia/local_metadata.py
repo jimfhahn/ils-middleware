@@ -69,7 +69,7 @@ def create_admin_metadata(**kwargs) -> str:
         (
             local_admin_metadata,
             SINOPIA.localAdminMetadataFor,
-            rdflib.URIRef(instance_uri),
+            rdflib.URIRef(instance_uri),  # type: ignore
         )
     )
     if cataloger_id:
