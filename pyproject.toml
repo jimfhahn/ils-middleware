@@ -6,7 +6,7 @@ authors = ["Jeremy Nelson <jpnelson@stanford.edu>", "Aaron Collier <aaron.collie
 license = "Apache2"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 pymarc = "^4.1.1"
 apache-airflow = "^2.2.1"
 apache-airflow-providers-amazon = "^2.2.0"
@@ -19,9 +19,10 @@ types-requests = "^2.26.1"
 lxml = "^4.6.4"
 folio-uuid = "^0.2.0"
 folioclient = {git = "https://github.com/FOLIO-FSE/FolioClient.git"}
+numpy = "^1.23.3"
 
 [tool.poetry.dev-dependencies]
-black = "21.8b0"
+black = "^22.1.0"
 flake8 = "^3.9.2"
 mypy = "^0.910"
 pytest = "^6.2"
