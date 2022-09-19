@@ -19,6 +19,7 @@ types-requests = "^2.26.1"
 lxml = "^4.6.4"
 folio-uuid = "^0.2.0"
 folioclient = {git = "https://github.com/FOLIO-FSE/FolioClient.git"}
+numpy = "^1.23.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
