@@ -74,7 +74,6 @@ x-airflow-common:
     HONEYBADGER_API_KEY: ${HONEYBADGER_API_KEY:-}
     LOGLEVEL: ${LOGLEVEL:-DEBUG}
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
-    LOGLEVEL: ${LOGLEVEL:-DEBUG}
     AIRFLOW__SECRETS__BACKEND: "airflow.providers.hashicorp.secrets.vault.VaultBackend"
     AIRFLOW__SECRETS__BACKEND_KWARGS: '{"token": "vault-plaintext-root-token","connections_path": "app/airflow/connections","variables_path": "app/airflow/variables","url": "http://vault:8200"}'
   volumes:
@@ -115,7 +114,7 @@ services:
     restart: always
 
   vault:
-    image: vault:latest
+    image: hashicorp/vault:latest
     ports:
       - 8200:8200
     cap_add:
