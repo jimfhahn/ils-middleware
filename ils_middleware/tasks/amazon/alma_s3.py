@@ -4,9 +4,10 @@ import os
 from os import path
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from lxml import etree
 from pymarc import MARCReader
-from pymarc import record_to_xml
+from rdflib import Graph
+import logging
+from lxml import etree
 
 logger = logging.getLogger(__name__)
 
@@ -39,29 +40,67 @@ def send_to_alma_s3(**kwargs):
         temp_file = task_instance.xcom_pull(
             key=instance_uri, task_ids="process_alma.download_marc"
         )
-        marc_file = marc_record_from_temp_file(instance_id, temp_file)
+        marc_record_from_temp_file(instance_id, temp_file)
         with open(temp_file, "rb") as marc_file:
             reader = MARCReader(marc_file)
             for record in reader:
-                alma_xml = record_to_xml(record)
-                tree = etree.fromstring(alma_xml)
-                newroot = etree.Element(
-                    "bib"
-                )  # insert the <bib> root element required by alma
-                newroot.append(tree)
-                alma_xml = etree.tostring(
-                    newroot, xml_declaration=True, encoding="utf-8"
-                )
+                work_field = record.get_fields("758")
+                work_uri = work_field[0].get_subfields("0")[0]
+                logger.info(f"Work URI: {work_uri}")
+                instance_field = record.get_fields("884")
+                instance_uri = instance_field[0].get_subfields("k")[0]
+            g = Graph()
+            h = Graph()
+            g.parse(work_uri)
+            h.parse(instance_uri)
+            # declare namespaces
+            # not very DRY?
+            g.bind("xmlns", "http://www.w3.org/2000/xmlns/")
+            g.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
+            g.bind("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+            g.bind("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
+            g.bind("bf", "http://id.loc.gov/ontologies/bibframe/")
+            g.bind("bflc", "http://id.loc.gov/ontologies/bflc/")
+            g.bind("madsrdf", "http://www.loc.gov/mads/rdf/v1#")
+            g.bind("sinopia", "http://sinopia.io/vocabulary/")
+            g.bind("sinopiabf", "http://sinopia.io/vocabulary/bf/")
+            g.bind("rdau", "http://rdaregistry.info/Elements/u/")
+            g.bind("owl", "http://www.w3.org/2002/07/owl#")
+            g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
+            g.bind("dcterms", "http://purl.org/dc/terms/")
+            g.bind("cc", "http://creativecommons.org/ns#")
+            g.bind("foaf", "http://xmlns.com/foaf/0.1/")
+            h.bind("xmlns", "http://www.w3.org/2000/xmlns/")
+            h.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
+            h.bind("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+            h.bind("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
+            h.bind("bf", "http://id.loc.gov/ontologies/bibframe/")
+            h.bind("bflc", "http://id.loc.gov/ontologies/bflc/")
+            h.bind("madsrdf", "http://www.loc.gov/mads/rdf/v1#")
+            h.bind("sinopia", "http://sinopia.io/vocabulary/")
+            h.bind("sinopiabf", "http://sinopia.io/vocabulary/bf/")
+            h.bind("rdau", "http://rdaregistry.info/Elements/u/")
+            h.bind("owl", "http://www.w3.org/2002/07/owl#")
+            h.bind("skos", "http://www.w3.org/2004/02/skos/core#")
+            h.bind("dcterms", "http://purl.org/dc/terms/")
+            h.bind("cc", "http://creativecommons.org/ns#")
+            h.bind("foaf", "http://xmlns.com/foaf/0.1/")
+            # serialize to xml
+            bfwork_alma_xml = g.serialize(format="pretty-xml")
+            bfinstance_alma_xml = h.serialize(format="pretty-xml")
         s3_hook.load_bytes(
-            alma_xml,
-            f"marc/alma/{instance_id}/alma.xml",
+            bfwork_alma_xml,
+            bfinstance_alma_xml,
+            f"/alma/{instance_id}/bfwork.xml",
+            f"/alma/{instance_id}/bfinstance.xml",
             Variable.get("marc_s3_bucket"),
             replace=True,
         )
         task_instance.xcom_push(
-            key=f"marc/airflow/{instance_id}/alma.xml", value=alma_xml.decode()
+            key=f"marc/airflow/{instance_id}/bfwork.xml",
+            value=bfwork_alma_xml.decode(),
         )
-        logger.info(f"Saved MARC record for {instance_id} to alma.")
+        logger.info(f"Saved BFWork and BFInstance records for {instance_id} to alma.")
 
 
 def marc_record_from_temp_file(instance_id, temp_file):

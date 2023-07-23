@@ -18,15 +18,15 @@ from tasks import (
     mock_task_instance,
     test_xml_response,
 )
-from ils_middleware.tasks.alma.post import NewMARCtoAlma
+from ils_middleware.tasks.alma.post_bfwork import NewWorktoAlma
 
 task_instance = mock_task_instance
 xml_response = test_xml_response
 doc = xml_response
 
 
-def test_NewMARCtoAlma(mock_s3_hook, mock_task_instance, mock_env_vars):
-    NewMARCtoAlma(
+def test_NewWorktoAlma(mock_s3_hook, mock_task_instance, mock_env_vars):
+    NewWorktoAlma(
         task_instance=test_task_instance(),
         alma_api_key=test_alma_api_key(),
         alma_import_profile_id=test_import_profile_id(),

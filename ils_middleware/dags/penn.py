@@ -15,7 +15,8 @@ from ils_middleware.tasks.sinopia.email import (
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
-from ils_middleware.tasks.alma.post import NewMARCtoAlma
+from ils_middleware.tasks.alma.post_bfwork import NewWorktoAlma
+from ils_middleware.tasks.alma.post_bfinstance import NewInstancetoAlma
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -76,17 +77,28 @@ with DAG(
             python_callable=get_from_alma_s3,
         )
 
-        export_marc_xml = PythonOperator(
-            task_id="marc_xml_to_s3",
+        export_bf_xml = PythonOperator(
+            task_id="bf_xml_to_s3",
             python_callable=send_to_alma_s3,
         )
 
-        alma_new_record = PythonOperator(
-            task_id="post_new_alma",
-            python_callable=NewMARCtoAlma,
+        alma_post_work = PythonOperator(
+            task_id="post_work",
+            python_callable=NewWorktoAlma,
         )
 
-        (run_rdf2marc >> download_marc >> export_marc_xml >> alma_new_record)
+        alma_post_instance = PythonOperator(
+            task_id="post_instance",
+            python_callable=NewInstancetoAlma,
+        )
+
+        (
+            run_rdf2marc
+            >> download_marc
+            >> export_bf_xml
+            >> alma_post_work
+            >> alma_post_instance
+        )
     # Dummy Operator
     processed_sinopia = DummyOperator(
         task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"

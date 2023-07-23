@@ -1,4 +1,4 @@
-"""POST API function for Alma API"""
+"""POST Instance function for Alma API"""
 import logging
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -9,14 +9,8 @@ import lxml.etree as ET
 
 logger = logging.getLogger(__name__)
 
-# Alma Sandbox API
-# The Alma API can update an existing record when configured with an import profile rule to do so.
-# API uses the same path to either a) create new record or b) match existing record.
-# The Alma Import Profile, setup in Alma admin side, has the rules for matching or creating new.
-# The pre-configured Alma Import Profile is assigned an import ID, used here in the Post param.
 
-
-def NewMARCtoAlma(**kwargs):
+def NewInstancetoAlma(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")

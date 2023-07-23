@@ -12,8 +12,12 @@ from airflow.hooks.base_hook import BaseHook
 
 from tasks import mock_task_instance, test_task_instance
 
-task_instance = mock_task_instance
+import ssl
 
+ssl._create_default_https_context = ssl._create_unverified_context
+
+task_instance = mock_task_instance
+marc = "tests/fixtures/record.mar"
 
 def test_get_from_alma_s3(mock_s3_hook, mock_env_vars, mock_task_instance):
     get_from_alma_s3(task_instance=test_task_instance())
@@ -21,7 +25,7 @@ def test_get_from_alma_s3(mock_s3_hook, mock_env_vars, mock_task_instance):
         test_task_instance().xcom_pull(
             key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
         )
-        == "tests/fixtures/record.mar"
+        == marc
     )
 
 
@@ -33,8 +37,20 @@ def test_send_to_alma_s3(
     mock_task_instance,
 ):
     """Test sending a file to s3"""
+    # fix 'str' object has no attribute 'decode' error
     send_to_alma_s3(task_instance=test_task_instance())
-    mock_s3_load_string.call_count == 2
+    assert (
+        test_task_instance().xcom_pull(
+            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
+        )
+        == marc
+    )
+    mock_s3_hook.assert_called_once_with(aws_conn_id="aws_default")
+    mock_s3_hook.return_value.load_string.assert_called_once_with(
+        string_data=marc,
+        key="0000-1111-2222-3333",
+        bucket_name="sinopia-marc-test",
+    )
 
 
 @pytest.fixture
@@ -67,7 +83,7 @@ mock_s3_hook_with_file_and_key = pytest.mark.usefixtures(
 @pytest.fixture
 def mock_s3_hook(monkeypatch):
     def mock_download_file(*args, **kwargs):
-        return "tests/fixtures/record.mar"
+        return marc
 
     def mock_load_bytes(*args, **kwargs):
         return
