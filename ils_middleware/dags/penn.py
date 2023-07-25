@@ -7,7 +7,6 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
 from ils_middleware.tasks.amazon.alma_work_s3 import (
-    get_from_alma_s3,
     send_work_to_alma_s3,
 )
 from ils_middleware.tasks.amazon.alma_instance_s3 import (
