@@ -1,0 +1,126 @@
+<bib>
+    <record_format>lcbf_work</record_format>
+    <record>
+<rdf:RDF
+    xmlns:bf="http://id.loc.gov/ontologies/bibframe/"
+    xmlns:sinopia="http://sinopia.io/vocabulary/"
+    xmlns:bflc="http://id.loc.gov/ontologies/bflc/"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    >
+    <bf:Work rdf:about="https://api.stage.sinopia.io/resource/860ae9bc-e939-4ba8-af4e-c22129c79459" xmlns:bf="http://id.loc.gov/ontologies/bibframe/">
+        <rdf:type rdf:resource="http://id.loc.gov/ontologies/bibframe/Text"/>
+        <sinopia:hasResourceTemplate>pcc:bf2:Monograph:Work</sinopia:hasResourceTemplate>
+        <bf:hasInstance rdf:resource="https://api.stage.sinopia.io/resource/c6cec5eb-1b2d-45e7-a982-9f03b3ad9874"/>    
+        <bf:title>
+            <bf:Title rdf:nodeID="f5fb5b5c1bb174e008cb73b4bbbf48da5b3">
+                <bf:mainTitle xml:lang="en">Royal physician Axel Munthe</bf:mainTitle>
+            </bf:Title>
+        </bf:title>
+        <bf:contribution>
+            <bflc:PrimaryContribution rdf:nodeID="f5fb5b5c1bb174e008cb73b4bbbf48da5b4">
+                <bf:agent>
+                    <bf:Agent rdf:nodeID="f5fb5b5c1bb174e008cb73b4bbbf48da5b5">
+                        <rdf:type rdf:resource="http://id.loc.gov/ontologies/bibframe/Person"/>
+                        <rdfs:label xml:lang="en">Bråtenius, Anna</rdfs:label>
+                    </bf:Agent>
+                </bf:agent>
+                <bf:role rdf:resource="http://id.loc.gov/vocabulary/relators/aut"/>
+            </bflc:PrimaryContribution>
+        </bf:contribution>
+        <bf:genreForm>
+            <rdf:Description rdf:about="http://id.loc.gov/authorities/genreForms/gf2014026049">
+                <rdfs:label xml:lang="en">Biographies</rdfs:label>
+            </rdf:Description>
+        </bf:genreForm>
+        <bf:originDate xml:lang="en">2020</bf:originDate>
+        <bf:originPlace>
+            <bf:Place rdf:about="http://id.loc.gov/authorities/names/n79021184">
+                <rdfs:label xml:lang="en">Sweden</rdfs:label>
+            </bf:Place>
+        </bf:originPlace>
+        <bf:language>
+            <rdf:Description rdf:about="http://id.loc.gov/vocabulary/languages/eng">
+                <rdfs:label>English</rdfs:label>
+            </rdf:Description>
+        </bf:language>
+        <bf:notation>
+            <bf:Script rdf:about="http://id.loc.gov/vocabulary/mscript/a">
+                <rdfs:label xml:lang="en">Latin</rdfs:label>
+            </bf:Script>
+        </bf:notation>
+        <bf:illustrativeContent>
+            <bf:Illustration rdf:about="http://id.loc.gov/vocabulary/millus/ill">
+                <rdfs:label xml:lang="en">Illustrations</rdfs:label>
+            </bf:Illustration>
+        </bf:illustrativeContent>
+        <bf:illustrativeContent>
+            <bf:Illustration rdf:about="http://id.loc.gov/vocabulary/millus/pht">
+                <rdfs:label xml:lang="en">Photographs</rdfs:label>
+            </bf:Illustration>
+        </bf:illustrativeContent>
+        <bf:colorContent>
+            <bf:ColorContent rdf:about="http://id.loc.gov/vocabulary/mcolor/mul">
+                <rdfs:label xml:lang="en">color</rdfs:label>
+            </bf:ColorContent>
+        </bf:colorContent>
+        <bf:supplementaryContent>
+            <bf:SupplementaryContent rdf:about="http://id.loc.gov/vocabulary/msupplcont/bibliography">
+                <rdfs:label xml:lang="en">bibliography</rdfs:label>
+            </bf:SupplementaryContent>
+        </bf:supplementaryContent>
+        <bf:subject>
+            <rdf:Description rdf:about="http://id.loc.gov/authorities/names/n89614456">
+                <rdfs:label xml:lang="en">Munthe, Axel, 1857-1949</rdfs:label>
+            </rdf:Description>
+        </bf:subject>
+        <bf:subject>
+            <rdf:Description rdf:about="http://id.worldcat.org/fast/1062841">
+                <rdfs:label xml:lang="en">Physicians</rdfs:label>
+            </rdf:Description>
+        </bf:subject>
+        <bf:subject>
+            <rdf:Description rdf:about="http://id.worldcat.org/fast/1204537">
+                <rdfs:label xml:lang="en">Sweden</rdfs:label>
+            </rdf:Description>
+        </bf:subject>
+        <bf:classification>
+            <bf:ClassificationLcc rdf:nodeID="f5fb5b5c1bb174e008cb73b4bbbf48da5b1">
+                <bf:classificationPortion>R554.M86</bf:classificationPortion>
+                <bf:itemPortion xml:lang="en">B73</bf:itemPortion>
+            </bf:ClassificationLcc>
+        </bf:classification>
+        <bf:content>
+            <bf:Content rdf:about="http://id.loc.gov/vocabulary/contentTypes/txt">
+                <rdfs:label xml:lang="en">text</rdfs:label>
+            </bf:Content>
+        </bf:content>
+        <bf:adminMetadata>
+            <bf:AdminMetadata rdf:nodeID="f5fb5b5c1bb174e008cb73b4bbbf48da5b2">
+                <bflc:catalogerId>kblount</bflc:catalogerId>
+                <bf:creationDate>2023-06-06</bf:creationDate>
+                <bf:assigner rdf:resource="http://id.loc.gov/vocabulary/organizations/pu"/>
+                <bflc:encodingLevel rdf:resource="http://id.loc.gov/vocabulary/menclvl/f"/>
+                <bf:descriptionConventions rdf:resource="http://id.loc.gov/vocabulary/descriptionConventions/rda"/>
+                <bf:descriptionLanguage rdf:resource="https://id.loc.gov/vocabulary/languages/eng"/>
+            </bf:AdminMetadata>
+        </bf:adminMetadata>
+    </bf:Work>
+    <rdf:Description rdf:about="http://id.loc.gov/vocabulary/menclvl/f">
+        <rdfs:label xml:lang="en">full</rdfs:label>
+    </rdf:Description>
+    <bf:Role rdf:about="http://id.loc.gov/vocabulary/relators/aut">
+        <rdfs:label>Author</rdfs:label>
+    </bf:Role>
+    <bf:DescriptionConventions rdf:about="http://id.loc.gov/vocabulary/descriptionConventions/rda">
+        <rdfs:label xml:lang="en">Resource description and access</rdfs:label>
+    </bf:DescriptionConventions>
+    <bf:Agent rdf:about="http://id.loc.gov/vocabulary/organizations/pu">
+        <rdfs:label xml:lang="en">University of Pennsylvania, Van Pelt-Dietrich Library (Van Pelt-Dietrich Library, University of ...</rdfs:label>
+    </bf:Agent>
+    <rdf:Description rdf:about="https://id.loc.gov/vocabulary/languages/eng">
+        <rdfs:label xml:lang="en">English</rdfs:label>
+    </rdf:Description>
+</rdf:RDF>
+    </record>
+</bib>

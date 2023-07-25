@@ -28,7 +28,7 @@ def get_from_alma_s3(**kwargs):
         task_instance.xcom_push(key=instance_uri, value=temp_file)
 
 
-def send_to_alma_s3(**kwargs):
+def send_work_to_alma_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
@@ -47,13 +47,8 @@ def send_to_alma_s3(**kwargs):
                 work_field = record.get_fields("758")
                 work_uri = work_field[0].get_subfields("0")[0]
                 logger.info(f"Work URI: {work_uri}")
-                instance_field = record.get_fields("884")
-                instance_uri = instance_field[0].get_subfields("k")[0]
             g = Graph()
-            h = Graph()
             g.parse(work_uri)
-            h.parse(instance_uri)
-            # declare namespaces
             # not very DRY?
             g.bind("xmlns", "http://www.w3.org/2000/xmlns/")
             g.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
@@ -70,37 +65,18 @@ def send_to_alma_s3(**kwargs):
             g.bind("dcterms", "http://purl.org/dc/terms/")
             g.bind("cc", "http://creativecommons.org/ns#")
             g.bind("foaf", "http://xmlns.com/foaf/0.1/")
-            h.bind("xmlns", "http://www.w3.org/2000/xmlns/")
-            h.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
-            h.bind("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-            h.bind("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-            h.bind("bf", "http://id.loc.gov/ontologies/bibframe/")
-            h.bind("bflc", "http://id.loc.gov/ontologies/bflc/")
-            h.bind("madsrdf", "http://www.loc.gov/mads/rdf/v1#")
-            h.bind("sinopia", "http://sinopia.io/vocabulary/")
-            h.bind("sinopiabf", "http://sinopia.io/vocabulary/bf/")
-            h.bind("rdau", "http://rdaregistry.info/Elements/u/")
-            h.bind("owl", "http://www.w3.org/2002/07/owl#")
-            h.bind("skos", "http://www.w3.org/2004/02/skos/core#")
-            h.bind("dcterms", "http://purl.org/dc/terms/")
-            h.bind("cc", "http://creativecommons.org/ns#")
-            h.bind("foaf", "http://xmlns.com/foaf/0.1/")
             # serialize to xml
             bfwork_alma_xml = g.serialize(format="pretty-xml")
-            bfinstance_alma_xml = h.serialize(format="pretty-xml")
-        s3_hook.load_bytes(
-            bfwork_alma_xml,
-            bfinstance_alma_xml,
-            f"/alma/{instance_id}/bfwork.xml",
-            f"/alma/{instance_id}/bfinstance.xml",
-            Variable.get("marc_s3_bucket"),
-            replace=True,
-        )
+            s3_hook.load_bytes(
+                bfwork_alma_xml,
+                f"/alma/{instance_id}/bfwork_alma.xml",
+                Variable.get("marc_s3_bucket"),
+                replace=True,
+            )
         task_instance.xcom_push(
-            key=f"marc/airflow/{instance_id}/bfwork.xml",
-            value=bfwork_alma_xml.decode(),
+            key=instance_uri, value=f"/alma/{instance_id}/bfwork_alma.xml"
         )
-        logger.info(f"Saved BFWork and BFInstance records for {instance_id} to alma.")
+        logger.info(f"Saved BFWork description for {instance_id} to alma.")
 
 
 def marc_record_from_temp_file(instance_id, temp_file):

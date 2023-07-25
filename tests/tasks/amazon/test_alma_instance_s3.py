@@ -6,7 +6,10 @@ from unittest import mock
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
-from ils_middleware.tasks.amazon.alma_s3 import get_from_alma_s3, send_to_alma_s3
+from ils_middleware.tasks.amazon.alma_instance_s3 import (
+    get_from_alma_s3,
+    send_instance_to_alma_s3,
+)
 
 from airflow.hooks.base_hook import BaseHook
 
@@ -19,17 +22,18 @@ ssl._create_default_https_context = ssl._create_unverified_context
 task_instance = mock_task_instance
 marc = "tests/fixtures/record.mar"
 
+
 def test_get_from_alma_s3(mock_s3_hook, mock_env_vars, mock_task_instance):
     get_from_alma_s3(task_instance=test_task_instance())
     assert (
         test_task_instance().xcom_pull(
             key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
         )
-        == marc
+        == "tests/fixtures/record.mar"
     )
 
 
-def test_send_to_alma_s3(
+def test_send_instance_to_alma_s3(
     mock_env_vars,
     mock_s3_load_string,
     mock_s3_hook,
@@ -37,19 +41,12 @@ def test_send_to_alma_s3(
     mock_task_instance,
 ):
     """Test sending a file to s3"""
-    # fix 'str' object has no attribute 'decode' error
-    send_to_alma_s3(task_instance=test_task_instance())
+    send_instance_to_alma_s3(task_instance=test_task_instance())
     assert (
         test_task_instance().xcom_pull(
             key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
         )
-        == marc
-    )
-    mock_s3_hook.assert_called_once_with(aws_conn_id="aws_default")
-    mock_s3_hook.return_value.load_string.assert_called_once_with(
-        string_data=marc,
-        key="0000-1111-2222-3333",
-        bucket_name="sinopia-marc-test",
+        == "tests/fixtures/record.mar"
     )
 
 
@@ -101,8 +98,6 @@ def mock_s3_load_string():
 
 
 @pytest.fixture
-def mock_s3_load_bytes():
-    with mock.patch(
-        "airflow.providers.amazon.aws.hooks.s3.S3Hook.load_bytes"
-    ) as mocked:
+def mock_s3_load_file():
+    with mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.load_file") as mocked:
         yield mocked

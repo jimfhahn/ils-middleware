@@ -6,7 +6,14 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
-from ils_middleware.tasks.amazon.alma_s3 import get_from_alma_s3, send_to_alma_s3
+from ils_middleware.tasks.amazon.alma_work_s3 import (
+    get_from_alma_s3,
+    send_work_to_alma_s3,
+)
+from ils_middleware.tasks.amazon.alma_instance_s3 import (
+    get_from_alma_s3,
+    send_instance_to_alma_s3,
+)
 from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
@@ -77,9 +84,14 @@ with DAG(
             python_callable=get_from_alma_s3,
         )
 
-        export_bf_xml = PythonOperator(
-            task_id="bf_xml_to_s3",
-            python_callable=send_to_alma_s3,
+        export_work_bf_xml = PythonOperator(
+            task_id="bf_work_xml_to_s3",
+            python_callable=send_work_to_alma_s3,
+        )
+
+        export_instance_bf_xml = PythonOperator(
+            task_id="bf_instance_xml_to_s3",
+            python_callable=send_instance_to_alma_s3,
         )
 
         alma_post_work = PythonOperator(
@@ -95,7 +107,8 @@ with DAG(
         (
             run_rdf2marc
             >> download_marc
-            >> export_bf_xml
+            >> export_work_bf_xml
+            >> export_instance_bf_xml
             >> alma_post_work
             >> alma_post_instance
         )
