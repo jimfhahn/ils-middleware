@@ -6,6 +6,7 @@ from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from pymarc import MARCReader
 from rdflib import Graph
+import lxml.etree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +39,13 @@ def send_instance_to_alma_s3(**kwargs):
         temp_file = task_instance.xcom_pull(
             key=instance_uri, task_ids="process_alma.download_marc"
         )
-        marc_file = marc_record_from_temp_file(instance_id, temp_file)
+        marc_record_from_temp_file(instance_id, temp_file)
         with open(temp_file, "rb") as marc_file:
             reader = MARCReader(marc_file)
             for record in reader:
                 instance_field = record.get_fields("884")
                 instance_uri = instance_field[0].get_subfields("k")[0]
-                logger.info(f"Work URI: {instance_uri}")
+                logger.info(f"Instance URI: {instance_uri}")
             h = Graph()
             h.parse(instance_uri)
             # declare namespaces
@@ -63,15 +64,25 @@ def send_instance_to_alma_s3(**kwargs):
             h.bind("dcterms", "http://purl.org/dc/terms/")
             h.bind("cc", "http://creativecommons.org/ns#")
             h.bind("foaf", "http://xmlns.com/foaf/0.1/")
-            bfinstance_alma_xml = h.serialize(format="pretty-xml")
+            bfinstance_alma_xml = h.serialize(format="pretty-xml", encoding="utf-8")
+            tree = ET.fromstring(bfinstance_alma_xml)
+            # apply xslt to normalize instance
+            xslt = ET.parse("tests/fixtures/xslt/normalize-instance.xsl")
+            transform = ET.XSLT(xslt)
+            bfinstance_alma_xml = transform(tree)
+            bfinstance_alma_xml = ET.tostring(bfinstance_alma_xml, pretty_print=True)
+            logger.info(f"Normalized BFInstance description for {instance_id}.")
+            # post to s3 as bytes
             s3_hook.load_bytes(
                 bfinstance_alma_xml,
-                f"marc/alma/{instance_id}/bfinstance_alma.xml",
+                f"alma/airflow/{instance_id}/bfinstance_alma.xml",
                 Variable.get("marc_s3_bucket"),
                 replace=True,
             )
-        # xcom push this file to the next task
-        task_instance.xcom_push(key=instance_uri, value=bfinstance_alma_xml)
+
+        task_instance.xcom_push(
+            key=instance_uri, value=f"/alma/{instance_id}/bfinstance_alma.xml"
+        )
 
         logger.info(f"Saved BFInstance description for {instance_id} to alma.")
 

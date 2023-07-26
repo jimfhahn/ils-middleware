@@ -20,7 +20,7 @@ def NewWorktoAlma(**kwargs):
         instance_id = path.split(instance_path)[-1]
 
     temp_file = s3_hook.download_file(
-        key=f"marc/alma/{instance_id}/bfwork.xml",
+        key=f"marc/alma/{instance_id}/bfwork_alma.xml",
         bucket_name=Variable.get("marc_s3_bucket"),
     )
 

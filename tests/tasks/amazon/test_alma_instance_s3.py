@@ -98,6 +98,8 @@ def mock_s3_load_string():
 
 
 @pytest.fixture
-def mock_s3_load_file():
-    with mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.load_file") as mocked:
+def mock_s3_load_bytes():
+    with mock.patch(
+        "airflow.providers.amazon.aws.hooks.s3.S3Hook.load_bytes"
+    ) as mocked:
         yield mocked

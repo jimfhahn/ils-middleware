@@ -6,6 +6,7 @@ from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from pymarc import MARCReader
 from rdflib import Graph
+from lxml import etree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,6 @@ def send_work_to_alma_s3(**kwargs):
                 logger.info(f"Work URI: {work_uri}")
             g = Graph()
             g.parse(work_uri)
-            # not very DRY?
             g.bind("xmlns", "http://www.w3.org/2000/xmlns/")
             g.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
             g.bind("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
@@ -64,7 +64,15 @@ def send_work_to_alma_s3(**kwargs):
             g.bind("cc", "http://creativecommons.org/ns#")
             g.bind("foaf", "http://xmlns.com/foaf/0.1/")
             # serialize to xml
-            bfwork_alma_xml = g.serialize(format="pretty-xml")
+            bfwork_alma_xml = g.serialize(format="pretty-xml", encoding="utf-8")
+            tree = ET.fromstring(bfwork_alma_xml)
+            # apply xslt to normalize instance
+            xslt = ET.parse("tests/fixtures/xslt/normalize-work.xsl")
+            transform = ET.XSLT(xslt)
+            bfwork_alma_xml = transform(tree)
+            bfwork_alma_xml = ET.tostring(bfwork_alma_xml, pretty_print=True)
+            logger.info(f"Normalized BFWork description for {instance_id}.")
+            # post to s3 as bytes
             s3_hook.load_bytes(
                 bfwork_alma_xml,
                 f"/alma/{instance_id}/bfwork_alma.xml",

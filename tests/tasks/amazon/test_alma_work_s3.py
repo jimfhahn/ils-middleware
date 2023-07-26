@@ -41,7 +41,6 @@ def test_send_work_to_alma_s3(
     mock_task_instance,
 ):
     """Test sending a file to s3"""
-    # fix 'str' object has no attribute 'decode' error
     send_work_to_alma_s3(task_instance=test_task_instance())
     assert (
         test_task_instance().xcom_pull(
