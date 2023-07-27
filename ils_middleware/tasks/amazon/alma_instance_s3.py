@@ -67,23 +67,24 @@ def send_instance_to_alma_s3(**kwargs):
             bfinstance_alma_xml = h.serialize(format="pretty-xml", encoding="utf-8")
             tree = ET.fromstring(bfinstance_alma_xml)
             # apply xslt to normalize instance
-            xslt = ET.parse("tests/fixtures/xslt/normalize-instance.xsl")
+            xslt = ET.parse("ils_middleware/tasks/amazon/xslt/normalize-instance.xsl")
             transform = ET.XSLT(xslt)
             bfinstance_alma_xml = transform(tree)
-            bfinstance_alma_xml = ET.tostring(bfinstance_alma_xml, pretty_print=True)
+            bfinstance_alma_xml = ET.tostring(
+                bfinstance_alma_xml, pretty_print=True, encoding="utf-8"
+            )
             logger.info(f"Normalized BFInstance description for {instance_id}.")
             # post to s3 as bytes
             s3_hook.load_bytes(
                 bfinstance_alma_xml,
-                f"alma/airflow/{instance_id}/bfinstance_alma.xml",
+                f"/alma/{instance_id}/bfinstance_alma.xml",
                 Variable.get("marc_s3_bucket"),
                 replace=True,
             )
 
         task_instance.xcom_push(
-            key=instance_uri, value=f"/alma/{instance_id}/bfinstance_alma.xml"
+            key=instance_uri, value=bfinstance_alma_xml.decode("utf-8")
         )
-
         logger.info(f"Saved BFInstance description for {instance_id} to alma.")
 
 

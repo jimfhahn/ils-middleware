@@ -67,10 +67,12 @@ def send_work_to_alma_s3(**kwargs):
             bfwork_alma_xml = g.serialize(format="pretty-xml", encoding="utf-8")
             tree = ET.fromstring(bfwork_alma_xml)
             # apply xslt to normalize instance
-            xslt = ET.parse("tests/fixtures/xslt/normalize-work.xsl")
+            xslt = ET.parse("ils_middleware/tasks/amazon/xslt/normalize-work.xsl")
             transform = ET.XSLT(xslt)
             bfwork_alma_xml = transform(tree)
-            bfwork_alma_xml = ET.tostring(bfwork_alma_xml, pretty_print=True)
+            bfwork_alma_xml = ET.tostring(
+                bfwork_alma_xml, pretty_print=True, encoding="utf-8"
+            )
             logger.info(f"Normalized BFWork description for {instance_id}.")
             # post to s3 as bytes
             s3_hook.load_bytes(
@@ -79,9 +81,8 @@ def send_work_to_alma_s3(**kwargs):
                 Variable.get("marc_s3_bucket"),
                 replace=True,
             )
-        task_instance.xcom_push(
-            key=instance_uri, value=f"/alma/{instance_id}/bfwork_alma.xml"
-        )
+
+        task_instance.xcom_push(key=instance_uri, value=bfwork_alma_xml.decode("utf-8"))
         logger.info(f"Saved BFWork description for {instance_id} to alma.")
 
 

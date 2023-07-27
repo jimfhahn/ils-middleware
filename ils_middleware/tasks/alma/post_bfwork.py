@@ -20,7 +20,7 @@ def NewWorktoAlma(**kwargs):
         instance_id = path.split(instance_path)[-1]
 
     temp_file = s3_hook.download_file(
-        key=f"marc/alma/{instance_id}/bfwork_alma.xml",
+        key=f"/alma/{instance_id}/bfwork_alma.xml",
         bucket_name=Variable.get("marc_s3_bucket"),
     )
 
@@ -29,7 +29,7 @@ def NewWorktoAlma(**kwargs):
     logger.debug(f"file data: {data}")
 
     alma_api_key = Variable.get("alma_sandbox_api_key")
-    alma_import_profile_id = Variable.get("import_profile_id")
+    alma_import_profile_id = ""
 
     alma_uri = (
         "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?"
