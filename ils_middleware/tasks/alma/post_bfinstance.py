@@ -27,16 +27,14 @@ def NewInstancetoAlma(**kwargs):
     task_instance.xcom_pull(key=instance_uri, task_ids=temp_file)
     data = open(temp_file, "rb").read()
     logger.debug(f"file data: {data}")
-
-    alma_api_key = Variable.get("alma_sandbox_api_key")
-    alma_import_profile_id = ""
+    uri_region = Variable.get("alma_uri_region_na")
+    alma_api_key = Variable.get("alma_api_key_penn")
 
     alma_uri = (
-        "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?"
+        uri_region
+        + "/almaws/v1/bibs?"
         + "from_nz_mms_id=&from_cz_mms_id=&normalization=&validate=false"
-        + "&override_warning=true&check_match=false&import_profile="
-        + alma_import_profile_id
-        + "&apikey="
+        + "&override_warning=true&check_match=false&import_profile=&apikey="
         + alma_api_key
     )
     # post to alma

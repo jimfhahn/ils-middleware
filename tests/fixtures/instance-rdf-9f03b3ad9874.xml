@@ -77,23 +77,6 @@
                     </bf:AdminMetadata>
                 </bf:adminMetadata>
             </bf:Instance>
-            <rdf:Description rdf:about="http://id.loc.gov/vocabulary/menclvl/f">
-                <rdfs:label xml:lang="en">full</rdfs:label>
-            </rdf:Description>
-            <bf:Agent rdf:about="http://id.loc.gov/vocabulary/organizations/pu">
-                <rdfs:label xml:lang="en">University of Pennsylvania, Van Pelt-Dietrich Library (Van
-                    Pelt-Dietrich Library, University of ...</rdfs:label>
-            </bf:Agent>
-            <rdf:Description rdf:about="https://id.loc.gov/vocabulary/languages/eng">
-                <rdfs:label xml:lang="en">English</rdfs:label>
-            </rdf:Description>
-            <rdf:Description rdf:about="http://id.loc.gov/vocabulary/countries/sw">
-                <rdfs:label xml:lang="en">Sweden</rdfs:label>
-            </rdf:Description>
-            <bf:DescriptionConventions
-                rdf:about="http://id.loc.gov/vocabulary/descriptionConventions/rda">
-                <rdfs:label xml:lang="en">Resource description and access</rdfs:label>
-            </bf:DescriptionConventions>
         </rdf:RDF>
     </record>
 </bib>

@@ -1,20 +1,17 @@
-"""Tests alma Post"""
+"""Tests alma Post BF Instance"""
 import pytest
 import lxml.etree as ET
 import requests
 
-# import requests
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
-# from airflow.models import Variable
-# from airflow import models
 from unittest import mock
 from airflow.hooks.base_hook import BaseHook
 from pytest_mock import MockerFixture
 from tasks import (
     test_task_instance,
     test_alma_api_key,
-    test_import_profile_id,
+    test_uri_region,
     mock_task_instance,
     test_xml_response,
 )
@@ -29,7 +26,7 @@ def test_NewInstancetoAlma(mock_s3_hook, mock_task_instance, mock_env_vars):
     NewInstancetoAlma(
         task_instance=test_task_instance(),
         alma_api_key=test_alma_api_key(),
-        alma_import_profile_id=test_import_profile_id(),
+        uri_region=test_uri_region(),
     )
 
 
@@ -99,9 +96,11 @@ def mock_connection(monkeypatch, mocker: MockerFixture):
 def mock_env_vars(monkeypatch) -> None:
     monkeypatch.setenv("AIRFLOW_VAR_MARC_S3_BUCKET", "sinopia-marc-test")
     monkeypatch.setenv(
-        "AIRFLOW_VAR_ALMA_SANDBOX_API_KEY", "12ab34c56789101112131415161718192021"
+        "AIRFLOW_VAR_ALMA_API_KEY_PENN", "12ab34c56789101112131415161718192021"
     )
-    monkeypatch.setenv("AIRFLOW_VAR_IMPORT_PROFILE_ID", "33008879050003681")
+    monkeypatch.setenv(
+        "AIRFLOW_VAR_ALMA_URI_REGION_NA", "https://api-na.hosted.exlibrisgroup.com"
+    )
 
 
 @pytest.fixture
@@ -111,8 +110,7 @@ def mock_hook(mocker: mock.Mock) -> mock.Mock:
 
 mock_s3_hook_with_file_and_key = pytest.mark.usefixtures(
     "mock_env_vars", "mock_s3_hook_with_file_and_key"
-)  # noqa: E501
-"""Test the Alma AWS S3 tasks properly name and load files."""
+)
 
 
 @pytest.fixture
