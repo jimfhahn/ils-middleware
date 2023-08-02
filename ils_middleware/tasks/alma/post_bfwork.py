@@ -51,30 +51,28 @@ def NewWorktoAlma(**kwargs):
     )
     logger.debug(f"alma result: {alma_result.status_code}\n{alma_result.text}")
     result = alma_result.content
+    status = alma_result.status_code
     xml_response = ET.fromstring(result)
     # run xslt on the result in case the response is 400 and we need to update the record
     xslt = ET.parse("ils_middleware/tasks/alma/xslt/put_mms_id.xsl")
     transform = ET.XSLT(xslt)
     result_tree = transform(xml_response)
-    # convert the result to a string
     put_mms_id_str = str(result_tree)
     logger.debug(f"put_mms_id_str: {put_mms_id_str}")
-    if alma_result.status_code == 200:
-        # get the mms_id from the response
-        mms_id_list = xml_response.xpath("//mms_id/text()")
-        mms_id = " ".join(mms_id_list)
-        logger.debug(f"mms_id: {mms_id}")
+    mms_id = xml_response.xpath("//mms_id/text()")
+    logger.debug(f"mms_id: {mms_id}")
+    if status == 200:
         task_instance.xcom_push(key=instance_uri, value=mms_id)
-    elif alma_result.status_code == 400:
+    elif status == 400:
         alma_update_uri = (
             uri_region
             + "/almaws/v1/bibs/"
             + put_mms_id_str
-            + "?normalization=&validate=false&override_warning=true&override_lock=true&stale_version_check=false&cataloger_level=&check_match=false"
+            + "?normalization=&validate=false&override_warning=true"
+            + "&override_lock=true&stale_version_check=false&cataloger_level=&check_match=false"
             + "&apikey="
             + alma_api_key
         )
-        # use the put_mms_id to update the record
         put_update = requests.put(
             alma_update_uri,
             headers={
@@ -84,18 +82,12 @@ def NewWorktoAlma(**kwargs):
             },
             data=data,
         )
-        # what is the response?
-        logger.debug(put_update.status_code)
-        # if 200 the record was updated and we can continue
-        if put_update.status_code == 200:
-            # get the mms_id from the response
-            result = put_update.content
-            xml_response = ET.fromstring(result)
-            mms_id_list = xml_response.xpath("//mms_id/text()")
-            mms_id = " ".join(mms_id_list)
-            logger.debug(f"mms_id: {mms_id}")
-            task_instance.xcom_push(key=instance_uri, value=mms_id)
-        else:
-            raise Exception(f"Unexpected status code: {put_update.status_code}")
-    else:
-        raise Exception(f"Unexpected status code: {alma_result.status_code}")
+        logger.debug(f"put update: {put_update.status_code}\n{put_update.text}")
+        put_update_status = put_update.status_code
+        result = put_update.content
+        xml_response = ET.fromstring(result)
+        put_mms_id = xml_response.xpath("//mms_id/text()")
+        if put_update_status == 200:
+            task_instance.xcom_push(key=instance_uri, value=put_mms_id)
+        if put_update_status != 200:
+            raise Exception(f"Unexpected status code: {status}")

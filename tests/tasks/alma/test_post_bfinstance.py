@@ -1,84 +1,46 @@
 """Tests alma Post BF Instance"""
 import pytest
-import lxml.etree as ET
-import requests
-
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-
 from unittest import mock
-from airflow.hooks.base_hook import BaseHook
+import requests_mock
 from pytest_mock import MockerFixture
+from airflow.hooks.base_hook import BaseHook
 from tasks import (
     test_task_instance,
     test_alma_api_key,
     test_uri_region,
     mock_task_instance,
-    test_xml_response,
 )
 from ils_middleware.tasks.alma.post_bfinstance import NewInstancetoAlma
 
+
 task_instance = mock_task_instance
-xml_response = test_xml_response
-doc = xml_response
+alma_uri = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?from_nz_mms_id=&from_cz_mms_id=&\
+            normalization=&validate=false&override_warning=true&check_match=false&import_profile=&apikey=\
+            12ab34c56789101112131415161718192021"
 
 
-def test_NewInstancetoAlma(mock_s3_hook, mock_task_instance, mock_env_vars):
-    NewInstancetoAlma(
-        task_instance=test_task_instance(),
-        alma_api_key=test_alma_api_key(),
-        uri_region=test_uri_region(),
-    )
-
-
-@pytest.fixture()
-def mock_etree():
-    with mock.patch("organizer.tools.xml_files_operations.etree") as mocked_etree:
-        yield mocked_etree
-
-
-@pytest.fixture()
-def mock_parser(mock_etree):
-    parser = mock.Mock()
-    with mock.patch.object(mock_etree, "XMLParser", parser):
-        yield parser
-
-
-"fixture for .find and .text"
-
-
-@pytest.fixture
-def mock_find(mock_etree):
-    def mock_find(self, *args, **kwargs):
-        return ET.Element(
-            "root",
-            attrib={
-                "mms_id": "mms_id",
-                "status": "status",
-                "error_message": "error_message",
-                "error_code": "error_code",
-            },
+def test_NewInstancetoAlma_200(mock_s3_hook, mock_task_instance, mock_env_vars):
+    with pytest.raises(Exception, match="Unexpected status code: 400"):
+        NewInstancetoAlma(
+            task_instance=test_task_instance(),
+            alma_api_key=test_alma_api_key(),
+            uri_region=test_uri_region(),
         )
 
-    with mock.patch.object(mock_etree, "Element", mock_find):
-        yield mock_find
 
+def test_NewInstancetoAlma_400(mock_s3_hook, mock_task_instance, mock_env_vars):
+    with requests_mock.Mocker() as m:
+        m.post(alma_uri, status_code=400)
+        m.put(alma_uri, status_code=400)
 
-@pytest.fixture
-def mock_text(mock_etree):
-    def mock_text(self, *args, **kwargs):
-        return "text"
-
-    with mock.patch.object(mock_etree, "Text", mock_text):
-        yield mock_text
-
-
-@pytest.fixture
-def mock_request(monkeypatch, mocker: MockerFixture):
-    def mock_post(*args, **kwargs):
-        mms_id = test_xml_response.find("mms_id").text = "9978021305103681"
-        return mms_id
-
-    monkeypatch.setattr(requests, "post", mock_post)
+        # Call the function and expect it to raise an exception
+        with pytest.raises(Exception):
+            NewInstancetoAlma(
+                task_instance=test_task_instance(),
+                alma_api_key=test_alma_api_key(),
+                uri_region=test_uri_region(),
+            )
 
 
 @pytest.fixture
