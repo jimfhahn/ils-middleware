@@ -1,4 +1,4 @@
-<!-- xslt will normalize the Sinopia Instance RDFXML structure to the Alma Work RDFXML structure  -->
+<!-- xslt will normalize the Sinopia Instance RDFXML structure to the Alma Instance RDFXML structure  -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:sinopiabf="http://sinopia.io/vocabulary/bf/"
 exclude-result-prefixes="sinopiabf" >
   <xsl:output method="xml" indent="yes"/>

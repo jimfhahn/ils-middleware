@@ -6,7 +6,7 @@ authors = ["Jeremy Nelson <jpnelson@stanford.edu>", "Aaron Collier <aaron.collie
 license = "Apache2"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 pymarc = "5.1.0"
 apache-airflow = "^2.2.1"
 apache-airflow-providers-amazon = "^2.2.0"
@@ -29,6 +29,7 @@ pytest = "^6.2"
 pytest-cov = "^2.12"
 pytest-mock = "^3.6.1"
 types-mock = "^4.0.1"
+requests-mock = "^1.9.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
