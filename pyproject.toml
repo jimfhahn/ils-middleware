@@ -6,7 +6,7 @@ authors = ["Jeremy Nelson <jpnelson@stanford.edu>", "Aaron Collier <aaron.collie
 license = "Apache2"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 pymarc = "5.1.0"
 apache-airflow = "^2.2.1"
 apache-airflow-providers-amazon = "^2.2.0"
