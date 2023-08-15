@@ -59,7 +59,7 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_FOLDER: '/opt/airflow/ils_middleware/dags'
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
+    AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW_VAR_MARC_S3_BUCKET: 'sinopia-marc-development'
     AIRFLOW_VAR_RDF2MARC_LAMBDA: 'sinopia-rdf2marc-development'
     AIRFLOW_VAR_SINOPIA_ENV: ${AIRFLOW_VAR_SINOPIA_ENV:-dev}
@@ -169,17 +169,6 @@ services:
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
 
-  flower:
-    <<: *airflow-common
-    command: celery flower
-    ports:
-      - 5555:5555
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
 
   localstack:
     image: localstack/localstack
