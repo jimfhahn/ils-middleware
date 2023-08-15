@@ -2,12 +2,12 @@
 import logging
 import requests
 
-from airflow.providers.http.operators.http import SimpleHttpOperator
+from typing import Union
 
 logger = logging.getLogger(__name__)
 
 
-def FolioLogin(**kwargs) -> SimpleHttpOperator:
+def FolioLogin(**kwargs) -> Union[str | None]:  # type: ignore
     """Logs into FOLIO and returns Okapi token."""
     url = kwargs["url"]
     username = kwargs["username"]
