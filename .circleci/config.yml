@@ -101,6 +101,8 @@ workflows:
           requires:
             - build
       - publish_to_dockerhub:
+          context:
+            - ld4p
           filters:
             branches:
               only: main
