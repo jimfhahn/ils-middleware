@@ -7,6 +7,8 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from pymarc import MARCReader
 from rdflib import Graph
 from lxml import etree as ET
+from ils_middleware.tasks.amazon.alma_ns import alma_namespaces
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,21 +50,8 @@ def send_work_to_alma_s3(**kwargs):
                 logger.info(f"Work URI: {work_uri}")
             g = Graph()
             g.parse(work_uri)
-            g.bind("xmlns", "http://www.w3.org/2000/xmlns/")
-            g.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
-            g.bind("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-            g.bind("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-            g.bind("bf", "http://id.loc.gov/ontologies/bibframe/")
-            g.bind("bflc", "http://id.loc.gov/ontologies/bflc/")
-            g.bind("madsrdf", "http://www.loc.gov/mads/rdf/v1#")
-            g.bind("sinopia", "http://sinopia.io/vocabulary/")
-            g.bind("sinopiabf", "http://sinopia.io/vocabulary/bf/")
-            g.bind("rdau", "http://rdaregistry.info/Elements/u/")
-            g.bind("owl", "http://www.w3.org/2002/07/owl#")
-            g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
-            g.bind("dcterms", "http://purl.org/dc/terms/")
-            g.bind("cc", "http://creativecommons.org/ns#")
-            g.bind("foaf", "http://xmlns.com/foaf/0.1/")
+            for prefix, url in alma_namespaces:
+                g.bind(prefix, url)
             # serialize to xml
             bfwork_alma_xml = g.serialize(format="pretty-xml", encoding="utf-8")
             tree = ET.fromstring(bfwork_alma_xml)
