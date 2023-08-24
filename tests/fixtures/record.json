@@ -1,26 +1,328 @@
-{
-  "leader": "01455nam a2200277uu 4500",
-  "fields": [
-      {"003": "cst"},
-      {"008": "200915|||||||||enk                 eng||"},
-      {"010": {"subfields": [{"a": "981811"}], "ind1": " ", "ind2": " "}},
-      {"020": {"subfields": [{"a": "0892816619"}, {"q": "(hardcover)"}], "ind1": " ", "ind2": " "}},
-      {"040": {"subfields": [{"a": "cst"}, {"b": "eng"}, {"c": "cst"}, {"e": "rda"}], "ind1": " ", "ind2": " "}},
-      {"050": {"subfields": [{"a": "R128.H5313"}, {"b": "1998"}], "ind1": " ", "ind2": "0"}},
-      {"100": {"subfields": [{"a": "Hildegard"}, {"c": "Saint,"}, {"d": "1098-1179"}, {"0": "http://id.loc.gov/authorities/names/n80118409"}], "ind1": "0", "ind2": " "}},
-      {"245": {"subfields": [{"a": "Hildegard von Bingen's Physica"}, {"b": "the complete English translation of her classic work on health and healing"}, {"c": "translated from the Latin by Priscilla Throop ; illustrations by Mary Elder Jacobsen"}], "ind1": "1", "ind2": "0"}},
-      {"246": {"subfields": [{"a": "Physica"}], "ind1": "0", "ind2": " "}},
-      {"264": {"subfields": [{"a": "Rochester (Vt.)"}, {"a": "London (England)"}, {"b": "Macmillan London"}], "ind1": " ", "ind2": "1"}},
-      {"300": {"subfields": [{"a": "250 pages"}], "ind1": " ", "ind2": " "}},
-      {"300": {"subfields": [{"c": "24 cm"}], "ind1": " ", "ind2": " "}},
-      {"336": {"subfields": [{"c": "txt"}, {"0": "http://id.loc.gov/vocabulary/contentTypes/txt"}, {"2": "rdacontent"}], "ind1": " ", "ind2": " "}},
-      {"337": {"subfields": [{"a": "unmediated"}, {"c": "n"}, {"0": "http://id.loc.gov/vocabulary/mediaTypes/n"}, {"2": "rdamedia"}], "ind1": " ", "ind2": " "}},
-      {"338": {"subfields": [{"a": "volume"}, {"c": "nc"}, {"0": "http://id.loc.gov/vocabulary/carriers/nc"}, {"2": "rdacarrier"}], "ind1": " ", "ind2": " "}}, 
-      {"500": {"subfields": [{"a": "Includes index"}], "ind1": " ", "ind2": " "}},
-      {"650": {"subfields": [{"a": "Medicine, Medieval"}, {"0": "http://id.loc.gov/authorities/subjects/sh85083152"}], "ind1": " ", "ind2": "0"}},
-      {"655": {"subfields": [{"a": "Handbooks and manuals"}, {"0": "http://id.loc.gov/authorities/genreForms/gf2014026109"}, {"2": "lcgft"}], "ind1": " ", "ind2": "0"}},
-      {"700": {"subfields": [{"a": "Throop, Priscilla"}, {"d": "1946-"}, {"0": "http://id.loc.gov/authorities/names/n98031191"}], "ind1": "1", "ind2": " "}},
-      {"700": {"subfields": [{"a": "Jacobsen, Mary Elder"}, {"0": "http://id.loc.gov/authorities/names/no2012148249"}], "ind1": "1", "ind2": " "}},
-      {"884": {"subfields": [{"a": "Sinopia rdf2marc"}, {"g": "20210921"}, {"k": "https://api.stage.sinopia.io/resource/3eb5f480-60d6-4732-8daf-02d8d6f26eb7"}, {"u": "https://github.com/LD4P/rdf2marc"}], "ind1": " ", "ind2": " "}}
-  ]
-}
+    {
+      "leader": "01498nam a2200265 u 4500",
+      "fields": [
+        {
+          "008": "230607s2015    sw a                swe||"
+        },
+        {
+          "020": {
+            "subfields": [
+              {
+                "a": "9789137146348"
+              },
+              {
+                "q": "paperback"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "040": {
+            "subfields": [
+              {
+                "a": "PU"
+              },
+              {
+                "b": "eng"
+              },
+              {
+                "c": "PU"
+              },
+              {
+                "e": "rda"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "043": {
+            "subfields": [
+              {
+                "a": "e-sw---"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "050": {
+            "subfields": [
+              {
+                "a": "PT9876.19.N45"
+              },
+              {
+                "b": "V555"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "4"
+          }
+        },
+        {
+          "100": {
+            "subfields": [
+              {
+                "a": "Ingelman-Sundberg, C."
+              },
+              {
+                "e": "Author"
+              },
+              {
+                "0": "http://id.loc.gov/authorities/names/n79087059"
+              }
+            ],
+            "ind1": "1",
+            "ind2": " "
+          }
+        },
+        {
+          "245": {
+            "subfields": [
+              {
+                "a": "Vikingasilver"
+              },
+              {
+                "b": "en storslagen historisk roman om Birka"
+              },
+              {
+                "c": "Catharina Ingelman-Sundberg"
+              }
+            ],
+            "ind1": "1",
+            "ind2": "0"
+          }
+        },
+        {
+          "250": {
+            "subfields": [
+              {
+                "a": "Första utgåva"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "264": {
+            "subfields": [
+              {
+                "a": "Stockholm"
+              },
+              {
+                "b": "Bokförlaget Forum"
+              },
+              {
+                "c": "2015"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "1"
+          }
+        },
+        {
+          "300": {
+            "subfields": [
+              {
+                "a": "312 pages"
+              },
+              {
+                "b": "Maps"
+              },
+              {
+                "c": "22 cm"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "336": {
+            "subfields": [
+              {
+                "a": "text"
+              },
+              {
+                "b": "txt"
+              },
+              {
+                "0": "http://id.loc.gov/vocabulary/contentTypes/txt"
+              },
+              {
+                "2": "rdacontent"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "337": {
+            "subfields": [
+              {
+                "a": "unmediated"
+              },
+              {
+                "b": "n"
+              },
+              {
+                "0": "http://id.loc.gov/vocabulary/mediaTypes/n"
+              },
+              {
+                "2": "rdamedia"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "338": {
+            "subfields": [
+              {
+                "a": "volume"
+              },
+              {
+                "b": "nc"
+              },
+              {
+                "0": "http://id.loc.gov/vocabulary/carriers/nc"
+              },
+              {
+                "2": "rdacarrier"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "650": {
+            "subfields": [
+              {
+                "a": "Middle Ages"
+              },
+              {
+                "2": "fast"
+              },
+              {
+                "0": "http://id.worldcat.org/fast/1020301"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "650": {
+            "subfields": [
+              {
+                "a": "Vikings"
+              },
+              {
+                "2": "fast"
+              },
+              {
+                "0": "http://id.worldcat.org/fast/1166937"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "651": {
+            "subfields": [
+              {
+                "a": "Birka (Sweden)"
+              },
+              {
+                "0": "http://id.loc.gov/authorities/names/n81047935"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "0"
+          }
+        },
+        {
+          "655": {
+            "subfields": [
+              {
+                "a": "Historical fiction"
+              },
+              {
+                "0": "http://id.loc.gov/authorities/genreForms/gf2014026370"
+              },
+              {
+                "2": "lcgft"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "655": {
+            "subfields": [
+              {
+                "a": "Novels"
+              },
+              {
+                "0": "http://id.loc.gov/authorities/genreForms/gf2015026020"
+              },
+              {
+                "2": "lcgft"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "758": {
+            "subfields": [
+              {
+                "4": "http://id.loc.gov/ontologies/bibframe/instanceOf"
+              },
+              {
+                "i": "Instance of:"
+              },
+              {
+                "a": "Vikingasilver"
+              },
+              {
+                "0": "https://api.stage.sinopia.io/resource/4dd549fe-cb14-4076-a31c-ea63eb55a3be"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "884": {
+            "subfields": [
+              {
+                "a": "Sinopia rdf2marc"
+              },
+              {
+                "g": "20230723"
+              },
+              {
+                "k": "https://api.stage.sinopia.io/resource/cbed00b0-5100-478e-9b38-aacde9ef8176"
+              },
+              {
+                "u": "https://github.com/LD4P/rdf2marc"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        }
+      ]
+    }
