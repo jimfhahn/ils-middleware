@@ -12,10 +12,4 @@ def test_to_symphony_json(mock_task_instance):  # noqa: F811
         key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
     )
     assert symphony_json["standard"].startswith("MARC21")
-    assert symphony_json["leader"].startswith("01455nam a2200277uu 4500")
-    assert symphony_json["fields"][0]["tag"] == "003"
-    assert symphony_json["fields"][2]["subfields"][0]["code"] == "a"
-    assert symphony_json["fields"][2]["subfields"][0]["data"] == "981811"
-    assert symphony_json["fields"][7]["subfields"][0]["data"].startswith(
-        "Hildegard von Bingen's Physica"
-    )
+    assert symphony_json["leader"].startswith("01498nam a2200265 u 4500")

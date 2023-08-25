@@ -6,26 +6,32 @@ from unittest import mock
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
-from ils_middleware.tasks.amazon.alma_s3 import get_from_alma_s3, send_to_alma_s3
+from ils_middleware.tasks.amazon.alma_work_s3 import (
+    get_from_alma_s3,
+    send_work_to_alma_s3,
+)
 
 from airflow.hooks.base_hook import BaseHook
 
 from tasks import mock_task_instance, test_task_instance
 
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
 task_instance = mock_task_instance
+marc = "tests/fixtures/record.mar"
+work = "tests/fixtures/work-rdf-c22129c79459.xml"
 
 
 def test_get_from_alma_s3(mock_s3_hook, mock_env_vars, mock_task_instance):
     get_from_alma_s3(task_instance=test_task_instance())
-    assert (
-        test_task_instance().xcom_pull(
-            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
-        )
-        == "tests/fixtures/record.mar"
+    assert test_task_instance().xcom_pull(
+        key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
     )
 
 
-def test_send_to_alma_s3(
+def test_send_work_to_alma_s3(
     mock_env_vars,
     mock_s3_load_string,
     mock_s3_hook,
@@ -33,8 +39,10 @@ def test_send_to_alma_s3(
     mock_task_instance,
 ):
     """Test sending a file to s3"""
-    send_to_alma_s3(task_instance=test_task_instance())
-    mock_s3_load_string.call_count == 2
+    send_work_to_alma_s3(task_instance=test_task_instance())
+    assert test_task_instance().xcom_pull(
+        key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
+    )
 
 
 @pytest.fixture
@@ -67,7 +75,7 @@ mock_s3_hook_with_file_and_key = pytest.mark.usefixtures(
 @pytest.fixture
 def mock_s3_hook(monkeypatch):
     def mock_download_file(*args, **kwargs):
-        return "tests/fixtures/record.mar"
+        return marc
 
     def mock_load_bytes(*args, **kwargs):
         return

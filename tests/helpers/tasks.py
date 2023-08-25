@@ -42,6 +42,10 @@ def test_import_profile_id():
     return ["33008879050003681"]
 
 
+def test_uri_region():
+    return ["https://api-na.hosted.exlibrisgroup.com"]
+
+
 def test_xml_response():
     return [
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?">'

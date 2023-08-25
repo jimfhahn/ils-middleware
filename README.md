@@ -30,7 +30,7 @@ AWS_ACCESS_KEY_ID=999999 AWS_SECRET_ACCESS_KEY=1231 aws sqs \
 
 ### Setup the local AWS connection for SQS
 
-1. From the `Admin > Connectinos` menu
+1. From the `Admin > Connections` menu
 2. Click the "+"
 3. Add an Amazon Web Services connection with the following settings:
 
