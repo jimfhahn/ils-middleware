@@ -27,18 +27,18 @@ alma_uri = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?from_nz_mms_i
             normalization=&validate=false&override_warning=true&check_match=false&import_profile=&apikey=\
             12ab34c56789101112131415161718192021"
 MockDag = Mock()
-MockDag.dag_id = 'penn'
+MockDag.dag_id = "penn"
 actual_dag = MockDag
 
 
 def test_get_env_vars():
-    with patch('airflow.models.Variable.get') as mock_get:
-        mock_get.return_value = 'dummy_value'
+    with patch("airflow.models.Variable.get") as mock_get:
+        mock_get.return_value = "dummy_value"
 
-        uri_region, alma_api_key = get_env_vars('penn')
+        uri_region, alma_api_key = get_env_vars("penn")
 
-        assert uri_region == 'dummy_value'
-        assert alma_api_key == 'dummy_value'
+        assert uri_region == "dummy_value"
+        assert alma_api_key == "dummy_value"
 
 
 def test_NewInstancetoAlma_200(mock_s3_hook, mock_task_instance, mock_env_vars):
@@ -58,7 +58,7 @@ def test_NewInstancetoAlma_400(mock_s3_hook, mock_task_instance, mock_env_vars):
 
         # Call the function and expect it to raise an exception
         with pytest.raises(Exception):
-            NewWorktoAlma(
+            NewInstancetoAlma(
                 task_instance=test_task_instance(),
                 alma_api_key=test_alma_api_key(),
                 uri_region=test_uri_region(),
