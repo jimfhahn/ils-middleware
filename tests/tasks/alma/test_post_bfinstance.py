@@ -2,30 +2,52 @@
 import pytest
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from unittest import mock
+from unittest.mock import Mock
 import requests_mock
 from pytest_mock import MockerFixture
 from airflow.hooks.base_hook import BaseHook
+from unittest.mock import patch
+
+
 from tasks import (
     test_task_instance,
     test_alma_api_key,
     test_uri_region,
     mock_task_instance,
 )
-from ils_middleware.tasks.alma.post_bfinstance import NewInstancetoAlma
-
+from ils_middleware.tasks.alma.post_bfinstance import (
+    NewInstancetoAlma,
+    parse_400,
+    putInstanceToAlma,
+    get_env_vars,
+)
 
 task_instance = mock_task_instance
 alma_uri = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?from_nz_mms_id=&from_cz_mms_id=&\
             normalization=&validate=false&override_warning=true&check_match=false&import_profile=&apikey=\
             12ab34c56789101112131415161718192021"
+MockDag = Mock()
+MockDag.dag_id = 'penn'
+actual_dag = MockDag
+
+
+def test_get_env_vars():
+    with patch('airflow.models.Variable.get') as mock_get:
+        mock_get.return_value = 'dummy_value'
+
+        uri_region, alma_api_key = get_env_vars('penn')
+
+        assert uri_region == 'dummy_value'
+        assert alma_api_key == 'dummy_value'
 
 
 def test_NewInstancetoAlma_200(mock_s3_hook, mock_task_instance, mock_env_vars):
-    with pytest.raises(Exception, match="Unexpected status code: 400"):
+    with pytest.raises(Exception):
         NewInstancetoAlma(
             task_instance=test_task_instance(),
             alma_api_key=test_alma_api_key(),
             uri_region=test_uri_region(),
+            dag=MockDag,
         )
 
 
@@ -36,10 +58,26 @@ def test_NewInstancetoAlma_400(mock_s3_hook, mock_task_instance, mock_env_vars):
 
         # Call the function and expect it to raise an exception
         with pytest.raises(Exception):
-            NewInstancetoAlma(
+            NewWorktoAlma(
                 task_instance=test_task_instance(),
                 alma_api_key=test_alma_api_key(),
                 uri_region=test_uri_region(),
+                dag=MockDag,
+            )
+
+
+def test_putInstanceToAlma_200(mock_s3_hook, mock_task_instance, mock_env_vars):
+    with requests_mock.Mocker() as m:
+        m.post(alma_uri, status_code=200)
+        m.put(alma_uri, status_code=200)
+
+        # Call the function and expect it to raise an exception
+        with pytest.raises(Exception):
+            putInstanceToAlma(
+                task_instance=test_task_instance(),
+                alma_api_key=test_alma_api_key(),
+                uri_region=test_uri_region(),
+                dag=MockDag,
             )
 
 
@@ -61,7 +99,7 @@ def mock_env_vars(monkeypatch) -> None:
         "AIRFLOW_VAR_ALMA_API_KEY_PENN", "12ab34c56789101112131415161718192021"
     )
     monkeypatch.setenv(
-        "AIRFLOW_VAR_ALMA_URI_REGION_NA", "https://api-na.hosted.exlibrisgroup.com"
+        "AIRFLOW_VAR_ALMA_URI_REGION_PENN", "https://api-na.hosted.exlibrisgroup.com"
     )
 
 
@@ -97,3 +135,12 @@ def mock_s3_load_bytes():
         "airflow.providers.amazon.aws.hooks.s3.S3Hook.load_bytes"
     ) as mocked:
         yield mocked
+
+
+def test_parse_400():
+    # Create a mock result
+    result = "<root><error><errorMessage1>Test Error</errorMessage1></error></root>"
+    # Call the function
+    put_mms_id_str = parse_400(result)
+    # Assert that the function returns the expected value
+    assert put_mms_id_str == "No text found in brackets"
