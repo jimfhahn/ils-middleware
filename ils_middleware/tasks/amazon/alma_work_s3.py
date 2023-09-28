@@ -5,7 +5,7 @@ from os import path
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from pymarc import MARCReader
-from rdflib import Graph
+from rdflib import Graph, URIRef, Namespace
 from lxml import etree as ET
 from ils_middleware.tasks.amazon.alma_ns import alma_namespaces
 
@@ -47,11 +47,17 @@ def send_work_to_alma_s3(**kwargs):
             for record in reader:
                 work_field = record.get_fields("758")
                 work_uri = work_field[0].get_subfields("0")[0]
-                logger.info(f"Work URI: {work_uri}")
+                instance_field = record.get_fields("884")
+                instance_uri = instance_field[0].get_subfields("k")[0]
+                logger.info(f"Work URI: {work_uri}, Instance URI: {instance_uri}")
             g = Graph()
             g.parse(work_uri)
             for prefix, url in alma_namespaces:
                 g.bind(prefix, url)
+                bf = Namespace("http://id.loc.gov/ontologies/bibframe/")
+            # Add the instance URI as an instance of the work URI
+            instance_uri = instance_uri[0]
+            g.add((URIRef(work_uri), bf.hasInstance, URIRef(instance_uri)))
             # serialize to xml
             bfwork_alma_xml = g.serialize(format="pretty-xml", encoding="utf-8")
             tree = ET.fromstring(bfwork_alma_xml)

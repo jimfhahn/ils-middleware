@@ -3,11 +3,7 @@
   <xsl:output method="xml" indent="yes"/>
 
   <xsl:template match="*[local-name()='hasInstance']">
-    <xsl:copy>
-      <xsl:attribute name="rdf:resource" namespace="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-        <xsl:value-of select="//rdf:Description/@rdf:about" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
-      </xsl:attribute>
-    </xsl:copy>
+    <bf:hasInstance rdf:resource="{@rdf:resource}" xmlns:bf="http://id.loc.gov/ontologies/bibframe/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
   </xsl:template>
 
   <xsl:template match="bf:Work" xmlns:bf="http://id.loc.gov/ontologies/bibframe/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
