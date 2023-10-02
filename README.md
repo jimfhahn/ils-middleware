@@ -4,7 +4,7 @@
 Proof-of-concept for using [Apache Airflow][AF] to manage Sinopia workflows
 that interact with institutional integrated library systems (ILS) and/or
 library services platform (LSP). Currently there are Directed Acyclic Graphs (DAG)
-for Stanford and Cornell Sinopia-to-ILS/LSP workflows.
+for Stanford and Cornell Sinopia-to-ILS/LSP workflows. Alma users with the Linked Data API enabled can use the Alma DAG for connecting Sinopia to Alma.
 
 ## Running Locally with Docker
 Based on the documentation, [Running Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html).
