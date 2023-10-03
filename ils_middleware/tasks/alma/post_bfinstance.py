@@ -112,9 +112,12 @@ def putInstanceToAlma(
     result = put_update.content
     xml_response = ET.fromstring(result)
     put_mms_id = xml_response.xpath("//mms_id/text()")
-    if put_update_status == 200:
-        task_instance.xcom_push(key=instance_uri, value=put_mms_id)
-    elif put_update_status == 500:
-        raise Exception(f"Internal server error from Alma API: {put_update_status}")
-    else:
-        raise Exception(f"Unexpected status code from Alma API: {put_update_status}")
+    match put_update_status:
+        case 200:
+            task_instance.xcom_push(key=instance_uri, value=put_mms_id)
+        case 500:
+            raise Exception(f"Internal server error from Alma API: {put_update_status}")
+        case _:
+            raise Exception(
+                f"Unexpected status code from Alma API: {put_update_status}"
+            )

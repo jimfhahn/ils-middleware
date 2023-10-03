@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
@@ -134,8 +134,8 @@ for institution in institutions:
                 >> alma_post_work
                 >> alma_post_instance
             )
-        # Dummy Operator
-        processed_sinopia = DummyOperator(
+        # EmptyOperator
+        processed_sinopia = EmptyOperator(
             task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"
         )
 
@@ -170,9 +170,9 @@ for institution in institutions:
             python_callable=send_update_success_emails,
         )
 
-    processing_complete = DummyOperator(task_id="processing_complete", dag=dag)
-    messages_received = DummyOperator(task_id="messages_received", dag=dag)
-    messages_timeout = DummyOperator(task_id="sqs_timeout", dag=dag)
+    processing_complete = EmptyOperator(task_id="processing_complete", dag=dag)
+    messages_received = EmptyOperator(task_id="messages_received", dag=dag)
+    messages_timeout = EmptyOperator(task_id="sqs_timeout", dag=dag)
 
     listen_sns >> [messages_received, messages_timeout]
     messages_received >> process_message
