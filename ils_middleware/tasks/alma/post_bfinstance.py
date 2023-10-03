@@ -11,6 +11,12 @@ import lxml.etree as ET
 logger = logging.getLogger(__name__)
 
 
+def get_env_vars(institution):
+    uri_region = Variable.get(f"alma_uri_region_{institution}")
+    alma_api_key = Variable.get(f"alma_api_key_{institution}")
+    return uri_region, alma_api_key
+
+
 def parse_400(result):
     xml_response = ET.fromstring(result)
     xslt = ET.parse("ils_middleware/tasks/alma/xslt/put_mms_id.xsl")
@@ -22,6 +28,8 @@ def parse_400(result):
 
 
 def NewInstancetoAlma(**kwargs):
+    institution = kwargs["dag"].dag_id
+    uri_region, alma_api_key = get_env_vars(institution)
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
@@ -38,8 +46,7 @@ def NewInstancetoAlma(**kwargs):
     with open(temp_file, "rb") as f:
         data = f.read()
         logger.debug(f"file data: {data}")
-        uri_region = Variable.get("alma_uri_region_na")
-        alma_api_key = Variable.get("alma_api_key_penn")
+
         alma_uri = (
             uri_region
             + "/almaws/v1/bibs?"
@@ -97,7 +104,6 @@ def putInstanceToAlma(
         headers={
             "Content-Type": "application/xml; charset=UTF-8",
             "Accept": "application/xml",
-            "x-api-key": Variable.get("alma_api_key_penn"),
         },
         data=data,
     )
@@ -106,7 +112,12 @@ def putInstanceToAlma(
     result = put_update.content
     xml_response = ET.fromstring(result)
     put_mms_id = xml_response.xpath("//mms_id/text()")
-    if put_update_status == 200:
-        task_instance.xcom_push(key=instance_uri, value=put_mms_id)
-    else:
-        raise Exception(f"Unexpected status code: {put_update.status_code}")
+    match put_update_status:
+        case 200:
+            task_instance.xcom_push(key=instance_uri, value=put_mms_id)
+        case 500:
+            raise Exception(f"Internal server error from Alma API: {put_update_status}")
+        case _:
+            raise Exception(
+                f"Unexpected status code from Alma API: {put_update_status}"
+            )
