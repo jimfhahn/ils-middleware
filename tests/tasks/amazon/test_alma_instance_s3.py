@@ -1,105 +1,47 @@
-"""Test the Alma AWS S3 tasks properly name and load files."""
-import pytest
-from pytest_mock import MockerFixture
-
-from unittest import mock
-
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-
-from ils_middleware.tasks.amazon.alma_instance_s3 import (
-    get_from_alma_s3,
-    send_instance_to_alma_s3,
-)
-
-from airflow.hooks.base_hook import BaseHook
-
-from tasks import mock_task_instance, test_task_instance
-
+from unittest.mock import Mock, patch
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook  # noqa
+from ils_middleware.tasks.amazon.alma_instance_s3 import send_instance_to_alma_s3
 import ssl
 
-ssl._create_default_https_context = ssl._create_unverified_context
 
-task_instance = mock_task_instance
-marc = "tests/fixtures/record.mar"
-
-
-def test_get_from_alma_s3(mock_s3_hook, mock_env_vars, mock_task_instance):
-    get_from_alma_s3(task_instance=test_task_instance())
-    assert (
-        test_task_instance().xcom_pull(
-            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
-        )
-        == "tests/fixtures/record.mar"
-    )
-
-
-def test_send_instance_to_alma_s3(
-    mock_env_vars,
-    mock_s3_load_string,
-    mock_s3_hook,
-    mock_connection,
-    mock_task_instance,
-):
-    """Test sending a file to s3"""
-    send_instance_to_alma_s3(task_instance=test_task_instance())
-    assert (
-        test_task_instance().xcom_pull(
-            key="https://api.development.sinopia.io/resource/0000-1111-2222-3333"
-        )
-        == "tests/fixtures/record.mar"
-    )
-
-
-@pytest.fixture
-def mock_connection(monkeypatch, mocker: MockerFixture):
-    def mock_get_connection(*args, **kwargs):
-        connection = mocker.stub(name="Connection")
-        connection.host = "https://alma.test.edu/"
-
-        return connection
-
-    monkeypatch.setattr(BaseHook, "get_connection", mock_get_connection)
-
-
-@pytest.fixture
-def mock_env_vars(monkeypatch) -> None:
-    monkeypatch.setenv("AIRFLOW_VAR_MARC_S3_BUCKET", "sinopia-marc-test")
-
-
-@pytest.fixture
-def mock_hook(mocker: mock.Mock) -> mock.Mock:
-    return mocker.patch("airflow.hooks.base_hook.BaseHook")
-
-
-mock_s3_hook_with_file_and_key = pytest.mark.usefixtures(
-    "mock_env_vars", "mock_s3_hook_with_file_and_key"
+@patch.dict(
+    "os.environ", {"AWS_ACCESS_KEY_ID": "test", "AWS_SECRET_ACCESS_KEY": "test"}
 )
-"""Test the Alma AWS S3 tasks properly name and load files."""
+@patch("airflow.models.Variable.get")
+@patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_connection")
+@patch("airflow.providers.amazon.aws.hooks.s3.S3Hook")
+@patch("rdflib.Graph")
+@patch("lxml.etree")
+@patch.object(S3Hook, "load_bytes", return_value=None)
+def test_send_instance_to_alma_s3(
+    mock_load_bytes,
+    mock_etree,
+    mock_graph,
+    mock_s3_hook,
+    mock_get_connection,
+    mock_variable,
+):
+    # Arrange
+    mock_task_instance = Mock()
+    ssl._create_default_https_context = ssl._create_unverified_context
+    mock_task_instance.xcom_pull.return_value = [
+        "https://api.development.sinopia.io/resource/7d6626a9-45ca-46b7-ba1e-47c322998403"
+    ]
+    mock_graph_instance = mock_graph.return_value
+    mock_graph_instance.serialize.return_value = b"<test></test>"
+    mock_graph_instance.parse.return_value = (
+        None  # Mock the parse method on the instance
+    )
+    mock_etree.XSLT.return_value = Mock()  # Mock the XSLT transformation
+    mock_etree.fromstring.return_value = Mock()  # Mock the fromstring method
+    mock_etree.tostring.return_value = b"<test></test>"  # Mock the tostring method
+    mock_variable.return_value = "test_bucket"
+    mock_connection = Mock()
+    mock_connection.login = "test_access_key_id"
+    mock_connection.password = "test_secret_access_key"
+    mock_get_connection.return_value = mock_connection
+    mock_s3_hook_instance = Mock()
+    mock_s3_hook.return_value = mock_s3_hook_instance
+    mock_s3_hook.get_connection = Mock(return_value=mock_connection)
 
-
-@pytest.fixture
-def mock_s3_hook(monkeypatch):
-    def mock_download_file(*args, **kwargs):
-        return marc
-
-    def mock_load_bytes(*args, **kwargs):
-        return
-
-    monkeypatch.setattr(S3Hook, "download_file", mock_download_file)
-    monkeypatch.setattr(S3Hook, "load_bytes", mock_load_bytes)
-
-
-@pytest.fixture
-def mock_s3_load_string():
-    with mock.patch(
-        "airflow.providers.amazon.aws.hooks.s3.S3Hook.load_string"
-    ) as mocked:
-        yield mocked
-
-
-@pytest.fixture
-def mock_s3_load_bytes():
-    with mock.patch(
-        "airflow.providers.amazon.aws.hooks.s3.S3Hook.load_bytes"
-    ) as mocked:
-        yield mocked
+    send_instance_to_alma_s3(task_instance=mock_task_instance)

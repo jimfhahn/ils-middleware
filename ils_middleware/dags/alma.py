@@ -10,7 +10,6 @@ from ils_middleware.tasks.amazon.alma_work_s3 import (
     send_work_to_alma_s3,
 )
 from ils_middleware.tasks.amazon.alma_instance_s3 import (
-    get_from_alma_s3,
     send_instance_to_alma_s3,
 )
 from ils_middleware.tasks.amazon.sqs import parse_messages
@@ -20,7 +19,6 @@ from ils_middleware.tasks.sinopia.email import (
     send_update_success_emails,
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
-from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 from ils_middleware.tasks.alma.post_bfwork import NewWorktoAlma
 from ils_middleware.tasks.alma.post_bfinstance import NewInstancetoAlma
 from ils_middleware.tasks.general.init import message_from_context
@@ -71,6 +69,7 @@ for institution in institutions:
         tags=[f"{institution}-alma"],
         catchup=False,
         on_failure_callback=dag_failure_callback,
+        max_active_runs=1,
     ) as dag:
         get_messages = PythonOperator(
             task_id="get-message-from-context", python_callable=message_from_context
@@ -83,22 +82,6 @@ for institution in institutions:
         )
 
         with TaskGroup(group_id="process_alma", dag=dag) as alma_task_group:
-            run_rdf2marc = PythonOperator(
-                task_id="rdf2marc",
-                python_callable=Rdf2Marc,
-                op_kwargs={
-                    "rdf2marc_lambda": Variable.get("rdf2marc_lambda"),
-                    "s3_bucket": Variable.get("marc_s3_bucket"),
-                },
-                dag=dag,
-            )
-
-            download_marc = PythonOperator(
-                task_id="download_marc",
-                python_callable=get_from_alma_s3,
-                dag=dag,
-            )
-
             export_work_bf_xml = PythonOperator(
                 task_id="bf_work_xml_to_s3",
                 python_callable=send_work_to_alma_s3,
@@ -122,9 +105,7 @@ for institution in institutions:
             )
 
             (
-                run_rdf2marc
-                >> download_marc
-                >> export_work_bf_xml
+                export_work_bf_xml
                 >> export_instance_bf_xml
                 >> alma_post_work
                 >> alma_post_instance
@@ -135,7 +116,6 @@ for institution in institutions:
         )
 
         with TaskGroup(group_id="update_sinopia") as sinopia_update_group:
-
             # Sinopia Login
             login_sinopia = PythonOperator(
                 task_id="sinopia-login",

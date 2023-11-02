@@ -3,7 +3,6 @@ import logging
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from urllib.parse import urlparse
-from os import path
 import requests
 import lxml.etree as ET
 
@@ -35,62 +34,61 @@ def NewWorktoAlma(**kwargs):
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
     for instance_uri in resources:
-        instance_path = urlparse(instance_uri).path
-        instance_id = path.split(instance_path)[-1]
+        urlparse(instance_uri).path
+        file_content = s3_hook.read_key(
+            key=f"alma/{instance_uri}/bfwork_alma.xml",
+            bucket_name=Variable.get("marc_s3_bucket"),
+        )
+    data = file_content
+    # convert to bytes
+    data = data.encode("utf-8")
+    logger.debug(f"file data: {data}")
 
-    temp_file = s3_hook.download_file(
-        key=f"/alma/{instance_id}/bfwork_alma.xml",
-        bucket_name=Variable.get("marc_s3_bucket"),
+    alma_uri = (
+        uri_region
+        + "/almaws/v1/bibs?"
+        + "from_nz_mms_id=&from_cz_mms_id=&normalization=&validate=false"
+        + "&override_warning=true&check_match=false&import_profile=&apikey="
+        + alma_api_key
     )
-    task_instance.xcom_pull(key=instance_uri, task_ids=temp_file)
-    with open(temp_file, "rb") as f:
-        data = f.read()
-        logger.debug(f"file data: {data}")
-
-        alma_uri = (
+    # post to alma
+    alma_result = requests.post(
+        alma_uri,
+        headers={
+            "Content-Type": "application/xml; charset=utf-8",
+            "Accept": "application/xml",
+            "x-api-key": alma_api_key,
+        },
+        data=data,
+    )
+    logger.debug(f"alma result: {alma_result.status_code}\n{alma_result.text}")
+    result = alma_result.content
+    status = alma_result.status_code
+    if status == 200:
+        xml_response = ET.fromstring(result)
+        mms_id = xml_response.xpath("//mms_id/text()")
+        task_instance.xcom_push(key=instance_uri, value=mms_id)
+    elif status == 400:
+        # run xslt on the result in case the response is 400 and we need to update the record
+        put_mms_id_str = parse_400(result)
+        alma_update_uri = (
             uri_region
-            + "/almaws/v1/bibs?"
-            + "from_nz_mms_id=&from_cz_mms_id=&normalization=&validate=false"
-            + "&override_warning=true&check_match=false&import_profile=&apikey="
+            + "/almaws/v1/bibs/"
+            + put_mms_id_str
+            + "?normalization=&validate=false&override_warning=true"
+            + "&override_lock=true&stale_version_check=false&cataloger_level=&check_match=false"
+            + "&apikey="
             + alma_api_key
         )
-        # post to alma
-        alma_result = requests.post(
-            alma_uri,
-            headers={
-                "Content-Type": "application/xml; charset=utf-8",
-                "Accept": "application/xml",
-                "x-api-key": alma_api_key,
-            },
-            data=data,
+        putWorkToAlma(
+            alma_update_uri,
+            data,
+            task_instance,
+            instance_uri,
+            put_mms_id_str,
         )
-        logger.debug(f"alma result: {alma_result.status_code}\n{alma_result.text}")
-        result = alma_result.content
-        status = alma_result.status_code
-        if status == 200:
-            xml_response = ET.fromstring(result)
-            mms_id = xml_response.xpath("//mms_id/text()")
-            task_instance.xcom_push(key=instance_uri, value=mms_id)
-        elif status == 400:
-            # run xslt on the result in case the response is 400 and we need to update the record
-            put_mms_id_str = parse_400(result)
-            alma_update_uri = (
-                uri_region
-                + "/almaws/v1/bibs/"
-                + put_mms_id_str
-                + "?normalization=&validate=false&override_warning=true"
-                + "&override_lock=true&stale_version_check=false&cataloger_level=&check_match=false"
-                + "&apikey="
-                + alma_api_key
-            )
-            putWorkToAlma(
-                alma_update_uri,
-                data,
-                task_instance,
-                instance_uri,
-            )
-        else:
-            raise Exception(f"Unexpected status code from Alma API: {status}")
+    else:
+        raise Exception(f"Unexpected status code from Alma API: {status}")
 
 
 def putWorkToAlma(
@@ -98,6 +96,7 @@ def putWorkToAlma(
     data,
     task_instance,
     instance_uri,
+    put_mms_id_str,
 ):
     put_update = requests.put(
         alma_update_uri,
@@ -109,12 +108,9 @@ def putWorkToAlma(
     )
     logger.debug(f"put update: {put_update.status_code}\n{put_update.text}")
     put_update_status = put_update.status_code
-    result = put_update.content
-    xml_response = ET.fromstring(result)
-    put_mms_id = xml_response.xpath("//mms_id/text()")
     match put_update_status:
         case 200:
-            task_instance.xcom_push(key=instance_uri, value=put_mms_id)
+            task_instance.xcom_push(key=instance_uri, value=put_mms_id_str)
         case 500:
             raise Exception(f"Internal server error from Alma API: {put_update_status}")
         case _:
