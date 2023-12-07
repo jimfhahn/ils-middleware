@@ -1,6 +1,6 @@
-FROM apache/airflow:2.6.2-python3.11
+FROM apache/airflow:2.7.3-python3.11
 
-ENV POETRY_VERSION=1.1.8
+ENV POETRY_VERSION=1.7
 
 USER root
 RUN apt-get -y update && apt-get -y install git
