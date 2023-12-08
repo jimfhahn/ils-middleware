@@ -89,7 +89,7 @@ def test_NewInstancetoAlma_400(
                 uri_region=test_uri_region(),
                 dag=MockDag,
             )
-        assert "Internal server error from Alma API: 500" in str(e.value)
+        assert "Unexpected status code from Alma API: 400" in str(e.value)
 
 
 def test_NewInstancetoAlma_200(mock_s3_hook, mock_task_instance, mock_env_vars):
