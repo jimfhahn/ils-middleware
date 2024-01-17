@@ -12,6 +12,29 @@ from ils_middleware.tasks.amazon.sqs import SubscribeOperator
 logger = logging.getLogger(__name__)
 
 
+def _parse_institutional_msgs(task_instance) -> list:
+    messages = task_instance.xcom_pull(task_ids="sqs-sensor", key="messages")
+    institutional_messages = []
+    all_institutions = institutions + ["stanford", "cornell"]
+    for row in messages:
+        message = json.loads(row["Body"])
+        if message["group"] in all_institutions:
+            institutional_messages.append(message)
+    return institutional_messages
+
+
+def _trigger_dags(**kwargs):
+    messages = kwargs.get("messages")
+    for message in messages:
+        logger.info(f"Trigger DAG for {message['group']}")
+        # Assumes the DAG name is the same as the group
+        TriggerDagRunOperator(
+            task_id=f"{message['group']}-dag-run",
+            trigger_dag_id=f"{message['group']}",
+            conf={"message": message},
+        ).execute(kwargs)
+
+
 @dag(
     start_date=datetime(2024, 1, 15),
     schedule_interval=timedelta(minutes=5),
@@ -27,26 +50,11 @@ def monitor_institutions_messages():
     @task
     def parse_messages(**kwargs) -> list:
         ti = kwargs["ti"]
-        messages = ti.xcom_pull(task_ids="sqs-sensor", key="messages")
-        institutional_messages = []
-        all_institutions = institutions + ["stanford", "cornell"]
-        for row in messages:
-            message = json.loads(row["Body"])
-            if message["group"] in all_institutions:
-                institutional_messages.append(message)
-        return institutional_messages
+        return _parse_institutional_msgs(ti)
 
     @task
     def trigger_institutional_dags(**kwargs):
-        messages = kwargs.get("messages")
-        for message in messages:
-            logger.info(f"Trigger DAG for {message['group']}")
-            # Assumes the DAG name is the same as the group
-            TriggerDagRunOperator(
-                task_id=f"{message['group']}-dag-run",
-                trigger_dag_id=f"{message['group']}",
-                conf={"message": message},
-            ).execute(kwargs)
+        _trigger_dags(**kwargs)
 
     group_messages = parse_messages()
 
