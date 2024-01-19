@@ -13,7 +13,7 @@ from ils_middleware.tasks.amazon.alma_instance_s3 import (
     get_from_alma_s3,
     send_instance_to_alma_s3,
 )
-from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
+from ils_middleware.tasks.amazon.sqs import parse_messages
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
     notify_and_log,
@@ -23,6 +23,7 @@ from ils_middleware.tasks.sinopia.login import sinopia_login
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 from ils_middleware.tasks.alma.post_bfwork import NewWorktoAlma
 from ils_middleware.tasks.alma.post_bfinstance import NewInstancetoAlma
+from ils_middleware.tasks.general.init import message_from_context
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -66,24 +67,18 @@ for institution in institutions:
         f"{institution}",
         default_args=default_args,
         description=f"{institution} Alma DAG",
-        schedule_interval=timedelta(minutes=5),
         start_date=datetime(2021, 8, 24),
         tags=[f"{institution}-alma"],
         catchup=False,
         on_failure_callback=dag_failure_callback,
     ) as dag:
-        # Monitors SQS for Alma queue(s)
-        # By default, SubscribeOperator will make the message available via XCom: "Get messages from an SQS queue and then
-        # deletes the message from the SQS queue. If deletion of messages fails an AirflowException is thrown otherwise, the
-        # message is pushed through XCom with the key 'messages'."
-        # https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/_api/airflow/providers/amazon/aws/sensors/sqs/index.html
-        listen_sns = SubscribeOperator(queue=f"{institution}-ils")
+        get_messages = PythonOperator(
+            task_id="get-message-from-context", python_callable=message_from_context
+        )
+
         process_message = PythonOperator(
             task_id="sqs-message-parse",
             python_callable=parse_messages,
-            op_kwargs={
-                "raw_sqs_messages": "{{ task_instance.xcom_pull(task_ids='listen_sns', key='messages') }}"
-            },
             dag=dag,
         )
 
@@ -172,11 +167,8 @@ for institution in institutions:
 
     processing_complete = EmptyOperator(task_id="processing_complete", dag=dag)
     messages_received = EmptyOperator(task_id="messages_received", dag=dag)
-    messages_timeout = EmptyOperator(task_id="sqs_timeout", dag=dag)
 
-    listen_sns >> [messages_received, messages_timeout]
-    messages_received >> process_message
+    get_messages >> messages_received >> process_message
     process_message >> alma_task_group >> processed_sinopia
     processed_sinopia >> sinopia_update_group >> notify_sinopia_updated
     notify_sinopia_updated >> processing_complete
-    messages_timeout >> processing_complete
