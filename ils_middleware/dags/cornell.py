@@ -7,7 +7,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
-from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
+from ils_middleware.tasks.amazon.sqs import parse_messages
 from ils_middleware.tasks.folio.build import build_records
 from ils_middleware.tasks.folio.graph import construct_graph
 from ils_middleware.tasks.folio.login import FolioLogin
@@ -19,6 +19,7 @@ from ils_middleware.tasks.sinopia.email import (
     notify_and_log,
     send_update_success_emails,
 )
+from ils_middleware.tasks.general.init import message_from_context
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -44,14 +45,14 @@ with DAG(
     "cornell",
     default_args=default_args,
     description="Cornell FOLIO DAG",
-    schedule_interval=timedelta(minutes=5),
     start_date=datetime(2021, 8, 14),
     tags=["folio"],
     catchup=False,
 ) as dag:
 
-    # Monitors Cornell's SQS ILS
-    listen_sns = SubscribeOperator(queue="cornell-ils")
+    get_messages = PythonOperator(
+        task_id="get-message-from-context", python_callable=message_from_context
+    )
 
     process_message = PythonOperator(
         task_id="sqs-message-parse",
@@ -144,18 +145,15 @@ with DAG(
 
     # Dummy Operators
     messages_received = DummyOperator(task_id="messages_received", dag=dag)
-    messages_timeout = DummyOperator(task_id="sqs_timeout", dag=dag)
     processing_complete = DummyOperator(task_id="processing_complete", dag=dag)
     processed_sinopia = DummyOperator(
         task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"
     )
 
 
-listen_sns >> [messages_received, messages_timeout]
-messages_received >> process_message
+get_messages >> messages_received >> process_message
 process_message >> bf_graphs >> folio_map_task_group
 folio_map_task_group >> [folio_records, folio_login] >> new_folio_records
 new_folio_records >> processed_sinopia >> sinopia_update_group
 sinopia_update_group >> notify_sinopia_updated
 notify_sinopia_updated >> processing_complete
-messages_timeout >> processing_complete
