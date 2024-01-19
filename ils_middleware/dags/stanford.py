@@ -2,12 +2,12 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
 from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
-from ils_middleware.tasks.amazon.sqs import SubscribeOperator, parse_messages
+from ils_middleware.tasks.amazon.sqs import parse_messages
 
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
 from ils_middleware.tasks.sinopia.email import (
@@ -26,6 +26,7 @@ from ils_middleware.tasks.folio.login import FolioLogin
 from ils_middleware.tasks.folio.graph import construct_graph
 from ils_middleware.tasks.folio.map import FOLIO_FIELDS, map_to_folio
 from ils_middleware.tasks.folio.new import post_folio_records
+from ils_middleware.tasks.general.init import message_from_context
 
 
 def task_failure_callback(ctx_dict) -> None:
@@ -53,18 +54,15 @@ with DAG(
     "stanford",
     default_args=default_args,
     description="Stanford Symphony and FOLIO DAG",
-    schedule_interval=timedelta(minutes=5),
     start_date=datetime(2021, 8, 24),
     tags=["symphony", "folio"],
     catchup=False,
     on_failure_callback=dag_failure_callback,
 ) as dag:
-    # Monitors SQS for Stanford queue
-    # By default, SubscribeOperator will make the message available via XCom: "Get messages from an SQS queue and then
-    # deletes the message from the SQS queue. If deletion of messages fails an AirflowException is thrown otherwise, the
-    # message is pushed through XCom with the key 'messages'."
-    # https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/_api/airflow/providers/amazon/aws/sensors/sqs/index.html
-    listen_sns = SubscribeOperator(queue="stanford-ils")
+
+    get_messages = PythonOperator(
+        task_id="get-message-from-context", python_callable=message_from_context
+    )
 
     process_message = PythonOperator(
         task_id="sqs-message-parse",
@@ -213,7 +211,7 @@ with DAG(
         folio_map_task_group >> [folio_records, folio_login] >> new_folio_records
 
     # Dummy Operator
-    processed_sinopia = DummyOperator(
+    processed_sinopia = EmptyOperator(
         task_id="processed_sinopia", dag=dag, trigger_rule="none_failed"
     )
 
@@ -254,18 +252,14 @@ with DAG(
         python_callable=send_notification_emails,
     )
 
-    processing_complete = DummyOperator(
+    processing_complete = EmptyOperator(
         task_id="processing_complete", dag=dag, trigger_rule="one_success"
     )
-    messages_received = DummyOperator(task_id="messages_received", dag=dag)
-    messages_timeout = DummyOperator(
-        task_id="sqs_timeout", dag=dag, trigger_rule="all_failed"
-    )
+    messages_received = EmptyOperator(task_id="messages_received", dag=dag)
 
 
-listen_sns >> [messages_received, messages_timeout]
+get_messages >> messages_received
 messages_received >> process_message
 process_message >> [symphony_task_group, folio_task_group] >> processed_sinopia
 processed_sinopia >> sinopia_update_group >> notify_sinopia_updated
 notify_sinopia_updated >> processing_complete
-messages_timeout >> processing_complete
