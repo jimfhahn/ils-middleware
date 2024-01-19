@@ -1,6 +1,5 @@
 """Custom Operator using AWS SQSSensor."""
 import logging
-import json
 
 import requests  # type: ignore
 
@@ -35,29 +34,28 @@ def get_resource(resource_uri: str) -> dict:
 
 
 def parse_messages(**kwargs) -> str:
-    """Parses SQS Message Body into constituent part."""
+    """Parses and checks for existing resource in message."""
     task_instance = kwargs["task_instance"]
-    raw_sqs_messages = task_instance.xcom_pull(key="messages", task_ids="sqs-sensor")
+    message = task_instance.xcom_pull(task_ids="get-message-from-context")
 
     resources = []
     resources_with_errors = []
-    for message in raw_sqs_messages:
-        message_body = json.loads(message.get("Body"))
-        resource_uri = message_body["resource"]["uri"]
-        try:
-            resources.append(resource_uri)
-            task_instance.xcom_push(
-                key=resource_uri,
-                value={
-                    "email": message_body["user"]["email"],
-                    "group": message_body["group"],
-                    "target": message_body["target"],
-                    "resource_uri": resource_uri,
-                    "resource": get_resource(resource_uri),
-                },
-            )
-        except KeyError:
-            resources_with_errors.append(resource_uri)
+
+    resource_uri = message["resource"]["uri"]
+    try:
+        task_instance.xcom_push(
+            key=resource_uri,
+            value={
+                "email": message["user"]["email"],
+                "group": message["group"],
+                "target": message["target"],
+                "resource_uri": resource_uri,
+                "resource": get_resource(resource_uri),
+            },
+        )
+        resources.append(resource_uri)
+    except KeyError:
+        resources_with_errors.append(resource_uri)
 
     task_instance.xcom_push(key="resources", value=resources)
     task_instance.xcom_push(key="bad_resources", value=resources_with_errors)

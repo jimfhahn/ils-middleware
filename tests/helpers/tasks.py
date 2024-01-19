@@ -277,6 +277,8 @@ def mock_task_instance(monkeypatch, tmp_path):
                 "https://api.development.sinopia.io/resource/0000-1111-2222-3333",
                 "https://api.development.sinopia.io/resource/4444-5555-6666-7777",
             ]
+        elif task_ids == "get-message-from-context":
+            return json.loads(mock_message()[0]["Body"])
         elif key == "messages":
             return mock_message()
         elif key in mock_resources and task_ids == "sqs-message-parse":
