@@ -1,4 +1,5 @@
 """Test AWS SQS Operators and functions."""
+import json
 
 import pytest
 import requests  # type: ignore
@@ -14,7 +15,7 @@ from ils_middleware.tasks.amazon.sqs import (
     get_resource,
 )
 
-from tasks import test_task_instance, mock_task_instance  # noqa: F401
+from tasks import test_task_instance, mock_message, mock_task_instance  # noqa: F401
 
 
 @pytest.fixture
@@ -96,21 +97,48 @@ def mock_get_resource(monkeypatch):
 
 
 def test_parse_messages(
-    test_dag,
     mock_task_instance,  # noqa: F811
-    mock_variable,
     mock_get_resource,
     mock_resources,  # noqa: F811
 ):
     """Test parse_messages function."""
-    result = parse_messages(task_instance=test_task_instance())
+    task_instance = test_task_instance()
+    result = parse_messages(task_instance=task_instance)
     assert result == "completed_parse"
-    for resource in mock_resources:
-        assert test_task_instance().xcom_pull(key=resource).get(
-            "resource"
-        ) == mock_resource(resource)
 
-    assert len(test_task_instance().xcom_pull(key="bad_resources")) == 1
+    resource = mock_resources[0]
+    assert task_instance.xcom_pull(key=resource).get("resource") == mock_resource(
+        resource
+    )
+
+
+@pytest.fixture
+def mock_task_instance_bad_resource(mocker, mock_resources):
+    def mock_xcom_pull(**kwargs):
+        if kwargs.get("task_ids", "") == "get-message-from-context":
+            return json.loads(mock_message()[2]["Body"])
+        return messages[kwargs["key"]]
+
+    def mock_xcom_push(**kwargs):
+        messages[kwargs["key"]] = kwargs["value"]
+
+    messages = {}
+    mock_test_instance = mocker.MagicMock()
+    mock_test_instance.xcom_pull = mock_xcom_pull
+    mock_test_instance.xcom_push = mock_xcom_push
+    return mock_test_instance
+
+
+def test_parse_messages_bad_resources(
+    mocker,
+    mock_get_resource,
+    mock_task_instance_bad_resource,
+    mock_resources,  # noqa: F811
+):
+
+    parse_messages(task_instance=mock_task_instance_bad_resource)
+
+    assert len(mock_task_instance_bad_resource.xcom_pull(key="bad_resources")) == 1
 
 
 def test_get_resource(mock_get_resource):
