@@ -25,7 +25,7 @@ Based on the documentation, [Running Airflow in Docker](https://airflow.apache.o
 AWS_ACCESS_KEY_ID=999999 AWS_SECRET_ACCESS_KEY=1231 aws sqs \
     --endpoint-url=http://localhost:4566 create-queue \
     --region us-west-2 \
-    --queue-name stanford-ils
+    --queue-name all-instituions
 ```
 
 ### Setup the local AWS connection for SQS
@@ -46,7 +46,7 @@ In order to test a dag locally, a message must be sent to the above queue:
 AWS_ACCESS_KEY_ID=999999 AWS_SECRET_ACCESS_KEY=1231 aws sqs \
     send-message \
     --endpoint-url=http://localhost:4566 \
-    --queue-url https://localhost:4566/000000000000/stanford-ils \
+    --queue-url https://localhost:4566/000000000000/all-institutions \
     --message-body file://tests/fixtures/sqs/test-message.json
 ```
 
