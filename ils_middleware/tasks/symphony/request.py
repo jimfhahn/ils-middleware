@@ -1,4 +1,5 @@
 """Request function for Symphony Web Services"""
+
 import logging
 import requests  # type: ignore
 

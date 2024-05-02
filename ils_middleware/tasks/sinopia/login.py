@@ -1,4 +1,5 @@
 """Sinopia Login to generate a Cognito JWT."""
+
 import boto3
 from airflow.models import Variable
 
