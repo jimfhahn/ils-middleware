@@ -1,4 +1,5 @@
 """New Record in Symphony"""
+
 import json
 
 from ils_middleware.tasks.symphony.request import SymphonyRequest

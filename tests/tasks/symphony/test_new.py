@@ -1,6 +1,5 @@
 """Tests new MARC record in Symphony task."""
 
-
 import pytest
 import requests  # type: ignore
 

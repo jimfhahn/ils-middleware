@@ -1,4 +1,5 @@
 """Symphony Login."""
+
 import json
 
 from ils_middleware.tasks.symphony.request import SymphonyRequest

@@ -3,6 +3,7 @@ inventory-storage batch endpoint with upsert query parameter set to true.
 
 See https://s3.amazonaws.com/foliodocs/api/mod-inventory-storage/p/instance-sync.html
 """
+
 import logging
 
 import requests

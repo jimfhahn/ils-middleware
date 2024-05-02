@@ -1,4 +1,5 @@
 """POST Instance to Alma API"""
+
 import logging
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook

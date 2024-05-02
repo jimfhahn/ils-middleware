@@ -1,4 +1,5 @@
 """Test FOLIO Mapping from Sinopia."""
+
 import pytest
 import rdflib
 

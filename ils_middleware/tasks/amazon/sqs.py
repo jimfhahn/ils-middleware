@@ -1,4 +1,5 @@
 """Custom Operator using AWS SQSSensor."""
+
 import logging
 
 import requests  # type: ignore

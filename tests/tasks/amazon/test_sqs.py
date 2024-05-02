@@ -1,4 +1,5 @@
 """Test AWS SQS Operators and functions."""
+
 import json
 
 import pytest
