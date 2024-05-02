@@ -1,4 +1,5 @@
 """Tests functions for modifying JSON to Symphony JSON."""
+
 from ils_middleware.tasks.symphony.mod_json import to_symphony_json
 
 from tasks import test_task_instance, mock_task_instance  # noqa: F401

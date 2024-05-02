@@ -1,4 +1,5 @@
 """Test the AWS S3 tasks properly name and load files."""
+
 import json
 import pytest
 from unittest import mock

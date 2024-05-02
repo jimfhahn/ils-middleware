@@ -1,4 +1,5 @@
 """Test Sinopia email notification sending."""
+
 import pytest
 from pytest_mock import MockerFixture
 from datetime import datetime

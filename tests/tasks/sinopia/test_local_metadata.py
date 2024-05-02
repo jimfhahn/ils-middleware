@@ -1,4 +1,5 @@
 """Test Sinopia LocalAdminMetadata"""
+
 import uuid
 
 import pytest
