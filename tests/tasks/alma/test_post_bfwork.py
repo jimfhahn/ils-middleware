@@ -1,4 +1,5 @@
 """Tests alma Post BF Work"""
+
 import pytest
 from tasks import (
     mock_task_instance,
@@ -19,8 +20,8 @@ from ils_middleware.tasks.alma.post_bfwork import (
 
 # Define the mock variable
 mock_variable_getter = Mock()
-mock_variable_getter.side_effect = (
-    lambda x: "your_value"
+mock_variable_getter.side_effect = lambda x: (
+    "your_value"
     if x in ["alma_uri_region_penn", "uri_region", "alma_api_key"]
     else None
 )
@@ -126,8 +127,8 @@ def test_NewWorktoAlma_post_request(mocker: MockerFixture):
 
     # Mock the get_env_vars function
     mock_get_env_vars = Mock()
-    mock_get_env_vars.side_effect = (
-        lambda x: ("uri_region", "alma_api_key") if x == "penn" else (None, None)
+    mock_get_env_vars.side_effect = lambda x: (
+        ("uri_region", "alma_api_key") if x == "penn" else (None, None)
     )
     mocker.patch(
         "ils_middleware.tasks.alma.post_bfwork.get_env_vars", new=mock_get_env_vars
@@ -148,8 +149,8 @@ def test_NewWorktoAlma_post_request(mocker: MockerFixture):
 
     # Mock the Variable.get method
     mock_variable_getter = Mock()
-    mock_variable_getter.side_effect = (
-        lambda x: "bucket_name" if x == "marc_s3_bucket" else None
+    mock_variable_getter.side_effect = lambda x: (
+        "bucket_name" if x == "marc_s3_bucket" else None
     )
     mocker.patch("airflow.models.Variable.get", new=mock_variable_getter)
 

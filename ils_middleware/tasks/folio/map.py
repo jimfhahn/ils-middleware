@@ -1,4 +1,5 @@
 """Maps Sinopia RDF to FOLIO Records."""
+
 import logging
 
 import rdflib

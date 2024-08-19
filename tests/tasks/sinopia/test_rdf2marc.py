@@ -1,4 +1,5 @@
 """Test Symphony Operators and functions."""
+
 import io
 import pytest
 

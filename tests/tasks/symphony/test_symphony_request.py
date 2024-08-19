@@ -1,4 +1,5 @@
 """Tests Symphony Request"""
+
 import pytest
 import requests  # type: ignore
 

@@ -1,4 +1,5 @@
 """Sinopia Operators and Functions for email notifications."""
+
 from airflow.providers.amazon.aws.hooks.ses import SESHook
 
 import logging

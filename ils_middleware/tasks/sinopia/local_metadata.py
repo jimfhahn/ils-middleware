@@ -1,4 +1,5 @@
 """Adds Sinopia localAdminMetadata record."""
+
 import json
 import datetime
 import logging
