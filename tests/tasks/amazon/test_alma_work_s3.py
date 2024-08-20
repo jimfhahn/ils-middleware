@@ -24,7 +24,7 @@ def test_send_work_to_alma_s3(
     mock_task_instance = Mock()
     ssl._create_default_https_context = ssl._create_unverified_context
     mock_task_instance.xcom_pull.return_value = [
-        "https://api.development.sinopia.io/resource/7d6626a9-45ca-46b7-ba1e-47c322998403"
+        "https://api.stage.sinopia.io/resource/2b09bb49-549d-4851-9a52-5feb0abc0843"
     ]
     mock_graph_instance = mock_graph.return_value
     mock_graph_instance.serialize.return_value = b"<test></test>"
