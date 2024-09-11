@@ -6,7 +6,6 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
-from ils_middleware.tasks.amazon.s3 import get_from_s3, send_to_s3
 from ils_middleware.tasks.amazon.sqs import parse_messages
 
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
@@ -15,14 +14,7 @@ from ils_middleware.tasks.sinopia.email import (
     send_notification_emails,
 )
 from ils_middleware.tasks.sinopia.login import sinopia_login
-from ils_middleware.tasks.sinopia.metadata_check import existing_metadata_check
-from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
-from ils_middleware.tasks.symphony.login import SymphonyLogin
-from ils_middleware.tasks.symphony.new import NewMARCtoSymphony
-from ils_middleware.tasks.symphony.mod_json import to_symphony_json
-from ils_middleware.tasks.symphony.overlay import overlay_marc_in_symphony
 from ils_middleware.tasks.folio.build import build_records
-from ils_middleware.tasks.folio.login import FolioLogin
 from ils_middleware.tasks.folio.graph import construct_graph
 from ils_middleware.tasks.folio.map import FOLIO_FIELDS, map_to_folio
 from ils_middleware.tasks.folio.new import post_folio_records
@@ -69,104 +61,7 @@ with DAG(
         python_callable=parse_messages,
     )
 
-    with TaskGroup(group_id="process_symphony") as symphony_task_group:
-        run_rdf2marc = PythonOperator(
-            task_id="rdf2marc",
-            python_callable=Rdf2Marc,
-            op_kwargs={
-                "rdf2marc_lambda": Variable.get("rdf2marc_lambda"),
-                "s3_bucket": Variable.get("marc_s3_bucket"),
-            },
-        )
-
-        download_marc = PythonOperator(
-            task_id="download_marc",
-            python_callable=get_from_s3,
-        )
-
-        export_marc_json = PythonOperator(
-            task_id="marc_json_to_s3",
-            python_callable=send_to_s3,
-        )
-
-        convert_to_symphony_json = PythonOperator(
-            task_id="convert_to_symphony_json",
-            python_callable=to_symphony_json,
-        )
-
-        # Symphony Dev Server Settings
-        library_key = "GREEN"
-        home_location = "STACKS"
-        symphony_app_id = Variable.get("symphony_app_id")
-        symphony_client_id = "SymWSStaffClient"
-        symphony_conn_id = "stanford_symphony_connection"
-        # This could be mapped from the Instance RDF template
-        symphony_item_type = "STKS-MONO"
-
-        symphony_login = PythonOperator(
-            task_id="symphony-login",
-            python_callable=SymphonyLogin,
-            op_kwargs={
-                "app_id": symphony_app_id,
-                "client_id": symphony_client_id,
-                "conn_id": symphony_conn_id,
-                "url": Variable.get("stanford_symphony_auth_url"),
-                "login": Variable.get("stanford_symphony_login"),
-                "password": Variable.get("stanford_symphony_password"),
-            },
-        )
-
-        new_or_overlay = PythonOperator(
-            task_id="new-or-overlay",
-            python_callable=existing_metadata_check,
-        )
-
-        symphony_add_record = PythonOperator(
-            task_id="post_new_symphony",
-            python_callable=NewMARCtoSymphony,
-            op_kwargs={
-                "app_id": symphony_app_id,
-                "client_id": symphony_client_id,
-                "conn_id": symphony_conn_id,
-                "home_location": home_location,
-                "item_type": symphony_item_type,
-                "library_key": library_key,
-                "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='process_symphony.symphony-login')}}",
-            },
-        )
-
-        symphony_overlay_record = PythonOperator(
-            task_id="post_overlay_symphony",
-            python_callable=overlay_marc_in_symphony,
-            op_kwargs={
-                "app_id": symphony_app_id,
-                "client_id": symphony_client_id,
-                "conn_id": symphony_conn_id,
-                "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='process_symphony.symphony-login')}}",
-            },
-        )
-
-        (
-            run_rdf2marc
-            >> download_marc
-            >> export_marc_json
-            >> convert_to_symphony_json
-            >> symphony_login
-            >> new_or_overlay
-            >> [symphony_add_record, symphony_overlay_record]
-        )
-
     with TaskGroup(group_id="process_folio") as folio_task_group:
-        folio_login = PythonOperator(
-            task_id="folio-login",
-            python_callable=FolioLogin,
-            op_kwargs={
-                "url": Variable.get("stanford_folio_auth_url"),
-                "username": Variable.get("stanford_folio_login"),
-                "password": Variable.get("stanford_folio_password"),
-                "tenant": "sul",
-            },
-        )
 
         bf_graphs = PythonOperator(task_id="bf-graph", python_callable=construct_graph)
 
@@ -186,10 +81,7 @@ with DAG(
             python_callable=build_records,
             op_kwargs={
                 "task_groups_ids": ["process_folio", "folio_mapping"],
-                "folio_url": Variable.get("stanford_folio_url"),
-                "username": Variable.get("stanford_folio_login"),
-                "password": Variable.get("stanford_folio_password"),
-                "tenant": "sul",
+                "folio_connection_id": "stanford_folio",
             },
         )
 
@@ -197,18 +89,15 @@ with DAG(
             task_id="new-or-upsert-folio-records",
             python_callable=post_folio_records,
             op_kwargs={
-                "folio_url": Variable.get("stanford_folio_url"),
-                "endpoint": "/instance-storage/batch/synchronous?upsert=true",
-                "tenant": "sul",
+                "folio_connection_id": "stanford_folio",
                 "task_groups_ids": [
                     "process_folio",
                 ],
-                "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='process_folio.folio-login')}}",
             },
         )
 
         bf_graphs >> folio_map_task_group
-        folio_map_task_group >> [folio_records, folio_login] >> new_folio_records
+        folio_map_task_group >> folio_records >> new_folio_records
 
     # Dummy Operator
     processed_sinopia = EmptyOperator(
@@ -234,10 +123,6 @@ with DAG(
             op_kwargs={
                 "jwt": "{{ task_instance.xcom_pull(task_ids='update_sinopia.sinopia-login', key='return_value') }}",
                 "ils_tasks": {
-                    "SIRSI": [
-                        "process_symphony.post_new_symphony",
-                        "process_symphony.post_overlay_symphony",
-                    ],
                     "FOLIO": ["process_folio.new-or-upsert-folio-records"],
                 },
             },
@@ -260,6 +145,6 @@ with DAG(
 
 get_messages >> messages_received
 messages_received >> process_message
-process_message >> [symphony_task_group, folio_task_group] >> processed_sinopia
+process_message >> folio_task_group >> processed_sinopia
 processed_sinopia >> sinopia_update_group >> notify_sinopia_updated
 notify_sinopia_updated >> processing_complete

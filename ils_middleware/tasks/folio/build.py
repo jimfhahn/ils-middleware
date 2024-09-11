@@ -4,9 +4,10 @@ SPARQL queries run on BF Instance and Work RDF graphs from Sinopia."""
 import datetime
 import logging
 
-from folio_uuid import FOLIONamespaces, FolioUUID
-from folioclient.FolioClient import FolioClient
+from airflow.models.connection import Connection
 
+from folioclient import FolioClient
+from folio_uuid import FOLIONamespaces, FolioUUID
 
 from ils_middleware.tasks.folio.map import FOLIO_FIELDS
 
@@ -56,6 +57,25 @@ def _primary_contributor(**kwargs) -> tuple:
 def _folio_id(resource_uri: str, okapi_url: str) -> str:
     folio_id = FolioUUID(okapi_url, FOLIONamespaces.instances, resource_uri)
     return str(folio_id)
+
+
+def _electronic_access(**kwargs) -> dict:
+    folio_client = kwargs["folio_client"]
+    sinopia_url = kwargs["instance_uri"]
+
+    output = {}
+    relationship_id = None
+    for row in folio_client.folio_get(
+        "/electronic-access-relationships", key="electronicAccessRelationships"
+    ):
+        if row["name"] == "Resource":
+            relationship_id = row["id"]
+            break
+
+    if relationship_id is not None:
+        output = {"uri": sinopia_url, "relationshipId": relationship_id}
+
+    return output
 
 
 def _identifiers(**kwargs) -> tuple:
@@ -233,10 +253,10 @@ transforms = {
 
 
 def _create_update_metadata(**kwargs) -> dict:
-    okapi_url = kwargs["folio_url"]
-    folio_user = kwargs["username"]
+    folio_client = kwargs["folio_client"]
+
     current_timestamp = datetime.datetime.utcnow().isoformat()
-    user_uuid = _user_folio_id(okapi_url, folio_user)
+    user_uuid = _user_folio_id(folio_client.okapi_url, folio_client.username)
     metadata = kwargs.get("metadata", {})
     if len(metadata) < 1:
         metadata = {
@@ -260,15 +280,13 @@ def _inventory_record(**kwargs) -> dict:
     instance_uri = kwargs["instance_uri"]
     task_instance = kwargs["task_instance"]
     task_groups = ".".join(kwargs["task_groups_ids"])
-    okapi_url = kwargs["folio_url"]
-    folio_user = kwargs["username"]
     folio_client = kwargs["folio_client"]
 
     record = {
-        "id": _folio_id(instance_uri, okapi_url),
-        "hrid": instance_uri,
+        "id": _folio_id(instance_uri, folio_client.okapi_url),
         "metadata": _create_update_metadata(**kwargs),
         "source": "SINOPIA",
+        "electronicAccess": [_electronic_access(**kwargs)],
     }
     for folio_field in FOLIO_FIELDS:
         post_processing = transforms.get(folio_field, _default_transform)
@@ -277,9 +295,9 @@ def _inventory_record(**kwargs) -> dict:
         if raw_values:
             record_field, values = post_processing(
                 values=raw_values,
-                okapi_url=okapi_url,
+                okapi_url=folio_client.okapi_url,
                 folio_field=folio_field,
-                folio_user=folio_user,
+                folio_user=folio_client.username,
                 folio_client=folio_client,
                 record=record,
             )
@@ -292,8 +310,15 @@ def _inventory_record(**kwargs) -> dict:
 def build_records(**kwargs):
     """ """
     task_instance = kwargs["task_instance"]
+    connection_id = kwargs["folio_connection_id"]
+
+    connection = Connection.get_connection_from_secrets(connection_id)
+
     folio_client = FolioClient(
-        kwargs["folio_url"], kwargs["tenant"], kwargs["username"], kwargs["password"]
+        connection.host,
+        connection.extra_dejson["tenant"],
+        connection.login,
+        connection.password,
     )
 
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
