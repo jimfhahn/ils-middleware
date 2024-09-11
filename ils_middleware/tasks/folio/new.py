@@ -29,6 +29,7 @@ def _check_for_existance(records: list, folio_client: FolioClient) -> tuple:
             record["hrid"] = existing_record["hrid"]
             record["_version"] = existing_record["_version"]
             existing_records.append(record)
+
     return new_records, existing_records
 
 
@@ -101,6 +102,5 @@ def post_folio_records(**kwargs):
     new_records, existing_records = _check_for_existance(
         inventory_records, folio_client
     )
-    logger.error(f"New records {new_records} Existing records {existing_records}")
     _post_to_okapi(records=new_records, folio_client=folio_client, **kwargs)
     _put_to_okapi(records=existing_records, folio_client=folio_client, **kwargs)
