@@ -1,6 +1,6 @@
 import pytest
 import json
-import requests
+import requests  # type: ignore
 from datetime import datetime
 
 from pytest_mock import MockerFixture

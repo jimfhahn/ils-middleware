@@ -2,7 +2,7 @@ import json
 import logging
 
 import rdflib
-import requests
+import requests  # type: ignore
 
 logger = logging.getLogger(__name__)
 
