@@ -50,7 +50,7 @@ def send_task_failure_notifications(**kwargs) -> None:
     failed_resources = task_instance.xcom_pull(
         key="conversion_failures", task_ids="process_symphony.rdf2marc"
     )
-    for resource_uri in failed_resources:
+    for resource_uri in failed_resources or []:
         message = task_instance.xcom_pull(
             key=resource_uri, task_ids="sqs-message-parse"
         )
