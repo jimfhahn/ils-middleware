@@ -1,12 +1,17 @@
 import datetime
+import json
 
 from unittest.mock import MagicMock
 
 import pytest
 
+from airflow.models import Connection
+
 from tasks import test_task_instance  # noqa: F401
 from tasks import mock_requests_okapi  # noqa: F401
 from tasks import mock_task_instance  # noqa: F401
+from tasks import folio_properties
+
 
 import ils_middleware.tasks.folio.build as folio_build
 
@@ -41,6 +46,8 @@ def mock_variable(monkeypatch):
 
 class MockFolioClient(object):
     def __init__(self, *args):
+        self.okapi_url = okapi_uri
+        self.username = "folio_user"
         self.contributor_types = [
             {"id": "6e09d47d-95e2-4d8a-831b-f777b8ef6d81", "name": "Author"}
         ]
@@ -72,32 +79,72 @@ class MockFolioClient(object):
             {"id": "6a2533a7-4de2-4e64-8466-074c2fa9308c", "name": "General note"},
         ]
 
+    def folio_get(self, *args, **kwargs):
+        get_response = MagicMock()
+        get_response.status_code = 200
+        get_response.text = json.dumps(folio_properties)
+        if args[0].endswith("electronic-access-relationships"):
+            return [{"name": "Resource", "id": "d2f38edc-b225-4cb4-a412-734d8bbbc855"}]
+        return get_response
+
+    def folio_put(self, *args, **kwargs):
+        put_response = MagicMock()
+        put_response.status_code = 201
+        put_response.text = ""
+        put_response.raise_for_status = lambda: None
+        return put_response
+
+    def folio_post(self, *args, **kwargs):
+        post_response = MagicMock()
+        post_response.status_code = 201
+        post_response.headers = {"x-okapi-token": "some_jwt_token"}
+        post_response.raise_for_status = lambda: None
+
+        return post_response
+
 
 @pytest.fixture
 def mock_folio_client(monkeypatch):
     monkeypatch.setattr(folio_build, "FolioClient", MockFolioClient)
 
 
+@pytest.fixture
+def mock_airflow_connection():
+    return Connection(
+        conn_id="stanford_folio",
+        conn_type="http",
+        host=okapi_uri,
+        login="folio_user",
+        password="pass",
+        extra={"tenant": "sul "},
+    )
+
+
 def test_happypath_build_records(
+    mocker,
+    mock_airflow_connection,
     mock_folio_client,  # noqa: F811
     mock_requests_okapi,  # noqa: F811
     mock_task_instance,  # noqa: F811
 ):  # noqa: F811
 
+    mocker.patch(
+        "ils_middleware.tasks.folio.build.Connection.get_connection_from_secrets",
+        return_value=mock_airflow_connection,
+    )
+
     build_records(
         task_instance=test_task_instance(),  #
         task_groups_ids=[],
         folio_url=okapi_uri,
-        username="test_user",
-        password="asdfdsfa",
-        tenant="sul",
+        folio_connection_id="stanford_folio",
     )
     record = test_task_instance().xcom_pull(key=instance_uri)
 
-    assert record["hrid"].startswith(instance_uri)
     assert record["metadata"]["createdByUserId"].startswith(
-        "21eaac74-1b29-5546-a13b-bc2e7e4717c6"
+        "faecc486-50f1-5082-a6d0-5e967e6f4786"
     )
+    assert record["electronicAccess"][0]["uri"].startswith(instance_uri)
     assert record["title"] == "Great force"
 
 
@@ -171,10 +218,8 @@ def test_inventory_record(mock_task_instance):  # noqa: F811
         task_groups_ids=[""],
         folio_url=okapi_uri,
         folio_client=MockFolioClient(),
-        username="test_user",
-        tenant="sul",
     )
-    assert record["hrid"].startswith(instance_uri)
+    assert record["electronicAccess"][0]["uri"].startswith(instance_uri)
 
 
 def test_inventory_record_existing_metadata(
@@ -193,7 +238,7 @@ def test_inventory_record_existing_metadata(
         folio_client=MockFolioClient(),
         metadata=metadata,
     )
-    assert record["hrid"].startswith(instance_uri)
+    assert record["electronicAccess"][0]["uri"].startswith(instance_uri)
     assert record["metadata"]["createdDate"].startswith("2021-12-06T15:45:28.140795")
 
 

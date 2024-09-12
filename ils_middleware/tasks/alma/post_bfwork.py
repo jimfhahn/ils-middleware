@@ -4,7 +4,7 @@ import logging
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from urllib.parse import urlparse
-import requests
+import requests  # type: ignore
 import lxml.etree as ET
 
 

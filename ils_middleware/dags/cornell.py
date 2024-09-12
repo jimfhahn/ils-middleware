@@ -11,7 +11,6 @@ from airflow.utils.task_group import TaskGroup
 from ils_middleware.tasks.amazon.sqs import parse_messages
 from ils_middleware.tasks.folio.build import build_records
 from ils_middleware.tasks.folio.graph import construct_graph
-from ils_middleware.tasks.folio.login import FolioLogin
 from ils_middleware.tasks.folio.map import FOLIO_FIELDS, map_to_folio
 from ils_middleware.tasks.folio.new import post_folio_records
 from ils_middleware.tasks.sinopia.local_metadata import new_local_admin_metadata
@@ -60,17 +59,6 @@ with DAG(
         python_callable=parse_messages,
     )
 
-    folio_login = PythonOperator(
-        task_id="folio-login",
-        python_callable=FolioLogin,
-        op_kwargs={
-            "url": Variable.get("cornell_folio_auth_url"),
-            "username": Variable.get("cornell_folio_login"),
-            "password": Variable.get("cornell_folio_password"),
-            "tenant": "cul",
-        },
-    )
-
     bf_graphs = PythonOperator(task_id="bf-graph", python_callable=construct_graph)
 
     with TaskGroup(group_id="folio_mapping") as folio_map_task_group:
@@ -89,10 +77,7 @@ with DAG(
         python_callable=build_records,
         op_kwargs={
             "task_groups": ["folio_mapping"],
-            "folio_url": Variable.get("cornell_folio_url"),
-            "username": Variable.get("cornell_folio_login"),
-            "password": Variable.get("cornell_folio_password"),
-            "tenant": "cul",
+            "folio_connection_id": "cornell_folio",
             "task_groups_ids": ["folio_mapping"],
         },
     )
@@ -101,11 +86,8 @@ with DAG(
         task_id="new-or-upsert-folio-records",
         python_callable=post_folio_records,
         op_kwargs={
-            "folio_url": Variable.get("cornell_folio_url"),
-            "endpoint": "/instance-storage/batch/synchronous?upsert=true",
-            "tenant": "cul",
             "task_groups_ids": [""],
-            "token": "{{ task_instance.xcom_pull(key='return_value', task_ids='folio-login')}}",
+            "folio_connection_id": "cornell_folio",
         },
     )
 
@@ -154,7 +136,7 @@ with DAG(
 
 get_messages >> messages_received >> process_message
 process_message >> bf_graphs >> folio_map_task_group
-folio_map_task_group >> [folio_records, folio_login] >> new_folio_records
+folio_map_task_group >> folio_records >> new_folio_records
 new_folio_records >> processed_sinopia >> sinopia_update_group
 sinopia_update_group >> notify_sinopia_updated
 notify_sinopia_updated >> processing_complete

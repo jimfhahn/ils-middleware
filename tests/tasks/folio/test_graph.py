@@ -1,5 +1,5 @@
 import pytest
-import requests
+import requests  # type: ignore
 
 from pytest_mock import MockerFixture
 from airflow.models.taskinstance import TaskInstance
