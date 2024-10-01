@@ -5,18 +5,18 @@ import logging
 import requests  # type: ignore
 
 from airflow.models import Variable
-from airflow.providers.amazon.aws.sensors.sqs import SQSSensor
+from airflow.providers.amazon.aws.sensors.sqs import SqsSensor
 
 logger = logging.getLogger(__name__)
 
 
 # Should return aws_sqs_sensor operator
 # https://airflow.apache.org/docs/apache-airflow/1.10.12/_api/airflow/contrib/sensors/aws_sqs_sensor/index.html
-def SubscribeOperator(**kwargs) -> SQSSensor:
+def SubscribeOperator(**kwargs) -> SqsSensor:
     """Subscribe to a topic to filter SQS messages."""
     queue_name = kwargs.get("queue", "")
     aws_sqs_url = Variable.get("sqs_url")
-    return SQSSensor(
+    return SqsSensor(
         aws_conn_id="aws_sqs_connection",
         sqs_queue=f"{aws_sqs_url}{queue_name}",
         task_id="sqs-sensor",

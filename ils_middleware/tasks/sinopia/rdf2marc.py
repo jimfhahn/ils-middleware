@@ -3,7 +3,7 @@ import json
 from urllib.parse import urlparse
 from os import path
 
-from airflow.providers.amazon.aws.hooks.lambda_function import AwsLambdaHook
+from airflow.providers.amazon.aws.hooks.lambda_function import LambdaHook
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +27,7 @@ def Rdf2Marc(**kwargs):
         marc_text_path = f"{s3_record_path}.txt"
         marc_err_path = f"{s3_record_path}.err"
 
-        lambda_hook = AwsLambdaHook(
-            rdf2marc_lambda,
-            log_type="None",
-            qualifier="$LATEST",
-            invocation_type="RequestResponse",
-            config=None,
+        lambda_hook = LambdaHook(
             aws_conn_id="aws_lambda_connection",
         )
 
@@ -44,7 +39,13 @@ def Rdf2Marc(**kwargs):
             "error_path": marc_err_path,
         }
 
-        result = lambda_hook.invoke_lambda(payload=json.dumps(params))
+        result = lambda_hook.invoke_lambda(
+            function=rdf2marc_lambda,
+            log_type="None",
+            qualifier="$LATEST",
+            invocation_type="RequestResponse",
+            payload=json.dumps(params),
+        )
 
         if "x-amz-function-error" in result["ResponseMetadata"].get("HTTPHeaders"):
             payload = json.loads(result["Payload"].read())

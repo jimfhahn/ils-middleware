@@ -1,6 +1,6 @@
 """Sinopia Operators and Functions for email notifications."""
 
-from airflow.providers.amazon.aws.hooks.ses import SESHook
+from airflow.providers.amazon.aws.hooks.ses import SesHook
 
 import logging
 
@@ -22,7 +22,7 @@ def send_update_success_emails(**kwargs) -> None:
     task_instance = kwargs["task_instance"]
     resources = task_instance.xcom_pull(key="resources", task_ids="sqs-message-parse")
 
-    ses_hook = SESHook(aws_conn_id="aws_ses_connection")
+    ses_hook = SesHook(aws_conn_id="aws_ses_connection")
     for resource_uri in resources:
         message = task_instance.xcom_pull(
             key=resource_uri, task_ids="sqs-message-parse"
@@ -34,7 +34,7 @@ def send_update_success_emails(**kwargs) -> None:
 def send_task_failure_notifications(**kwargs) -> None:
     parent_task_ids = list(kwargs["task"].upstream_task_ids)
     err_msg_context = {"parent_task_ids": parent_task_ids, "kwargs": kwargs}
-    ses_hook = SESHook(aws_conn_id="aws_ses_connection")
+    ses_hook = SesHook(aws_conn_id="aws_ses_connection")
     task_instance = kwargs["task_instance"]
     bad_resources = task_instance.xcom_pull(
         key="bad_resources", task_ids="sqs-message-parse"
