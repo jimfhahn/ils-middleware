@@ -3,7 +3,8 @@
 import io
 import pytest
 
-from airflow.contrib.hooks.aws_lambda_hook import AwsLambdaHook
+
+from airflow.providers.amazon.aws.hooks.lambda_function import LambdaHook
 
 from ils_middleware.tasks.sinopia.rdf2marc import Rdf2Marc
 
@@ -23,7 +24,7 @@ def mock_lambda(monkeypatch):
     def mock_invoke_lambda(*args, **kwargs):
         return mock_200_response
 
-    monkeypatch.setattr(AwsLambdaHook, "invoke_lambda", mock_invoke_lambda)
+    monkeypatch.setattr(LambdaHook, "invoke_lambda", mock_invoke_lambda)
 
 
 def test_Rdf2Marc(mock_task_instance, mock_lambda):  # noqa: F811
@@ -53,7 +54,7 @@ def mock_failed_lambda(monkeypatch):
             "ResponseMetadata": {"HTTPHeaders": {"x-amz-function-error": "Unhandled"}},
         }
 
-    monkeypatch.setattr(AwsLambdaHook, "invoke_lambda", mock_invoke_lambda)
+    monkeypatch.setattr(LambdaHook, "invoke_lambda", mock_invoke_lambda)
 
 
 def test_Rdf2Marc_LambdaError(mock_task_instance, mock_failed_lambda):  # noqa: F811
