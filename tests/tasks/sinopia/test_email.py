@@ -6,7 +6,7 @@ from datetime import datetime
 
 from airflow import DAG
 
-from airflow.providers.amazon.aws.hooks.ses import SESHook
+from airflow.providers.amazon.aws.hooks.ses import SesHook
 from airflow.models.taskinstance import TaskInstance
 from airflow.operators.dummy import DummyOperator
 
@@ -86,9 +86,9 @@ def test_send_update_success_emails(
 ) -> None:
     task_instance = test_task_instance()
 
-    mock_ses_hook_obj = mocker.Mock(SESHook)
+    mock_ses_hook_obj = mocker.Mock(SesHook)
     patched_ses_hook_class = mocker.patch(
-        "ils_middleware.tasks.sinopia.email.SESHook", return_value=mock_ses_hook_obj
+        "ils_middleware.tasks.sinopia.email.SesHook", return_value=mock_ses_hook_obj
     )
     send_update_success_emails(task_instance=task_instance)
 
@@ -121,9 +121,9 @@ def test_send_task_failure_notifications(
     hb_notify_spy = mocker.spy(honeybadger, "notify")
     logger_spy = mocker.spy(logger, "error")
 
-    mock_ses_hook_obj = mocker.Mock(SESHook)
+    mock_ses_hook_obj = mocker.Mock(SesHook)
     patched_ses_hook_class = mocker.patch(
-        "ils_middleware.tasks.sinopia.email.SESHook", return_value=mock_ses_hook_obj
+        "ils_middleware.tasks.sinopia.email.SesHook", return_value=mock_ses_hook_obj
     )
 
     send_task_failure_notifications(
