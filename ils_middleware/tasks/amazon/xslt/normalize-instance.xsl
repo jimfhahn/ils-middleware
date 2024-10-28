@@ -58,4 +58,12 @@ exclude-result-prefixes="sinopiabf" >
   </xsl:attribute>
 </xsl:template>
 
+<!-- Template to handle bf:date elements and add rdf:datatype attribute -->
+<xsl:template match="bf:date" xmlns:bf="http://id.loc.gov/ontologies/bibframe/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <xsl:element name="bf:date">
+    <xsl:attribute name="rdf:datatype">http://id.loc.gov/datatypes/edtf</xsl:attribute>
+    <xsl:apply-templates select="node()"/>
+  </xsl:element>
+</xsl:template>
+
 </xsl:stylesheet>
