@@ -57,6 +57,7 @@ institutions = [
     "leeds",
     "harvard",
     "emory",
+    "jmu",
 ]
 
 
