@@ -19,9 +19,8 @@ def send_instance_to_alma_s3(**kwargs):
         instance_graph = Graph()
         instance_graph.parse(instance_uri)
 
-        # Define the bf and bflc namespaces
+        # Define the bf namespace
         bf = Namespace("http://id.loc.gov/ontologies/bibframe/")
-        bflc = Namespace("http://id.loc.gov/ontologies/bflc/")
 
         # Bind the namespaces to the instance graph
         for prefix, url in alma_namespaces:
