@@ -1,7 +1,13 @@
+import logging
 from unittest.mock import Mock, patch
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook  # noqa
 from ils_middleware.tasks.amazon.alma_instance_s3 import send_instance_to_alma_s3
 import ssl
+from rdflib import URIRef
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 @patch.dict(
@@ -44,4 +50,19 @@ def test_send_instance_to_alma_s3(
     mock_s3_hook.return_value = mock_s3_hook_instance
     mock_s3_hook.get_connection = Mock(return_value=mock_connection)
 
+    # Act
     send_instance_to_alma_s3(task_instance=mock_task_instance)
+
+    # Log the calls to verify behavior
+    logger.debug(f"xcom_pull calls: {mock_task_instance.xcom_pull.call_args_list}")
+    logger.debug(f"parse calls: {mock_graph_instance.parse.call_args_list}")
+    logger.debug(f"serialize calls: {mock_graph_instance.serialize.call_args_list}")
+    logger.debug(f"fromstring calls: {mock_etree.fromstring.call_args_list}")
+    logger.debug(f"XSLT calls: {mock_etree.XSLT.call_args_list}")
+    logger.debug(f"tostring calls: {mock_etree.tostring.call_args_list}")
+    logger.debug(f"load_bytes calls: {mock_s3_hook_instance.load_bytes.call_args_list}")
+    logger.debug(f"xcom_push calls: {mock_task_instance.xcom_push.call_args_list}")
+
+
+# Run the test
+test_send_instance_to_alma_s3()

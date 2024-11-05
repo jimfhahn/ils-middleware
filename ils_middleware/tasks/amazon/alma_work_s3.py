@@ -10,6 +10,98 @@ from ils_middleware.tasks.amazon.alma_ns import alma_namespaces
 logger = logging.getLogger(__name__)
 
 
+def get_work_uri(instance_graph, instance_uri, bf):
+    return instance_graph.value(subject=URIRef(instance_uri), predicate=bf.instanceOf)
+
+
+def parse_graph(uri):
+    graph = Graph()
+    graph.parse(uri)
+    return graph
+
+
+def serialize_work_graph(work_graph):
+    return work_graph.serialize(format="pretty-xml", encoding="utf-8")
+
+
+def find_related_to_elements(tree, work_about, namespaces):
+    return tree.xpath(
+        f'//bf:relatedTo[@rdf:resource="{work_about}"]',
+        namespaces=namespaces,
+    )
+
+
+def process_related_to_elements(related_to_elements, work, namespaces):
+    cloned = False
+    for related_to in related_to_elements:
+        relationship = related_to.getparent()
+        if (
+            relationship.tag
+            in (
+                "{http://id.loc.gov/ontologies/bflc/}Relationship",
+                "{http://id.loc.gov/ontologies/bibframe/}Relationship",
+            )
+            and relationship.find("bf:relatedTo/bf:Work", namespaces=namespaces)
+            is not None
+        ):
+            logger.info(
+                "bf:relatedTo element is within a bflc:Relationship that contains a bf:Work element"
+            )
+            related_to.attrib.pop(
+                "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource", None
+            )
+            existing_work = related_to.find("bf:Work", namespaces=namespaces)
+            if existing_work is None:
+                cloned_work = deepcopy(work)
+                related_to.append(cloned_work)
+                cloned = True
+    return cloned
+
+
+def process_work_elements(tree, namespaces):
+    works_to_remove = []
+    works = tree.xpath("//bf:Work", namespaces=namespaces)
+    logger.info(f"Found {len(works)} bf:Work elements")
+
+    for work in works:
+        work_about = work.attrib.get(
+            "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about"
+        )
+        logger.info(f"Processing bf:Work with rdf:about={work_about}")
+
+        if work_about:
+            related_to_elements = find_related_to_elements(tree, work_about, namespaces)
+
+            if process_related_to_elements(related_to_elements, work, namespaces):
+                works_to_remove.append(work)
+
+    for work in works_to_remove:
+        work.getparent().remove(work)
+        logger.info(
+            f"Removed original bf:Work element with rdf:about= \
+            {work.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about')}"
+        )
+
+
+def apply_xslt(tree):
+    xslt = ET.parse("ils_middleware/tasks/amazon/xslt/normalize-work.xsl")
+    transform = ET.XSLT(xslt)
+    return transform(tree)
+
+
+def load_to_s3(s3_hook, bfwork_alma_xml, instance_uri):
+    s3_hook.load_bytes(
+        bfwork_alma_xml,
+        f"alma/{instance_uri}/bfwork_alma.xml",
+        Variable.get("marc_s3_bucket"),
+        replace=True,
+    )
+
+
+def push_to_xcom(task_instance, instance_uri, bfwork_alma_xml):
+    task_instance.xcom_push(key=instance_uri, value=bfwork_alma_xml.decode("utf-8"))
+
+
 def send_work_to_alma_s3(**kwargs):
     s3_hook = S3Hook(aws_conn_id="aws_lambda_connection")
     task_instance = kwargs.get("task_instance")
@@ -17,78 +109,33 @@ def send_work_to_alma_s3(**kwargs):
 
     for instance_uri in resources:
         instance_uri = URIRef(instance_uri)
-        work_uri = None
-        instance_graph = Graph()
-        work_graph = Graph()
-        instance_graph.parse(instance_uri)
-        # Define the bf namespace
         bf = Namespace("http://id.loc.gov/ontologies/bibframe/")
-        for prefix, url in alma_namespaces:
-            work_graph.bind(prefix, url)
-        work_uri = instance_graph.value(
-            subject=URIRef(instance_uri), predicate=bf.instanceOf
-        )
-        work_uri = URIRef(work_uri)
-        # Explicitly state that work_uri is of type bf:Work
-        work_graph.add((work_uri, RDF.type, bf.Work))
-        # parse the work graph
-        work_graph.parse(work_uri)
-        # add the instance to the work graph
-        work_graph.add((work_uri, bf.hasInstance, URIRef(instance_uri)))
-
-        # serialize the work graph
-        bfwork_alma_xml = work_graph.serialize(format="pretty-xml", encoding="utf-8")
-        tree = ET.fromstring(bfwork_alma_xml)
-
-        # Define namespaces
         namespaces = {
             "bf": "http://id.loc.gov/ontologies/bibframe/",
             "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+            "bflc": "http://id.loc.gov/ontologies/bflc/",
         }
 
-        # Find all bf:Work elements
-        works = tree.xpath("//bf:Work", namespaces=namespaces)
+        instance_graph = parse_graph(instance_uri)
+        work_uri = get_work_uri(instance_graph, instance_uri, bf)
+        work_uri = URIRef(work_uri)
+        work_graph = parse_graph(work_uri)
+        work_graph.add((work_uri, RDF.type, bf.Work))
 
-        for work in works:
-            work_about = work.attrib[
-                "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about"
-            ]
+        for prefix, url in alma_namespaces:
+            work_graph.bind(prefix, Namespace(url))
 
-            # Find the bf:relatedTo element with the same rdf:resource attribute value
-            related_to = tree.xpath(
-                f'//bf:relatedTo[@rdf:resource="{work_about}"]', namespaces=namespaces
-            )
+        bfwork_alma_xml = serialize_work_graph(work_graph)
+        tree = ET.fromstring(bfwork_alma_xml)
 
-            if related_to:
-                # Remove the rdf:resource attribute from the bf:relatedTo element
-                related_to[0].attrib.pop(
-                    "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource", None
-                )
-
-                # Clone the bf:Work element and append it under the bf:relatedTo element
-                cloned_work = deepcopy(work)
-                related_to[0].append(cloned_work)
-
-                # Remove the original bf:Work element that was cloned
-                work.getparent().remove(work)
-
-        # apply xslt to normalize work
-        xslt = ET.parse("ils_middleware/tasks/amazon/xslt/normalize-work.xsl")
-        transform = ET.XSLT(xslt)
-        bfwork_alma_xml = transform(tree)
+        process_work_elements(tree, namespaces)
+        bfwork_alma_xml = apply_xslt(tree)
         bfwork_alma_xml = ET.tostring(
             bfwork_alma_xml, pretty_print=True, encoding="utf-8"
         )
+
         logger.info(f"Normalized BFWork description for {work_uri}.")
-        # post to s3 as bytes
-        s3_hook.load_bytes(
-            bfwork_alma_xml,
-            f"alma/{instance_uri}/bfwork_alma.xml",
-            Variable.get("marc_s3_bucket"),
-            replace=True,
-        )
-        # save to xcom
-        task_instance.xcom_push(key=instance_uri, value=bfwork_alma_xml.decode("utf-8"))
-        logger.info(f"Saved BFWork description(s) for {work_uri} to alma.")
+        load_to_s3(s3_hook, bfwork_alma_xml, instance_uri)
+        push_to_xcom(task_instance, instance_uri, bfwork_alma_xml)
         logger.info(f"bf_work_alma_xml: {bfwork_alma_xml.decode('utf-8')}")
