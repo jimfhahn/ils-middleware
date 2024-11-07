@@ -29,6 +29,11 @@ def send_instance_to_alma_s3(**kwargs):
         # Get the work URI from the instance graph
         work_uri = instance_graph.value(subject=instance_uri, predicate=bf.instanceOf)
 
+        # Check if work_uri is none
+        if work_uri is None:
+            logger.error(f"No work URI found for instance {instance_uri}")
+            continue
+
         # Ensure work_uri is a URIRef
         work_uri = URIRef(work_uri)
 
