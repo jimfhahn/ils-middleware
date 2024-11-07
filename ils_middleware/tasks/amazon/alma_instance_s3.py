@@ -2,7 +2,6 @@ import logging
 from airflow.models import Variable
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from rdflib import Graph, URIRef, Namespace
-from rdflib.namespace import RDF
 from lxml import etree as ET
 from ils_middleware.tasks.amazon.alma_ns import alma_namespaces
 
@@ -18,38 +17,49 @@ def send_instance_to_alma_s3(**kwargs):
         instance_uri = URIRef(instance_uri)
         work_uri = None
         instance_graph = Graph()
-        work_graph = Graph()
         instance_graph.parse(instance_uri)
+
         # Define the bf namespace
         bf = Namespace("http://id.loc.gov/ontologies/bibframe/")
+
+        # Bind the namespaces to the instance graph
         for prefix, url in alma_namespaces:
             instance_graph.bind(prefix, url)
-        work_uri = instance_graph.value(
-            subject=URIRef(instance_uri), predicate=bf.instanceOf
-        )
+
+        # Get the work URI from the instance graph
+        work_uri = instance_graph.value(subject=instance_uri, predicate=bf.instanceOf)
+
+        # Check if work_uri is none
         if work_uri is None:
-            logger.info(f"Instance {instance_uri} has no work.")
+            logger.error(f"No work URI found for instance {instance_uri}")
             continue
+
+        # Ensure work_uri is a URIRef
         work_uri = URIRef(work_uri)
-        # Explicitly state that work_uri is of type bf:Work
-        work_graph.add((work_uri, RDF.type, bf.Work))
-        # add the work to the instance graph
-        instance_graph.add((instance_uri, bf.instanceOf, URIRef(work_uri)))
-        # serialize the instance graph
+
+        # Remove any triples where work_uri is the subject
+        instance_graph.remove((work_uri, None, None))
+
+        # Serialize the instance graph
         instance_alma_xml = instance_graph.serialize(
             format="pretty-xml", encoding="utf-8"
         )
-        logger.info(instance_alma_xml)
+
+        # Parse the serialized XML
         tree = ET.fromstring(instance_alma_xml)
-        logger.info(instance_alma_xml)
-        # apply xslt to normalize instance description
+
+        # Log the XML before XSLT transformation
+        logger.debug(
+            f"XML before XSLT transformation: {ET.tostring(tree, pretty_print=True, encoding='utf-8').decode('utf-8')}"
+        )
+
+        # Apply XSLT to normalize instance
         xslt = ET.parse("ils_middleware/tasks/amazon/xslt/normalize-instance.xsl")
         transform = ET.XSLT(xslt)
         instance_alma_xml = transform(tree)
         instance_alma_xml = ET.tostring(
             instance_alma_xml, pretty_print=True, encoding="utf-8"
         )
-        logger.info(f"Normalized BFInstance description for {instance_uri}.")
         # post to s3 as bytes
         s3_hook.load_bytes(
             instance_alma_xml,
