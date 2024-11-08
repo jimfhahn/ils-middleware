@@ -59,7 +59,7 @@ institutions = [
     "emory",
     "jmu",
     "brandeis",
-    "puc",
+    "PUC",
 ]
 
 
