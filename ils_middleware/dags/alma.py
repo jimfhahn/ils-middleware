@@ -71,6 +71,7 @@ for institution in institutions:
         start_date=datetime(2021, 8, 24),
         tags=[f"{institution}-alma"],
         catchup=False,
+        schedule=None,
         on_failure_callback=dag_failure_callback,
         max_active_runs=1,
     ) as dag:
