@@ -87,11 +87,11 @@ def _identifiers(**kwargs) -> tuple:
     if folio_field.endswith("oclc"):
         identifier_name = "OCLC"
     if folio_field.endswith("lccn"):
-        identifer_name = "LCCN"
+        identifier_name = "LCCN"
     if folio_field.endswith("doi"):
-        identifer_name = "DOI"
+        identifier_name = "DOI"
     if folio_field.endswith("issn"):
-        identifer_name = "ISSN"
+        identifier_name = "ISSN"
 
     values = kwargs["values"]
 
