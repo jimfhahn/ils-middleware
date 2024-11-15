@@ -26,8 +26,24 @@ BF_TO_FOLIO_MAP = {
         "class": "bf:Isbn",
     },
     "identifiers.oclc": {
-        "template": bf_instance_map.local_identifier,
+        "template": bf_instance_map.identifier,
         "uri": "instance",
+        "class": "bf:OclcNumber",
+    },
+    "identifiers.lccn": {
+        "template": bf_instance_map.identifier,
+        "uri": "instance",
+        "class": "bf:Lccn",
+    },
+    "identifiers.doi": {
+        "template": bf_instance_map.identifier,
+        "uri": "instance",
+        "class": "bf:Doi",
+    },
+    "identifiers.issn": {
+        "template": bf_instance_map.identifier,
+        "uri": "instance",
+        "class": "bf:Issn",
     },
     "instance_type": {"template": bf_work_map.instance_type_id, "uri": "work"},
     "language": {"template": bf_work_map.language, "uri": "work"},
