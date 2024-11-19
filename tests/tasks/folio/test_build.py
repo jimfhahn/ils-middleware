@@ -57,7 +57,10 @@ class MockFolioClient(object):
         ]
 
         self.identifier_types = [
+            {"id": "39554f54-d0bb-4f0a-89a4-e422f6136316", "name": "DOI"},
             {"id": "8261054f-be78-422d-bd51-4ed9f33c3422", "name": "ISBN"},
+            {"id": "913300b2-03ed-469a-8179-c1092c991227", "name": "ISSN"},
+            {"id": "c858e4f2-2b6b-4385-842b-60732ee14abb", "name": "LCCN"},
             {"id": "439bfbae-75bc-4f74-9fc7-b2a2d47ce3ef", "name": "OCLC"},
         ]
 
@@ -164,6 +167,35 @@ def test_default_transform_value_listing():
     assert name in default_tuple[1][0]
 
 
+def test_identifiers_doi(mock_folio_client, mock_task_instance):  # noqa: F811
+    identifiers = _identifiers(
+        values=[["10.1111/j.1753-4887.2008.00114.x:"]],
+        folio_client=MockFolioClient(),
+        folio_field="identifiers.doi",
+        record={},
+    )
+
+    assert identifiers[1][0]["identifierTypeId"].startswith(
+        "39554f54-d0bb-4f0a-89a4-e422f6136316"
+    )
+    assert identifiers[1][0]["value"].startswith("10.1111/j.1753-4887.2008.00114.x:")
+
+
+def test_identifiers_issn(mock_folio_client, mock_task_instance):  # noqa: F811
+    identifiers = _identifiers(
+        values=[["123456"]],
+        folio_client=MockFolioClient(),
+        folio_field="identifiers.issn",
+        record={},
+    )
+
+    assert (identifiers[1][0]["identifierTypeId"]).startswith(
+        "913300b2-03ed-469a-8179-c1092c991227"
+    )
+
+    assert (identifiers[1][0]["value"]).startswith("123456")
+
+
 def test_identifiers_isbn(mock_folio_client, mock_task_instance):  # noqa: F811
 
     identifiers = _identifiers(
@@ -178,6 +210,20 @@ def test_identifiers_isbn(mock_folio_client, mock_task_instance):  # noqa: F811
         "8261054f-be78-422d-bd51-4ed9f33c3422"
     )
     assert (identifiers[1][0]["value"]).startswith("123456")
+
+
+def test_identifiers_lccn(mock_folio_client, mock_task_instance):  # noqa: F811
+    identifiers = _identifiers(
+        values=[["2023045856"]],
+        folio_client=MockFolioClient(),
+        folio_field="identifiers.lccn",
+        record={},
+    )
+
+    assert identifiers[1][0]["identifierTypeId"].startswith(
+        "c858e4f2-2b6b-4385-842b-60732ee14abb"
+    )
+    assert identifiers[1][0]["value"].startswith("2023045856")
 
 
 def test_identifiers_oclc(mock_task_instance):  # noqa: F811
